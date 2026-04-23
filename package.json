@@ -1,0 +1,24 @@
+{
+  "name": "app-extraescolares",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.5.0",
+    "firebase": "^12.12.0",
+    "leaflet": "^1.9.4",
+    "next": "latest",
+    "postcss": "^8.5.10",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-leaflet": "^4.2.1",
+    "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "typescript": "6.0.2"
+  }
+}
