@@ -1,7 +1,21 @@
 'use client';
-import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import { useState, useEffect } from 'react'; 
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet'; 
 import L from 'leaflet';
+
+// ✈️ Función interna para que el mapa vuele al destino
+function ControladorVuelo({ destino }) {
+  const map = useMap();
+  useEffect(() => {
+    if (destino && Array.isArray(destino) && typeof destino[0] === 'number') {
+      map.flyTo(destino, 20, {
+        duration: 1.5,
+        easeLinearity: 0.25
+      });
+    }
+  }, [destino, map]);
+  return null;
+}
 
 const crearIcono = (color) =>
   new L.Icon({
@@ -22,10 +36,20 @@ export default function Mapa({
   fotoAct,
   fotoMon,
   fotoFam,
+  destinoVuelo, 
 }) {
   const [iluminado, setIluminado] = useState(null);
   // ✨ NUEVO: Estado para saber qué foto queremos ver en grande
   const [fotoGrande, setFotoGrande] = useState(null);
+
+  // 🔦 ESTA ES LA ÚNICA PIEZA NUEVA QUE AÑADIMOS
+  useEffect(() => {
+    if (destinoVuelo) {
+      if (destinoVuelo[0] === posActividad?.[0]) setIluminado('act');
+      else if (destinoVuelo[0] === posMonitores?.[0]) setIluminado('mon');
+      else if (destinoVuelo[0] === posFamilias?.[0]) setIluminado('fam');
+    }
+  }, [destinoVuelo, posActividad, posMonitores, posFamilias]);
 
   const centroCole = [40.407937755274425, -3.7469348757382366];
   const esValida = (pos) =>
@@ -100,6 +124,9 @@ export default function Mapa({
           maxNativeZoom={19}
         />
 
+        {/* 🚀 EL CONTROLADOR DE VUELO */}
+        <ControladorVuelo destino={destinoVuelo} />
+
         {/* 🔦 CÍRCULOS DE LUZ */}
         {iluminado === 'act' && esValida(posActividad) && (
           <Circle
@@ -150,7 +177,7 @@ export default function Mapa({
                   Lugar de realización
                 </span>
                 {fotoAct && (
-                  /* 🔍 Cambiamos el <a> por un onClick para agrandar aquí mismo */
+                  
                   <img
                     src={fotoAct}
                     alt="Lugar"

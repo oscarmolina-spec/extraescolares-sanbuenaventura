@@ -47,6 +47,8 @@ export default function Page() {
   const [actividades, setActividades] = useState([]);
   const [puntosInteres, setPuntosInteres] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  // Este es el estado que le dirá al mapa a dónde volar
+const [destino, setDestino] = useState(null);
   const [actividadSeleccionada, setActividadSeleccionada] = useState(null);
   const [editandoId, setEditandoId] = useState(null); // Para saber si estamos creando o editando
   const [pestaña, setPestaña] = useState('info'); // Puede ser 'info' o 'mapa'
@@ -1194,11 +1196,12 @@ return (
                 fotoAct={act.fotoAct}
                 fotoMon={act.fotoMon}
                 fotoFam={act.fotoFam}
+                destinoVuelo={destino}
               />
             </div>
 
-            {/* 📍 Logística (Recogidas) */}
-            <div
+           {/* 📍 Logística (Recogidas) */}
+           <div
               style={{
                 backgroundColor: '#ffffff',
                 padding: '25px',
@@ -1207,18 +1210,23 @@ return (
                 marginBottom: '60px',
               }}
             >
+              {/* 1. LUGAR (Vuela a la actividad) */}
               <div
-                style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}
+                onClick={() => setDestino([act.latAct, act.lngAct])}
+                style={{ display: 'flex', gap: '15px', marginBottom: '20px', cursor: 'pointer' }}
               >
                 <div style={{ fontSize: '1.5rem', minWidth: '35px' }}>📍</div>
                 <div>
                   <p style={{ margin: 0, fontWeight: '800', color: '#1e293b' }}>
-                    Lugar
+                    Lugar (Ver en mapa)
                   </p>
                   <p style={{ margin: 0, color: '#64748b' }}>{act.lugar}</p>
                 </div>
               </div>
+
+              {/* 2. MONITORES (Vuela al punto de monitores) */}
               <div
+                onClick={() => setDestino([act.latMon, act.lngMon])}
                 style={{
                   display: 'flex',
                   gap: '15px',
@@ -1226,23 +1234,36 @@ return (
                   padding: '15px',
                   backgroundColor: '#f8fafc',
                   borderRadius: '20px',
+                  cursor: 'pointer', // 👈 ¡Ahora es un botón mágico!
+                  transition: 'transform 0.1s active'
                 }}
               >
                 <div style={{ fontSize: '1.5rem', minWidth: '35px' }}>👨‍🏫</div>
                 <div>
                   <p style={{ margin: 0, fontWeight: '800', color: '#1e293b' }}>
-                    Monitores
+                    Monitores (Toca para ubicar 📍)
                   </p>
                   <p style={{ margin: 0, color: '#64748b' }}>
                     {act.recogidaMonitores || 'Consultar'}
                   </p>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '15px' }}>
+
+              {/* 3. FAMILIAS (Vuela al punto de familias) */}
+              <div 
+                onClick={() => setDestino([act.latFam, act.lngFam])}
+                style={{ 
+                  display: 'flex', 
+                  gap: '15px', 
+                  cursor: 'pointer',
+                  padding: '5px',
+                  borderRadius: '15px' 
+                }}
+              >
                 <div style={{ fontSize: '1.5rem', minWidth: '35px' }}>👪</div>
                 <div>
                   <p style={{ margin: 0, fontWeight: '800', color: '#1e293b' }}>
-                    Familias
+                    Familias (Toca para ubicar 📍)
                   </p>
                   <p style={{ margin: 0, color: '#64748b' }}>
                     {act.recogidaFamilias || 'Consultar'}
