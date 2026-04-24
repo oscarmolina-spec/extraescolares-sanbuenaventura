@@ -7,6 +7,7 @@ import {
   query,
   doc,
   deleteDoc,
+  updateDoc, // 👈 ¡Añade esta palabra mágica aquí!
 } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
@@ -30,11 +31,21 @@ const MapaActividad = dynamic(() => import('./Mapa'), {
     </div>
   ),
 });
+// ⭐ ESTE ES EL NUEVO: Mapa para los Puntos de Interés Generales
+const MapaPuntosInteres = dynamic(() => import('./MapaPuntosInteres'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ height: '100vh', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p>Cargando mapa maestro...</p>
+    </div>
+  ),
+});
 
 export default function Page() {
   const [vista, setVista] = useState('catalogo');
   const [etapaActiva, setEtapaActiva] = useState('Infantil');
   const [actividades, setActividades] = useState([]);
+  const [puntosInteres, setPuntosInteres] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [actividadSeleccionada, setActividadSeleccionada] = useState(null);
   const [editandoId, setEditandoId] = useState(null); // Para saber si estamos creando o editando
@@ -47,28 +58,39 @@ export default function Page() {
     latF: '',
     lngF: '',
   });
+  const [clubes, setClubes] = useState([]); // Aquí guardaremos la lista que viene de la nube
+  const [nuevoClub, setNuevoClub] = useState({
+    nombre: '',
+    etapas: [],
+    horario: '',
+    descripcion: '',
+    imagen: '',   // Aquí irá el logo
+    contacto: '', // Teléfono o Email
+    linkInscripcion: '', // El enlace directo
+    latAct: '',   // Punto de interés (latitud)
+    lngAct: '',   // Punto de interés (longitud)
+  });
   // 🏰 El enlace mágico de tu escudo desde Storage
   const URL_ESCUDO =
     'https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/San%20%20uenaventura.png?alt=media&token=c70def71-3920-425e-9d68-a3519ed51960';
 
-  const [nuevaAct, setNuevaAct] = useState({
-    nombre: '',
-    etapa: 'Infantil',
-    dias: '',
-    horario: '',
-    lugar: '',
-    info: '',
-    imagen: '',
-    recogidaMonitores: '',
-    recogidaFamilias: '',
-    precio: '',
-    // 📍 Coordenadas del cole ya puestas por defecto:
-    latAct: '40.407937755274425',
-    lngAct: '-3.7469348757382366',
-    fotoAct: '', // Foto del aula/patio
-    fotoMon: '', // Foto punto monitores
-    fotoFam: '', // Foto punto familias
-  });
+    const [nuevaAct, setNuevaAct] = useState({
+      nombre: '',
+      etapas: [], // 👈 ¡Ahora es una lista para marcar varias!
+      dias: '',
+      horario: '',
+      lugar: '',
+      info: '',
+      imagen: '',
+      recogidaMonitores: '',
+      recogidaFamilias: '',
+      precio: '',
+      latAct: '40.407937755274425',
+      lngAct: '-3.7469348757382366',
+      fotoAct: '', 
+      fotoMon: '', 
+      fotoFam: '', 
+    });
 
   const cargarActividades = async () => {
     try {
@@ -86,14 +108,39 @@ export default function Page() {
 
   useEffect(() => {
     cargarActividades();
+    cargarPuntosInteres();
+    cargarClubes();
   }, []);
+  // 📍 Esta función es la que va a buscar las chinchetas del Mapa Maestro
+  const cargarPuntosInteres = async () => {
+    try {
+      const q = query(collection(db, 'puntos_interes_cole'));
+      const querySnapshot = await getDocs(q);
+      const docs = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPuntosInteres(docs); // Guardamos las chinchetas en su estado
+      console.log("¡Chinchetas cargadas!", docs.length);
+    } catch (e) {
+      console.error('Error cargando puntos de interés:', e);
+    }
+  };
 
   const guardarActividad = async () => {
-    if (!nuevaAct.nombre) return alert('¡Escribe el nombre de la actividad!');
+    if (!nuevaAct.nombre) return alert('¡Escribe el nombre de la actividad! 📝');
+    
+    // 🛡️ ¡NUEVO! Comprobamos que haya marcado al menos una casilla
+    if (!nuevaAct.etapas || nuevaAct.etapas.length === 0) {
+      return alert('¡Debes elegir al menos una etapa para que aparezca en la web! 🚩');
+    }
 
-    // 🚀 PASO MÁGICO: Convertimos las coordenadas de texto a números reales
+    // 🚀 PASO MÁGICO: Convertimos coordenadas y preparamos los datos
     const actividadFinal = {
       ...nuevaAct,
+      // Guardamos la lista de etapas que has marcado en los checkboxes
+      etapas: nuevaAct.etapas,
+      // Convertimos coordenadas a números como tú querías
       latAct: parseFloat(nuevaAct.latAct) || 0,
       lngAct: parseFloat(nuevaAct.lngAct) || 0,
       latMon: parseFloat(nuevaAct.latMon) || 0,
@@ -102,25 +149,24 @@ export default function Page() {
       lngFam: parseFloat(nuevaAct.lngFam) || 0,
     };
 
+    // 🧹 Quitamos el campo 'etapa' antiguo si existiera para no liar a Firebase
+    delete actividadFinal.etapa;
+
     try {
       if (editandoId) {
-        const { updateDoc, doc } = await import('firebase/firestore');
-        // 👇 Usamos 'actividadFinal' en lugar de 'nuevaAct'
-        await updateDoc(
-          doc(db, 'actividades_cole', editandoId),
-          actividadFinal
-        );
+        // ✏️ Si estamos editando
+        await updateDoc(doc(db, 'actividades_cole', editandoId), actividadFinal);
         alert('¡Actividad actualizada con éxito! 🔄');
       } else {
-        // 👇 Usamos 'actividadFinal' en lugar de 'nuevaAct'
+        // 🆕 Si es una nueva
         await addDoc(collection(db, 'actividades_cole'), actividadFinal);
         alert('¡Publicado con éxito! ✨');
       }
 
-      // Limpiamos todo (incluidas las nuevas coordenadas)
+      // ✨ LIMPIEZA TOTAL (Reseteamos todo al estado inicial)
       setNuevaAct({
         nombre: '',
-        etapa: 'Infantil',
+        etapas: [], // 👈 ¡Súper importante! Limpiamos la lista de casillas
         dias: '',
         horario: '',
         lugar: '',
@@ -129,19 +175,82 @@ export default function Page() {
         recogidaMonitores: '',
         recogidaFamilias: '',
         precio: '',
-        latAct: '', // Limpiamos también estos...
-        lngAct: '',
+        latAct: '40.407937755274425', // Dejamos las del cole por defecto
+        lngAct: '-3.7469348757382366',
         latMon: '',
         lngMon: '',
         latFam: '',
         lngFam: '',
+        fotoAct: '',
+        fotoMon: '',
+        fotoFam: '',
       });
+
       setEditandoId(null);
       setVista('catalogo');
       cargarActividades();
     } catch (e) {
       console.error('Error al guardar:', e);
-      alert('Vaya, parece que ha habido un error al conectar con la nube.');
+      alert('Vaya, parece que ha habido un error al conectar con la nube. Revisa la consola.');
+    }
+  };
+  // 🚀 El "brazo robótico" para guardar Clubes Amigos
+  const guardarClub = async () => {
+    if (!nuevoClub.nombre) return alert('¡Escribe el nombre del club! 🥋');
+    if (nuevoClub.etapas.length === 0) return alert('¡Marca al menos una etapa! 🏁');
+
+    try {
+      // 🚀 Preparamos el paquete como siempre
+      const clubFinal = {
+        nombre: nuevoClub.nombre,
+        etapas: nuevoClub.etapas,
+        horario: nuevoClub.horario || '',
+        descripcion: nuevoClub.descripcion || '',
+        imagen: nuevoClub.imagen || '',
+        contacto: nuevoClub.contacto || '',
+        linkInscripcion: nuevoClub.linkInscripcion || '',
+        latAct: parseFloat(nuevoClub.latAct) || 0,
+        lngAct: parseFloat(nuevoClub.lngAct) || 0
+      };
+
+      // ✨ ¡AQUÍ ESTÁ EL TRUCO!
+      if (editandoId) {
+        // ✏️ SI HAY UN ID: Usamos updateDoc para sobrescribir el viejo
+        await updateDoc(doc(db, 'clubes_cole', editandoId), clubFinal);
+        alert('¡Club Amigo actualizado! ✨');
+      } else {
+        // 🆕 SI NO HAY ID: Usamos addDoc para crear uno nuevo
+        await addDoc(collection(db, 'clubes_cole'), clubFinal);
+        alert('¡Club Amigo guardado con éxito! 🌟');
+      }
+
+      // 🧹 Limpiamos el cajón y reseteamos el ID de edición
+      setNuevoClub({
+        nombre: '', etapas: [], horario: '', descripcion: '',
+        imagen: '', contacto: '', linkInscripcion: '', latAct: '', lngAct: ''
+      });
+      setEditandoId(null); // 👈 ¡Súper importante para que el siguiente no sea una edición!
+      
+      setVista('catalogo');
+      if (typeof cargarClubes === 'function') cargarClubes();
+
+    } catch (e) {
+      console.error('Error al guardar/actualizar:', e);
+      alert('¡Uy! Ha fallado el envío a la nube.');
+    }
+  };
+  const cargarClubes = async () => {
+    try {
+      const q = query(collection(db, 'clubes_cole'));
+      const querySnapshot = await getDocs(q);
+      const docs = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setClubes(docs); // Esto llena la lista de clubes
+      console.log("¡Clubes bajados de la nube!", docs.length);
+    } catch (e) {
+      console.error('Error cargando los clubes:', e);
     }
   };
 
@@ -268,7 +377,7 @@ export default function Page() {
               flexWrap: 'wrap',
             }}
           >
-            {['Infantil', 'Primaria', 'ESO'].map((e) => (
+            {['Infantil', 'Primaria', 'ESO','Clubes Amigos'].map((e) => (
               <button
                 key={e}
                 onClick={() => setEtapaActiva(e)}
@@ -306,331 +415,324 @@ export default function Page() {
             gap: '20px',
           }}
         >
-          {actividades.filter((a) => a.etapa === etapaActiva).length === 0 && (
-            <div
-              style={{
-                gridColumn: '1/-1',
-                textAlign: 'center',
-                padding: '50px',
-                backgroundColor: 'white',
-                borderRadius: '20px',
-              }}
-            >
-              <p>
-                No hay actividades publicadas en <strong>{etapaActiva}</strong>{' '}
-                todavía.
-              </p>
-              {isAdmin && (
-                <p style={{ color: '#ff6b6b' }}>
-                  ¡Pulsa el botón verde de abajo para añadir la primera!
-                </p>
+          {/* 🌟 AQUÍ EMPIEZA LA MAGIA: JUNTAMOS TODO */}
+        {(() => {
+          // Juntamos todo en una sola lista para filtrar
+          const todoJunto = [
+            ...actividades.map(a => ({ ...a, esClub: false })),
+            ...clubes.map(c => ({ ...c, esClub: true }))
+          ];
+
+          // 🔍 Filtramos según la pestaña pulsada (¡Sirve para todo!)
+          const itemsFiltrados = todoJunto.filter((item) => {
+            // 1. 🛡️ Primero miramos si el item tiene la lista nueva de 'etapas'
+            if (item.etapas && Array.isArray(item.etapas)) {
+              // Esto busca si 'Clubes Amigos' (o la que sea) está en la lista
+              return item.etapas.includes(etapaActiva);
+            }
+          
+            // 2. 🕰️ Si es una actividad antigua (de las que solo tenían 'etapa')
+            // También funcionará si coincide con la etapaActiva
+            return item.etapa === etapaActiva;
+          });
+
+          return (
+            <>
+              {/* 🚩 Mensaje si no hay nada que enseñar */}
+              {itemsFiltrados.length === 0 && (
+                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '50px', backgroundColor: 'white', borderRadius: '20px' }}>
+                  <p>No hay actividades ni clubes en <strong>{etapaActiva}</strong> todavía.</p>
+                  {isAdmin && <p style={{ color: '#ff6b6b' }}>¡Usa el panel de admin para añadir el primero!</p>}
+                </div>
               )}
-            </div>
-          )}
 
-          {actividades
-            .filter((a) => a.etapa === etapaActiva)
-            .map((act) => (
-              <div
-                key={act.id}
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: '24px', // Esquinas más modernas
-                  overflow: 'hidden',
-                  boxShadow:
-                    '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                  border: '1px solid #f1f5f9',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'transform 0.2s ease',
-                }}
-              >
-                {/* 🖼️ IMAGEN CON ETAPA FLOTANTE */}
-                <div style={{ position: 'relative' }}>
-                  <img
-                    src={
-                      act.imagen ||
-                      'https://via.placeholder.com/400x200?text=San+Buenaventura'
-                    }
-                    style={{
-                      width: '100%',
-                      height: '180px',
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
-                    onError={(e) => {
-                      e.target.src =
-                        'https://via.placeholder.com/400x200?text=San+Buenaventura';
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      padding: '4px 12px',
-                      borderRadius: '99px',
-                      fontSize: '0.7rem',
-                      fontWeight: '800',
-                      color: '#1e293b',
-                      backdropFilter: 'blur(4px)',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    }}
-                  >
-                    {act.etapa}
-                  </div>
-                </div>
+              {/* 🎨 Dibujamos las tarjetas (sirve para los dos tipos: Cole y Clubes) */}
+              {itemsFiltrados.map((item) => (
+  <div
+    key={item.id}
+    style={{
+      backgroundColor: 'white',
+      borderRadius: '24px',
+      overflow: 'hidden',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)',
+      border: '1px solid #f1f5f9',
+      display: 'flex',
+      flexDirection: 'column',
+      transition: 'transform 0.2s ease',
+    }}
+  >
+    {/* 🖼️ IMAGEN / LOGO */}
+    <div style={{ position: 'relative' }}>
+      <img
+        src={item.imagen || item.foto || 'https://via.placeholder.com/400x200?text=San+Buenaventura'}
+        style={{ width: '100%', height: '180px', objectFit: 'cover', display: 'block' }}
+        onError={(e) => { e.target.src = 'https://via.placeholder.com/400x200?text=Imagen+No+Disponible'; }}
+      />
+      <div style={{
+        position: 'absolute', top: '12px', right: '12px',
+        backgroundColor: item.esClub ? '#d946ef' : 'rgba(255, 255, 255, 0.9)',
+        padding: '4px 12px', borderRadius: '99px', fontSize: '0.7rem', fontWeight: '800',
+        color: item.esClub ? 'white' : '#1e293b',
+        backdropFilter: 'blur(4px)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      }}>
+        {/* Mostramos "CLUB" o la primera etapa que tenga la lista */}
+        {item.esClub ? '🌟 CLUB AMIGO' : (item.etapas && item.etapas[0]) || item.etapa}
+      </div>
+    </div>
 
-                {/* 📝 CONTENIDO DE LA TARJETA */}
-                <div
-                  style={{
-                    padding: '20px',
-                    textAlign: 'left',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flexGrow: 1,
-                  }}
-                >
-                  <h3
-                    style={{
-                      margin: '0 0 5px',
-                      fontSize: '1.2rem',
-                      color: '#0f172a',
-                      fontWeight: '700',
-                    }}
-                  >
-                    {act.nombre}
-                  </h3>
-                  <p
-                    style={{
-                      color: '#64748b',
-                      fontSize: '0.85rem',
-                      margin: '0 0 15px',
-                    }}
-                  >
-                    📅 {act.dias} · {act.horario}
-                  </p>
+{/* 📝 CONTENIDO */}
+<div style={{ padding: '20px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+      <h3 style={{ margin: '0 0 5px', fontSize: '1.2rem', color: '#0f172a', fontWeight: '700' }}>
+        {item.nombre}
+      </h3>
+      
+      {/* ⏰ HORARIO */}
+      <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 8px' }}>
+        ⏰ {item.horario || 'Horario a consultar'}
+      </p>
 
-                  <div style={{ marginTop: 'auto' }}>
-                    {/* Botón de Detalles (Principal) */}
-                    <button
-                      onClick={() => {
-                        setActividadSeleccionada(act);
-                        setVista('detalles');
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        borderRadius: '12px',
-                        border: 'none',
-                        backgroundColor: '#f1f5f9',
-                        color: '#1e293b',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        fontSize: '0.9rem',
-                        marginBottom: '10px',
-                      }}
-                    >
-                      Ver información completa
-                    </button>
+      {/* 🗓️ DÍAS DE LA SEMANA (Sustituye al precio) */}
+      <div style={{ 
+        backgroundColor: '#eff6ff', 
+        color: '#1e40af', 
+        fontSize: '0.8rem', 
+        fontWeight: '800', 
+        padding: '6px 12px',
+        borderRadius: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        alignSelf: 'flex-start',
+        border: '1px solid #dbeafe',
+        marginBottom: '10px'
+      }}>
+        <span>🗓️</span>
+        <span>{item.dias ? item.dias.toUpperCase() : 'DÍAS A CONSULTAR'}</span>
+      </div>
 
-                    {/* BOTÓN ROJO DE INSCRIPCIÓN */}
-                    {act.enlace && (
-                      <a
-                        href={act.enlace}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          display: 'block',
-                          padding: '12px',
-                          backgroundColor: '#ff6b6b',
-                          color: 'white',
-                          borderRadius: '12px',
-                          textDecoration: 'none',
-                          fontWeight: 'bold',
-                          fontSize: '0.9rem',
-                          textAlign: 'center',
-                          boxShadow: '0 4px 10px rgba(255, 107, 107, 0.2)',
-                        }}
-                      >
-                        📝 ¡INSCRIBIRSE AHORA!
-                      </a>
-                    )}
-
-                    {/* BOTONES DE ADMIN (Más discretos) */}
-                    {isAdmin && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: '8px',
-                          marginTop: '15px',
-                          paddingTop: '15px',
-                          borderTop: '1px dotted #e2e8f0',
-                        }}
-                      >
-                        <button
-                          onClick={() => {
-                            setNuevaAct(act);
-                            setEditandoId(act.id);
-                            setVista('panel');
-                          }}
-                          style={{
-                            flex: 1,
-                            padding: '8px',
-                            backgroundColor: '#fef3c7',
-                            color: '#92400e',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '0.8rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          EDITAR
-                        </button>
-                        <button
-                          onClick={async () => {
-                            if (confirm('¿Quieres borrar esta actividad?')) {
-                              await deleteDoc(
-                                doc(db, 'actividades_cole', act.id)
-                              );
-                              cargarActividades();
-                            }
-                          }}
-                          style={{
-                            flex: 1,
-                            padding: '8px',
-                            backgroundColor: '#fee2e2',
-                            color: '#991b1b',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '0.8rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                          }}
-                        >
-                          BORRAR
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-        </main>
-
-        <div
+      <div style={{ marginTop: 'auto' }}>
+        <button
+          onClick={() => {
+            setActividadSeleccionada(item);
+            setVista('detalles');
+          }}
           style={{
-            position: 'fixed',
-            bottom: '20px',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column', // Ponemos uno sobre otro para que no se amontonen
-            alignItems: 'center',
-            gap: '10px',
-            zIndex: 100,
+            width: '100%', padding: '12px', borderRadius: '12px', border: 'none',
+            backgroundColor: '#f1f5f9', color: '#1e293b', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', marginBottom: '10px',
           }}
         >
-          {/* 📍 BOTÓN DEL MAPA: Este lo verán siempre todos los papis */}
-          <button
-            onClick={() =>
-              window.open(
-                'https://view.genially.com/66f7b5afb6305cd7a7cb61e6',
-                '_blank'
-              )
-            }
+          Ver información completa
+        </button>
+
+        {/* 🔗 BOTÓN DE INSCRIPCIÓN (Muy importante: busca los dos nombres posibles) */}
+        {(item.enlace || item.linkInscripcion) && (
+          <a
+            href={item.linkInscripcion || item.enlace}
+            target="_blank" rel="noopener noreferrer"
             style={{
-              padding: '14px 28px',
-              backgroundColor: '#3b82f6', // Un azul muy profesional
-              color: 'white',
-              border: 'none',
-              borderRadius: '99px',
-              cursor: 'pointer',
-              fontWeight: '800',
-              fontSize: '1rem',
-              boxShadow: '0 10px 20px rgba(59, 130, 246, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              transition: 'transform 0.2s ease',
+              display: 'block', padding: '12px', 
+              backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
+              color: 'white', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold',
+              fontSize: '0.9rem', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
             }}
           >
-            <span>📍</span> VER MAPA DE ZONAS
-          </button>
+            📝 ¡INSCRIBIRSE AHORA!
+          </a>
+        )}
 
-          {/* Aquí empieza la lógica de Admin que ya tenías */}
-          {!isAdmin ? (
-            <button
-              onClick={() => {
-                const p = prompt('Clave:');
-                if (p === 'admin') setIsAdmin(true);
-              }}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#cbd5e1',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '0.75rem',
-                opacity: 0.7, // Lo hacemos más pequeñito y discreto
-              }}
-            >
-              🔑 Acceso Admin
-            </button>
-          ) : (
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => {
-                  setNuevaAct({
-                    nombre: '',
-                    etapa: 'Infantil',
-                    dias: '',
-                    horario: '',
-                    lugar: '',
-                    info: '',
-                    imagen: '',
-                    recogidaMonitores: '',
-                    recogidaFamilias: '',
-                    precio: '',
-                    enlace: '',
-                  });
-                  setEditandoId(null);
-                  setVista('panel');
-                }}
-                style={{
-                  padding: '15px 30px',
-                  backgroundColor: '#10ac84',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '30px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 15px rgba(16,172,132,0.4)',
-                }}
-              >
-                + AÑADIR ACTIVIDAD
-              </button>
-              <button
-                onClick={() => setIsAdmin(false)}
-                style={{
-                  padding: '15px 20px',
-                  backgroundColor: '#1e293b',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '30px',
-                  cursor: 'pointer',
-                }}
-              >
-                Salir
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+{/* BOTONES DE ADMIN */}
+{isAdmin && (
+  <div style={{ display: 'flex', gap: '8px', marginTop: '15px', paddingTop: '15px', borderTop: '1px dotted #e2e8f0' }}>
+    
+    {/* ✏️ AQUÍ PEGAS EL NUEVO BOTÓN DE EDITAR */}
+    <button
+      onClick={() => {
+        // Rellenamos el formulario con los datos actuales
+        setNuevoClub({
+          nombre: item.nombre || '',
+          etapas: item.etapas || [],
+          horario: item.horario || '',
+          descripcion: item.descripcion || '',
+          imagen: item.imagen || '',
+          contacto: item.contacto || '',
+          linkInscripcion: item.linkInscripcion || '',
+          latAct: item.latAct || '',
+          lngAct: item.lngAct || ''
+        });
+        setEditandoId(item.id); // Guardamos el ID para saber cuál actualizar
+        setVista('panel');      // ¡Al panel de control!
+      }}
+      style={{ 
+        flex: 1, 
+        padding: '8px', 
+        backgroundColor: '#fef3c7', 
+        color: '#92400e', 
+        border: 'none', 
+        borderRadius: '8px', 
+        fontSize: '0.8rem', 
+        fontWeight: 'bold', 
+        cursor: 'pointer' 
+      }}
+    >
+      EDITAR
+    </button>
+
+    {/* Y aquí debajo se queda tu botón de borrar como estaba */}
+    <button
+      onClick={async () => {
+        if (confirm('¿Quieres borrar esto?')) {
+          const coleccion = item.esClub ? 'clubes_cole' : 'actividades_cole';
+          await deleteDoc(doc(db, coleccion, item.id));
+          item.esClub ? cargarClubes() : cargarActividades();
+        }
+      }}
+      style={{ flex: 1, padding: '8px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}
+    >
+      BORRAR
+    </button>
+  </div>
+)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          );
+        })()}
+        </main>
+
+{/* 🗺️ BOTÓN FLOTANTE DEL MAPA - ¡Para que todos lo vean! */}
+<div
+  style={{
+    position: 'fixed',
+    bottom: '20px',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '10px',
+    zIndex: 9999,
+  }}
+>
+  <button
+    onClick={() => setVista('mapa')}
+    style={{
+      padding: '14px 28px',
+      backgroundColor: '#3b82f6',
+      color: 'white',
+      border: 'none',
+      borderRadius: '99px',
+      cursor: 'pointer',
+      fontWeight: '800',
+      fontSize: '1rem',
+      boxShadow: '0 10px 20px rgba(59, 130, 246, 0.4)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      transition: 'transform 0.2s ease',
+    }}
+  >
+    <span>📍</span> VER MAPA DEL COLE
+  </button>
+
+  {/* Lógica de Admin */}
+  {!isAdmin ? (
+    <button
+      onClick={() => {
+        const p = prompt('Clave:');
+        if (p === 'admin') setIsAdmin(true);
+      }}
+      style={{
+        padding: '8px 16px',
+        backgroundColor: '#cbd5e1',
+        border: 'none',
+        borderRadius: '10px',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        fontSize: '0.75rem',
+        opacity: 0.7,
+      }}
+    >
+      🔑 Acceso Admin
+    </button>
+  ) : (
+    <div style={{ display: 'flex', gap: '10px' }}>
+      <button
+        onClick={() => {
+          setNuevaAct({
+            nombre: '', etapa: 'Infantil', dias: '', horario: '', lugar: '',
+            info: '', imagen: '', recogidaMonitores: '', recogidaFamilias: '',
+            precio: '', enlace: '', latAct: '40.4079', lngAct: '-3.7469'
+          });
+          setEditandoId(null);
+          setVista('panel');
+        }}
+        style={{
+          padding: '15px 30px',
+          backgroundColor: '#10ac84',
+          color: 'white',
+          border: 'none',
+          borderRadius: '30px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          boxShadow: '0 4px 15px rgba(16,172,132,0.4)',
+        }}
+      >
+        + AÑADIR ACTIVIDAD
+      </button>
+      <button
+        onClick={() => setIsAdmin(false)}
+        style={{
+          padding: '15px 20px',
+          backgroundColor: '#1e293b',
+          color: 'white',
+          border: 'none',
+          borderRadius: '30px',
+          cursor: 'pointer',
+        }}
+      >
+        Salir
+      </button>
+    </div>
+  )}
+</div>
+</div>
+);
+}
+
+// 🚩 ESTA ES LA "HABITACIÓN" DEL MAPA QUE FALTABA
+if (vista === 'mapa') {
+return (
+<div style={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', backgroundColor: '#f8fafc' }}>
+<div style={{ 
+  padding: '15px 20px', 
+  backgroundColor: 'white', 
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'space-between',
+  boxShadow: '0 2px 10px rgba(0,0,0,0.1)', 
+  zIndex: 1000 
+}}>
+  <button 
+    onClick={() => setVista('catalogo')}
+    style={{ 
+      padding: '10px 20px', borderRadius: '12px', border: 'none', 
+      backgroundColor: '#3b82f6', color: 'white', fontWeight: 'bold', cursor: 'pointer' 
+    }}
+  >
+    ← Volver al Inicio
+  </button>
+  <h2 style={{ margin: 0, fontSize: '1.2rem', color: '#1e293b' }}>📍 Puntos Clave del Colegio</h2>
+  <div style={{ width: '85px' }}></div>
+</div>
+
+<div style={{ flex: 1 }}>
+  {/* Aquí cargamos tu componente pro con el mapa de satélite */}
+  <MapaPuntosInteres puntos={puntosInteres} />
+</div>
+</div>
+);
+}
   if (vista === 'detalles' && actividadSeleccionada) {
     const act = actividadSeleccionada;
     return (
@@ -690,22 +792,48 @@ export default function Page() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'flex-start',
+                flexWrap: 'wrap',
+                gap: '20px'
               }}
             >
               <div>
-                <span
-                  style={{
-                    backgroundColor: '#dbeafe',
-                    color: '#1e40af',
-                    padding: '6px 16px',
-                    borderRadius: '99px',
-                    fontSize: '0.75rem',
-                    fontWeight: '800',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {act.etapa}
-                </span>
+                {/* 🏷️ AQUÍ ESTÁN TODAS LAS ETAPAS JUNTAS */}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {act.etapas && Array.isArray(act.etapas) ? (
+                    act.etapas.map((et) => (
+                      <span
+                        key={et}
+                        style={{
+                          backgroundColor: et === 'Clubes Amigos' ? '#d946ef' : '#dbeafe',
+                          color: et === 'Clubes Amigos' ? 'white' : '#1e40af',
+                          padding: '6px 16px',
+                          borderRadius: '99px',
+                          fontSize: '0.75rem',
+                          fontWeight: '800',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {et === 'Clubes Amigos' ? '🌟 CLUB AMIGO' : et}
+                      </span>
+                    ))
+                  ) : (
+                    // Por si es una de las antiguas que no tenía lista de etapas
+                    <span
+                      style={{
+                        backgroundColor: '#dbeafe',
+                        color: '#1e40af',
+                        padding: '6px 16px',
+                        borderRadius: '99px',
+                        fontSize: '0.75rem',
+                        fontWeight: '800',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {act.etapa}
+                    </span>
+                  )}
+                </div>
+
                 <h2
                   style={{
                     fontSize: '2.2rem',
@@ -718,6 +846,8 @@ export default function Page() {
                   {act.nombre}
                 </h2>
               </div>
+
+              {/* 💰 EL PRECIO A LA DERECHA */}
               <div style={{ textAlign: 'right' }}>
                 <p
                   style={{
@@ -1125,6 +1255,60 @@ export default function Page() {
       </div>
     );
   }
+  // 📍 NUEVA VISTA: MAPA DE PUNTOS DE INTERÉS
+  if (vista === 'mapa') {
+    return (
+      <div style={{ 
+        height: '100vh', 
+        width: '100vw', 
+        display: 'flex', 
+        flexDirection: 'column',
+        backgroundColor: '#0f172a' // Un fondo oscuro para que la carga sea suave
+      }}>
+        
+        {/* 🔝 Barra superior elegante */}
+        <div style={{ 
+          padding: '15px 20px', 
+          backgroundColor: 'white', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)', 
+          zIndex: 1000 
+        }}>
+          <button 
+            onClick={() => setVista('catalogo')}
+            style={{ 
+              padding: '10px 18px', 
+              borderRadius: '12px', 
+              border: 'none', 
+              backgroundColor: '#3b82f6', 
+              color: 'white',
+              fontWeight: '800', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s'
+            }}
+          >
+            ← Volver al Inicio
+          </button>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#1e293b' }}>
+            📍 Puntos Clave del Cole
+          </h2>
+          <div style={{ width: '100px' }}></div> 
+        </div>
+
+        {/* 🗺️ Tu nuevo Mapa de Puntos de Interés */}
+        <div style={{ flex: 1, position: 'relative' }}>
+          {/* Aquí llamamos al componente que creamos antes */}
+          <MapaPuntosInteres puntos={puntosInteres} />
+        </div>
+      </div>
+    );
+  }
+  
   if (vista === 'panel') {
     return (
       <div
@@ -1141,7 +1325,9 @@ export default function Page() {
         <h2 style={{ textAlign: 'center', color: '#1e293b' }}>
           {editandoId ? 'Editar Actividad' : 'Nueva Actividad'}
         </h2>
+        
         <div style={{ display: 'grid', gap: '12px' }}>
+          {/* 📝 NOMBRE */}
           <input
             placeholder="Nombre de la Actividad"
             value={nuevaAct.nombre}
@@ -1150,17 +1336,65 @@ export default function Page() {
             }
             style={estiloInput}
           />
-          <select
-            value={nuevaAct.etapa}
-            onChange={(e) =>
-              setNuevaAct({ ...nuevaAct, etapa: e.target.value })
-            }
-            style={estiloInput}
-          >
-            <option>Infantil</option>
-            <option>Primaria</option>
-            <option>ESO</option>
-          </select>
+
+          {/* 🏁 NUEVO SELECTOR MULTI-ETAPA (Sustituye al viejo <select>) */}
+          <div style={{ 
+            backgroundColor: '#f8fafc', 
+            padding: '15px', 
+            borderRadius: '12px', 
+            border: '1px solid #e2e8f0',
+            marginTop: '5px'
+          }}>
+            <p style={{ margin: '0 0 10px 0', fontSize: '0.85rem', fontWeight: 'bold', color: '#64748b' }}>
+              ¿DÓNDE DEBE APARECER? (MARCA VARIAS SI QUIERES)
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {['Infantil', 'Primaria', 'ESO', 'Adultos', 'Clubes Amigos'].map((et) => (
+                <label 
+                key={et} 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  cursor: 'pointer', 
+                  padding: '8px 12px',
+                  borderRadius: '10px',
+                  // 🛡️ ESCUDO: Si 'nuevaAct.etapas' no existe, usamos el color gris claro (#f1f5f9)
+                  backgroundColor: (nuevaAct.etapas && nuevaAct.etapas.includes(et)) ? '#3b82f6' : '#f1f5f9',
+                  
+                  // 🛡️ ESCUDO: Lo mismo para el color del texto
+                  color: (nuevaAct.etapas && nuevaAct.etapas.includes(et)) ? 'white' : '#475569',
+                  
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  border: '1px solid',
+                  
+                  // 🛡️ ESCUDO: Y para el borde
+                  borderColor: (nuevaAct.etapas && nuevaAct.etapas.includes(et)) ? '#2563eb' : '#e2e8f0'
+                }}
+              >
+                <input
+                  type="checkbox"
+                  style={{ cursor: 'pointer' }}
+                  // 🛡️ ESCUDO: Aquí también para que el check no falle
+                  checked={nuevaAct.etapas ? nuevaAct.etapas.includes(et) : false}
+                  onChange={(e) => {
+                    // 📝 Creamos una lista segura (si es undefined, usamos [])
+                    const listaActual = nuevaAct.etapas || [];
+                    const listaNueva = e.target.checked
+                      ? [...listaActual, et]
+                      : listaActual.filter((x) => x !== et);
+                    setNuevaAct({ ...nuevaAct, etapas: listaNueva });
+                  }}
+                />
+                {et}
+              </label>
+              ))}
+            </div>
+          </div>
+
+          {/* 📅 RESTO DE TUS INPUTS FAVORITOS */}
           <input
             placeholder="Días (ej: Lunes y Miércoles)"
             value={nuevaAct.dias}
@@ -1507,6 +1741,7 @@ export default function Page() {
           </button>
 
           <button
+            type="button"
             onClick={() => setVista('catalogo')}
             style={{
               padding: '10px',
@@ -1514,15 +1749,168 @@ export default function Page() {
               border: 'none',
               color: '#94a3b8',
               cursor: 'pointer',
+              width: '100%'
             }}
+            
           >
             Volver sin guardar
           </button>
+
+        </div> {/* 👈 AQUÍ CERRAMOS EL GRID DE LA ACTIVIDAD */}
+
+        {/* 📍 AHORA EL MAPA ESTÁ FUERA, EN SU PROPIA ISLA AZUL */}
+        <div style={{ 
+          marginTop: '40px', 
+          padding: '25px', 
+          backgroundColor: '#eff6ff', 
+          borderRadius: '20px',
+          border: '2px dashed #3b82f6' 
+        }}>
+          <h3 style={{ color: '#1e293b', margin: '0 0 10px', textAlign: 'center' }}>📍 Gestionar Mapa Maestro</h3>
+          <p style={{ fontSize: '0.8rem', color: '#64748b', textAlign: 'center', marginBottom: '20px' }}>
+            (Estos puntos son independientes de las actividades)
+          </p>
+          
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <input
+              placeholder="Nombre del sitio (Ej: Secretaría)"
+              style={estiloInput}
+              id="nuevoPuntoNombre"
+            />
+            <input
+              placeholder="Breve descripción"
+              style={estiloInput}
+              id="nuevoPuntoDesc"
+            />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <input placeholder="Latitud" style={estiloInput} id="nuevoPuntoLat" />
+              <input placeholder="Longitud" style={estiloInput} id="nuevoPuntoLng" />
+            </div>
+            <input
+              placeholder="URL de la foto del lugar"
+              style={estiloInput}
+              id="nuevoPuntoFoto"
+            />
+            
+            <button
+              type="button"
+              onClick={async (e) => {
+                e.preventDefault();
+                e.stopPropagation(); // 🛡️ ¡Súper escudo! Evita que el clic suba a la actividad
+                
+                const nombre = document.getElementById('nuevoPuntoNombre').value;
+                const desc = document.getElementById('nuevoPuntoDesc').value;
+                const lat = document.getElementById('nuevoPuntoLat').value;
+                const lng = document.getElementById('nuevoPuntoLng').value;
+                const foto = document.getElementById('nuevoPuntoFoto').value;
+
+                if(!nombre || !lat || !lng) return alert('¡Oye! Faltan datos (Nombre, Lat y Lng)');
+
+                try {
+                    await addDoc(collection(db, 'puntos_interes_cole'), {
+                      nombre,
+                      descripcion: desc,
+                      lat: parseFloat(lat),
+                      lng: parseFloat(lng),
+                      foto: foto || '',
+                      color: 'red'
+                    });
+                    
+                    alert('¡Chincheta guardada con éxito! 📍');
+                    cargarPuntosInteres();
+                    
+                    // ✨ ¡ESTA ES LA LÍNEA MÁGICA! 
+                    // Te saca del panel y te lleva al catálogo automáticamente
+                    setVista('catalogo'); 
+                    
+                    // Limpiar los campos (por si acaso vuelves luego)
+                    document.getElementById('nuevoPuntoNombre').value = '';
+                    document.getElementById('nuevoPuntoDesc').value = '';
+                    document.getElementById('nuevoPuntoLat').value = '';
+                    document.getElementById('nuevoPuntoLng').value = '';
+                    document.getElementById('nuevoPuntoFoto').value = '';
+                    
+                    if (typeof cargarPuntosInteres === 'function') cargarPuntosInteres();
+                  } catch (error) {
+                    console.error("Error al guardar punto:", error);
+                    alert("¡Vaya! Algo ha fallado al guardar");
+                  }
+              }}
+              style={{
+                padding: '15px',
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '15px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                marginTop: '10px'
+              }}
+            >
+              🚀 GUARDAR SOLO LA CHINCHETA
+            </button>
+            {/* 🗑️ LISTA PARA BORRAR PUNTOS (Pégalo justo aquí) */}
+            <div style={{ 
+              marginTop: '25px', 
+              paddingTop: '20px', 
+              borderTop: '1px solid #cbd5e1' 
+            }}>
+              <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#1e293b', marginBottom: '10px' }}>
+                🗑️ Tus puntos actuales (Toca para borrar):
+              </p>
+              
+              <div style={{ display: 'grid', gap: '8px' }}>
+                {puntosInteres.map((p) => (
+                  <div key={p.id} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    backgroundColor: 'white',
+                    padding: '10px 15px',
+                    borderRadius: '12px',
+                    fontSize: '0.85rem',
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}>
+                    <span style={{ fontWeight: 'bold', color: '#334155' }}>📍 {p.nombre}</span>
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        if (confirm(`¿Quieres borrar "${p.nombre}"?`)) {
+                          try {
+                            const { deleteDoc, doc } = await import('firebase/firestore');
+                            await deleteDoc(doc(db, 'puntos_interes_cole', p.id));
+                            alert('¡Punto borrado! ✨');
+                            cargarPuntosInteres(); // Esto hace que la lista se actualice sola
+                          } catch (error) {
+                            alert('No se pudo borrar');
+                          }
+                        }
+                      }}
+                      style={{
+                        backgroundColor: '#fee2e2',
+                        color: '#ef4444',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '0.75rem'
+                      }}
+                    >
+                      ELIMINAR
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </div> // 👈 CIERRA EL CONTENEDOR BLANCO DEL PANEL
     );
   }
-}
+} // 👈 CIERRA LA FUNCIÓN PAGE
 
 const estiloInput = {
   padding: '12px',
