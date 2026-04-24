@@ -427,14 +427,26 @@ const [destino, setDestino] = useState(null);
 
           // 🔍 Filtramos según la pestaña pulsada (¡Sirve para todo!)
           const itemsFiltrados = todoJunto.filter((item) => {
-            // 1. 🛡️ Primero miramos si el item tiene la lista nueva de 'etapas'
+            // 🌟 0. REGLA DE ORO: ¿Es un Club Amigo?
+            const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
+
+            // Si estamos en la pestaña de Clubes, solo dejamos pasar a los Clubes
+            if (etapaActiva === 'Clubes Amigos') {
+              return esClub;
+            }
+
+            // Si NO estamos en la pestaña de Clubes, prohibimos el paso a cualquier Club Amigo
+            // (Así no se mezclan con Primaria, Infantil, etc.)
+            if (esClub) {
+              return false;
+            }
+
+            // 1. 🛡️ Si no es club, miramos la lista nueva de 'etapas'
             if (item.etapas && Array.isArray(item.etapas)) {
-              // Esto busca si 'Clubes Amigos' (o la que sea) está en la lista
               return item.etapas.includes(etapaActiva);
             }
           
-            // 2. 🕰️ Si es una actividad antigua (de las que solo tenían 'etapa')
-            // También funcionará si coincide con la etapaActiva
+            // 2. 🕰️ Para actividades antiguas
             return item.etapa === etapaActiva;
           });
 
