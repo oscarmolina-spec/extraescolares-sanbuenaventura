@@ -1274,14 +1274,22 @@ return (
                 }}
               >
                 <div style={{ fontSize: '1.5rem', minWidth: '35px' }}>👨‍🏫</div>
-                <div>
-                  <p style={{ margin: 0, fontWeight: '800', color: '#1e293b' }}>
-                    Monitores (Toca para ubicar 📍)
-                  </p>
-                  <p style={{ margin: 0, color: '#64748b' }}>
-                    {act.recogidaMonitores || 'Consultar'}
-                  </p>
-                </div>
+<div>
+  <p style={{ margin: 0, fontWeight: '800', color: '#1e293b' }}>
+    Monitores (Toca para ubicar 📍)
+  </p>
+  <p 
+    style={{ 
+      margin: 0, 
+      color: '#64748b',
+      // ✨ ¡ESTO ES LO QUE FALTA! ✨
+      whiteSpace: 'pre-wrap', 
+      lineHeight: '1.4' 
+    }}
+  >
+    {act.recogidaMonitores || 'Consultar'}
+  </p>
+</div>
               </div>
 
               {/* 3. FAMILIAS (Vuela al punto de familias) */}
