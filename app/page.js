@@ -132,17 +132,13 @@ const [destino, setDestino] = useState(null);
   const guardarActividad = async () => {
     if (!nuevaAct.nombre) return alert('¡Escribe el nombre de la actividad! 📝');
     
-    // 🛡️ ¡NUEVO! Comprobamos que haya marcado al menos una casilla
     if (!nuevaAct.etapas || nuevaAct.etapas.length === 0) {
       return alert('¡Debes elegir al menos una etapa para que aparezca en la web! 🚩');
     }
 
-    // 🚀 PASO MÁGICO: Convertimos coordenadas y preparamos los datos
     const actividadFinal = {
       ...nuevaAct,
-      // Guardamos la lista de etapas que has marcado en los checkboxes
       etapas: nuevaAct.etapas,
-      // Convertimos coordenadas a números como tú querías
       latAct: parseFloat(nuevaAct.latAct) || 0,
       lngAct: parseFloat(nuevaAct.lngAct) || 0,
       latMon: parseFloat(nuevaAct.latMon) || 0,
@@ -151,24 +147,27 @@ const [destino, setDestino] = useState(null);
       lngFam: parseFloat(nuevaAct.lngFam) || 0,
     };
 
-    // 🧹 Quitamos el campo 'etapa' antiguo si existiera para no liar a Firebase
     delete actividadFinal.etapa;
 
     try {
       if (editandoId) {
-        // ✏️ Si estamos editando
         await updateDoc(doc(db, 'actividades_cole', editandoId), actividadFinal);
         alert('¡Actividad actualizada con éxito! 🔄');
       } else {
-        // 🆕 Si es una nueva
         await addDoc(collection(db, 'actividades_cole'), actividadFinal);
         alert('¡Publicado con éxito! ✨');
       }
 
-      // ✨ LIMPIEZA TOTAL (Reseteamos todo al estado inicial)
+      // ✨ LIMPIEZA TOTAL (¡Actualizada!)
       setNuevaAct({
         nombre: '',
-        etapas: [], // 👈 ¡Súper importante! Limpiamos la lista de casillas
+        etapas: [],
+        // --- 🏢 LIMPIAMOS LOS CAMPOS DE EMPRESA NUEVOS ---
+        empresa: '',
+        logoEmpresa: '',
+        nombreContacto: '',
+        // -----------------------------------------------
+        contacto: '', // Este es el email
         dias: '',
         horario: '',
         lugar: '',
@@ -177,7 +176,7 @@ const [destino, setDestino] = useState(null);
         recogidaMonitores: '',
         recogidaFamilias: '',
         precio: '',
-        latAct: '40.407937755274425', // Dejamos las del cole por defecto
+        latAct: '40.407937755274425',
         lngAct: '-3.7469348757382366',
         latMon: '',
         lngMon: '',
@@ -193,7 +192,7 @@ const [destino, setDestino] = useState(null);
       cargarActividades();
     } catch (e) {
       console.error('Error al guardar:', e);
-      alert('Vaya, parece que ha habido un error al conectar con la nube. Revisa la consola.');
+      alert('Vaya, parece que ha habido un error al conectar con la nube.');
     }
   };
   // 🚀 El "brazo robótico" para guardar Clubes Amigos
@@ -558,38 +557,65 @@ const [destino, setDestino] = useState(null);
 {isAdmin && (
   <div style={{ display: 'flex', gap: '8px', marginTop: '15px', paddingTop: '15px', borderTop: '1px dotted #e2e8f0' }}>
     
-    {/* ✏️ AQUÍ PEGAS EL NUEVO BOTÓN DE EDITAR */}
-    <button
-      onClick={() => {
-        // Rellenamos el formulario con los datos actuales
-        setNuevoClub({
-          nombre: item.nombre || '',
-          etapas: item.etapas || [],
-          horario: item.horario || '',
-          descripcion: item.descripcion || '',
-          imagen: item.imagen || '',
-          contacto: item.contacto || '',
-          linkInscripcion: item.linkInscripcion || '',
-          latAct: item.latAct || '',
-          lngAct: item.lngAct || ''
-        });
-        setEditandoId(item.id); // Guardamos el ID para saber cuál actualizar
-        setVista('panel');      // ¡Al panel de control!
-      }}
-      style={{ 
-        flex: 1, 
-        padding: '8px', 
-        backgroundColor: '#fef3c7', 
-        color: '#92400e', 
-        border: 'none', 
-        borderRadius: '8px', 
-        fontSize: '0.8rem', 
-        fontWeight: 'bold', 
-        cursor: 'pointer' 
-      }}
-    >
-      EDITAR
-    </button>
+   {/* ✏️ BOTÓN DE EDITAR COMPLETO Y BLINDADO */}
+<button
+  onClick={() => {
+    // 📝 Cargamos TODO en el formulario único (setNuevaAct)
+    setNuevaAct({
+      ...item, // Mantenemos todo lo que ya traía el objeto
+      nombre: item.nombre || '',
+      etapas: item.etapas || [], // Casillas de verificación (Cole/Clubes)
+      horario: item.horario || '',
+      dias: item.dias || '',
+      lugar: item.lugar || '',
+      info: item.info || item.descripcion || '',
+      imagen: item.imagen || '',
+      precio: item.precio || '',
+      
+      // --- 🏢 Datos de empresa y contacto ---
+      empresa: item.empresa || '',
+      logoEmpresa: item.logoEmpresa || '',
+      nombreContacto: item.nombreContacto || '',
+      contacto: item.contacto || '', // Email de contacto
+      
+      // --- 📍 Coordenadas (Convertidas a NÚMERO para que el mapa no de error) ---
+      latAct: item.latAct ? Number(item.latAct) : 40.407937755274425,
+      lngAct: item.lngAct ? Number(item.lngAct) : -3.7469348757382366,
+      latMon: item.latMon ? Number(item.latMon) : '',
+      lngMon: item.lngMon ? Number(item.lngMon) : '',
+      latFam: item.latFam ? Number(item.latFam) : '',
+      lngFam: item.lngFam ? Number(item.lngFam) : '',
+      
+      // --- 📸 Fotos de los puntos de encuentro ---
+      fotoAct: item.fotoAct || '',
+      fotoMon: item.fotoMon || '',
+      fotoFam: item.fotoFam || '',
+      
+      // --- 🚩 Textos de recogida y enlaces ---
+      recogidaMonitores: item.recogidaMonitores || '',
+      recogidaFamilias: item.recogidaFamilias || '',
+      linkInscripcion: item.linkInscripcion || item.enlace || ''
+    });
+
+    setEditandoId(item.id); // Guardamos el ID para saber cuál actualizar al guardar
+    setVista('panel');      // ¡Directos al panel con todo relleno!
+  }}
+  /* ✨ TU FORMATO ORIGINAL RECUPERADO ✨ */
+  style={{ 
+    flex: 1, 
+    padding: '8px', 
+    backgroundColor: '#fef3c7', // Amarillo suave de edición
+    color: '#92400e',           // Marrón oscuro para el texto
+    border: 'none', 
+    borderRadius: '8px', 
+    fontSize: '0.8rem', 
+    fontWeight: 'bold', 
+    cursor: 'pointer',
+    transition: 'background-color 0.2s'
+  }}
+>
+  EDITAR
+</button>
 
     {/* Y aquí debajo se queda tu botón de borrar como estaba */}
     <button
@@ -967,6 +993,8 @@ return (
                     fontWeight: '700',
                     color: '#1e293b',
                     fontSize: '1.1rem',
+                    whiteSpace: 'pre-wrap', // 👈 ¡Esto permite los saltos de línea!
+                    lineHeight: '1.4'       // Un poquito de espacio entre líneas para que se lea mejor
                   }}
                 >
                   {act.dias}
@@ -1014,14 +1042,7 @@ return (
                 marginBottom: '25px',
               }}
             >
-              <h4
-                style={{
-                  margin: '0 0 15px',
-                  color: '#0f172a',
-                  fontSize: '1.2rem',
-                  fontWeight: '800',
-                }}
-              >
+            <h4 style={{ color: '#1e293b', marginBottom: '10px' }}>
                 Sobre la actividad
               </h4>
               <p
@@ -1029,9 +1050,11 @@ return (
                   color: '#475569',
                   lineHeight: '1.8',
                   fontSize: '1.05rem',
+                  whiteSpace: 'pre-wrap', // 👈 ¡ESTA ES LA CLAVE! 
+                  wordBreak: 'break-word' // Para que las palabras largas no se salgan
                 }}
               >
-                {act.info}
+                {act.info || item.descripcion} 
               </p>
               {act.material && (
                 <div
@@ -1427,35 +1450,37 @@ return (
             </div>
           </div>
 
-          {/* 📅 RESTO DE TUS INPUTS FAVORITOS */}
-          <input
-            placeholder="Días (ej: Lunes y Miércoles)"
+          {/* 📅 Días - Ahora puedes poner uno debajo de otro */}
+          <textarea
+            placeholder="Días (ej: 
+Lunes
+Miércoles)"
             value={nuevaAct.dias}
             onChange={(e) => setNuevaAct({ ...nuevaAct, dias: e.target.value })}
-            style={estiloInput}
+            style={{ ...estiloInput, height: '80px', paddingTop: '10px' }}
           />
-          <input
+
+          {/* ⏰ Horario - También con espacio por si hay varios turnos */}
+          <textarea
             placeholder="Horario (ej: 16:00 a 17:00)"
             value={nuevaAct.horario}
-            onChange={(e) =>
-              setNuevaAct({ ...nuevaAct, horario: e.target.value })
-            }
-            style={estiloInput}
+            onChange={(e) => setNuevaAct({ ...nuevaAct, horario: e.target.value })}
+            style={{ ...estiloInput, height: '60px', paddingTop: '10px' }}
           />
-          <input
+
+          {/* 📍 Lugar - Para explicar bien dónde está el aula */}
+          <textarea
             placeholder="Lugar o Aula"
             value={nuevaAct.lugar}
-            onChange={(e) =>
-              setNuevaAct({ ...nuevaAct, lugar: e.target.value })
-            }
-            style={estiloInput}
+            onChange={(e) => setNuevaAct({ ...nuevaAct, lugar: e.target.value })}
+            style={{ ...estiloInput, height: '60px', paddingTop: '10px' }}
           />
+
+          {/* 💰 El Precio lo dejamos como input porque suele ser cortito */}
           <input
             placeholder="Precio mensual (ej: 34€)"
             value={nuevaAct.precio}
-            onChange={(e) =>
-              setNuevaAct({ ...nuevaAct, precio: e.target.value })
-            }
+            onChange={(e) => setNuevaAct({ ...nuevaAct, precio: e.target.value })}
             style={estiloInput}
           />
 
@@ -1580,6 +1605,15 @@ return (
               }
               style={estiloInput}
             />
+            {/* 📸 ¡NUEVO!: Enlace para el logo de la empresa */}
+            <input
+                placeholder="URL del Logo de la empresa (Ej: https://...)"
+                value={nuevaAct.logoEmpresa || ''}
+                onChange={(e) =>
+                  setNuevaAct({ ...nuevaAct, logoEmpresa: e.target.value })
+                }
+                style={estiloInput}
+              />
             <input
               placeholder="Email contacto"
               value={nuevaAct.contacto || ''}
@@ -1590,14 +1624,22 @@ return (
             />
           </div>
 
-          <input
-            placeholder="Punto de recogida Monitores"
-            value={nuevaAct.recogidaMonitores}
-            onChange={(e) =>
-              setNuevaAct({ ...nuevaAct, recogidaMonitores: e.target.value })
-            }
-            style={estiloInput}
-          />
+          {/* 🙋‍♂️ Recogida Monitores - Con espacio para explicarse bien */}
+          <textarea
+  placeholder="Punto de recogida Monitores (ej: 
+- Puerta principal
+- Patio cubierto)"
+  value={nuevaAct.recogidaMonitores}
+  onChange={(e) => setNuevaAct({ ...nuevaAct, recogidaMonitores: e.target.value })}
+  style={{
+    ...estiloInput,
+    height: '100px',
+    padding: '12px',
+    lineHeight: '1.5',    // ↔️ Espacio justo entre líneas
+    fontFamily: 'inherit',
+    whiteSpace: 'pre-wrap' // 👈 Para que tú veas los saltos mientras escribes
+  }}
+/>
           <input
             placeholder="Punto de entrega a Familias"
             value={nuevaAct.recogidaFamilias}
