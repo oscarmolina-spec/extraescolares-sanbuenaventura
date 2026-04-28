@@ -301,34 +301,41 @@ const [destino, setDestino] = useState(null);
               padding: '20px',
             }}
           >
-            {/* 💡 EL TRUCO: Resplandor Blanco Intenso (Aura Pro) */}
+            {/* 💡 EL TRUCO: Resplandor Blanco Intenso MEGA (Aura Pro) */}
             <div
               style={{
                 position: 'absolute',
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: '320px', // Aura mucho más amplia
-                height: '320px',
-                // He subido la opacidad de 0.15 a 0.3 para que el blanco se note de verdad
+                width: '550px', // 💪 ¡Casi el doble! Para que asome tras el escudo de 400px
+                height: '550px',
+                // He subido un pelín más la opacidad para que el contraste sea total
                 background:
-                  'radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 40%, rgba(59, 130, 246, 0) 70%)',
+                  'radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(59, 130, 246, 0) 80%)',
                 borderRadius: '50%',
-                filter: 'blur(20px)', // Más desenfoque para que parezca luz real
+                filter: 'blur(35px)', // Un poco más de difuminado para que parezca luz celestial
                 zIndex: 0,
               }}
             ></div>
 
-            {/* 🛡️ EL ESCUDO GIGANTE (260px) */}
-            <img
+           {/* 🛡️ EL ESCUDO MEGA-GIGANTE (400px) CON EL CONTORNO BLANCO NÍTIDO Y EXACTO (COMO EN LA IMAGEN) */}
+           <img
               src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd"
               style={{
-                width: '260px', // 💪 ¡GIGANTE! Casi el doble de lo normal
+                width: '400px', // Mantenemos el tamaño grande
                 height: 'auto',
                 position: 'relative',
                 zIndex: 1,
-                // Sombra más profunda para que "salga" de la pantalla
-                filter: 'drop-shadow(0 25px 35px rgba(0, 0, 0, 0.5))',
+                // ✨ EL TRUCO DEL CONTORNO NÍTIDO Y EXACTO ✨
+                // Usamos múltiples drop-shadows con 0 de 'blur' (desenfoque) para crear una línea sólida
+                filter: `
+                  drop-shadow(2px 0 0 white)   // ➡️ Trazo blanco nítido a la derecha
+                  drop-shadow(-2px 0 0 white)  // ⬅️ Trazo blanco nítido a la izquierda
+                  drop-shadow(0 2px 0 white)   // ⬇️ Trazo blanco nítido abajo
+                  drop-shadow(0 -2px 0 white)  // ⬆️ Trazo blanco nítido arriba
+                  drop-shadow(0 25px 35px rgba(0, 0, 0, 0.5)) // 🌑 Tu sombra profunda para flotar
+                `,
                 transition: 'all 0.4s ease',
               }}
             />
