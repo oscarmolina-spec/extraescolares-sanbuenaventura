@@ -647,6 +647,35 @@ const [destino, setDestino] = useState(null);
           );
         })()}
         </main>
+        {/* 🛡️ AQUÍ PEGAS EL FOOTER (Justo debajo del main) */}
+        <footer style={{
+          backgroundColor: '#1e293b',
+          color: '#f8fafc',
+          padding: '60px 20px 30px',
+          marginTop: '80px',
+          borderTop: '4px solid #3b82f6',
+          borderRadius: '40px 40px 0 0'
+        }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '40px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <img src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd" style={{ width: '80px', marginBottom: '15px', filter: 'drop-shadow(0 0 5px white)' }} />
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '10px' }}>Colegio San Buenaventura</h3>
+              <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Madrid</p>
+            </div>
+            <div>
+              <h4 style={{ color: '#3b82f6', textTransform: 'uppercase', fontSize: '0.8rem', marginBottom: '15px' }}>Contacto</h4>
+              <p style={{ fontSize: '0.9rem' }}>📞 +34 915 267 161</p>
+              <p style={{ fontSize: '0.9rem' }}>📧 extraescolares@sanbuenaventura.org</p>
+            </div>
+            <div>
+              <h4 style={{ color: '#3b82f6', textTransform: 'uppercase', fontSize: '0.8rem', marginBottom: '15px' }}>Horarios</h4>
+              <p style={{ fontSize: '0.9rem' }}>Lunes a Viernes: 09:00 - 16:15</p>
+            </div>
+          </div>
+          <div style={{ marginTop: '40px', textAlign: 'center', fontSize: '0.8rem', color: '#64748b', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>
+            © {new Date().getFullYear()} Extraescolares CSB. ¡Hecho con mucha ilusión! ✨
+          </div>
+        </footer>
 
 {/* 🗺️ BOTÓN FLOTANTE DEL MAPA - ¡Para que todos lo vean! */}
 <div
@@ -2000,7 +2029,9 @@ Miércoles)"
       </div> // 👈 CIERRA EL CONTENEDOR BLANCO DEL PANEL
     );
   }
+  
 } // 👈 CIERRA LA FUNCIÓN PAGE
+
 
 const estiloInput = {
   padding: '12px',
