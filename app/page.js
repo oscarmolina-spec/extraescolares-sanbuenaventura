@@ -671,12 +671,12 @@ const [destino, setDestino] = useState(null);
               <img 
                 src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd" 
                 style={{ 
-                  width: '35px',      // 🛡️ Logo pequeñito
+                  width: '100px',      // 🛡️ Logo pequeñito
                   filter: 'brightness(0) invert(1)', 
                   opacity: '0.8' 
                 }} 
               />
-              <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>CSB Madrid</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Colegio San Buenaventura, Madrid</span>
             </div>
 
             {/* Contacto rápido */}
