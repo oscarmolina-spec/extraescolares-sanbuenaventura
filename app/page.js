@@ -61,6 +61,7 @@ const [destino, setDestino] = useState(null);
     lngF: '',
   });
   const [clubes, setClubes] = useState([]); // Aquí guardaremos la lista que viene de la nube
+  const [empresaActiva, setEmpresaActiva] = useState('Todas');
   const [nuevoClub, setNuevoClub] = useState({
     nombre: '',
     etapas: [],
@@ -411,6 +412,37 @@ const [destino, setDestino] = useState(null);
               </button>
             ))}
           </div>
+          {/* 🏢 2. NUEVO: SELECTOR DE EMPRESAS (Pégalo justo aquí) */}
+          <div
+            style={{
+              marginTop: '25px',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '10px',
+              flexWrap: 'wrap',
+            }}
+          >
+            {['Todas', 'Alventus', '4life', 'Kids&Us', 'San Buenaventura'].map((emp) => (
+              <button
+                key={emp}
+                onClick={() => setEmpresaActiva(emp)}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  backgroundColor:
+                    empresaActiva === emp ? '#60a5fa' : 'transparent',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                }}
+              >
+                {emp}
+              </button>
+            ))}
+          </div>
         </header>
 
         <main
@@ -436,14 +468,27 @@ const [destino, setDestino] = useState(null);
             // 🌟 0. REGLA DE ORO: ¿Es un Club Amigo?
             const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
 
+            // --- 🏢 NUEVA REGLA DE EMPRESA (CON TRADUCTOR) ---
+            // 1. Obtenemos el nombre que tiene la actividad (usamos "" si no tiene)
+            const nombreEmpresaActividad = item.empresa || "";
+
+            // 2. Creamos el filtro inteligente
+            const cumpleEmpresa = 
+              empresaActiva === 'Todas' || 
+              nombreEmpresaActividad === empresaActiva ||
+              (empresaActiva === 'San Buenaventura' && nombreEmpresaActividad === 'Colegio San Buenaventura');
+
+            if (!cumpleEmpresa) return false; 
+            // -------------------------------------------------
+
             // Si estamos en la pestaña de Clubes, solo dejamos pasar a los Clubes
             if (etapaActiva === 'Clubes Amigos') {
               return esClub;
             }
 
             // Si NO estamos en la pestaña de Clubes, prohibimos el paso a cualquier Club Amigo
-            // (Así no se mezclan con Primaria, Infantil, etc.)
-            if (esClub) {
+            if (esClub) 
+            {
               return false;
             }
 
