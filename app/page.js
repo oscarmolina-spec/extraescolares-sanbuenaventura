@@ -443,42 +443,35 @@ const [destino, setDestino] = useState(null);
             ...clubes.map(c => ({ ...c, esClub: true }))
           ];
 
-          // 🔍 Filtramos según la pestaña pulsada (¡Sirve para todo!)
           const itemsFiltrados = todoJunto.filter((item) => {
-            // 🌟 0. REGLA DE ORO: ¿Es un Club Amigo?
+            // 🌟 0. Identificamos si es Club Amigo
             const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
 
-            // --- 🏢 NUEVA REGLA DE EMPRESA (CON TRADUCTOR) ---
-            // 1. Obtenemos el nombre que tiene la actividad (usamos "" si no tiene)
+            // --- 🏢 REGLA DE EMPRESA (CON EL TRADUCTOR) ---
             const nombreEmpresaActividad = item.empresa || "";
-
-            // 2. Creamos el filtro inteligente
             const cumpleEmpresa = 
               empresaActiva === 'Todas' || 
               nombreEmpresaActividad === empresaActiva ||
               (empresaActiva === 'San Buenaventura' && nombreEmpresaActividad === 'Colegio San Buenaventura');
 
             if (!cumpleEmpresa) return false; 
-            // -------------------------------------------------
 
-            // Si estamos en la pestaña de Clubes, solo dejamos pasar a los Clubes
+            // --- 🛡️ REGLA DE ETAPAS (EL ARREGLO PARA PRIMARIA Y ESO) ---
+            
+            // 1. Si pulsamos la pestaña "Clubes Amigos"
             if (etapaActiva === 'Clubes Amigos') {
               return esClub;
             }
 
-            // Si NO estamos en la pestaña de Clubes, prohibimos el paso a cualquier Club Amigo
-            if (esClub) 
-            {
-              return false;
-            }
+            // 2. Si pulsamos Infantil, Primaria o ESO, los Clubes no pueden pasar
+            if (esClub) return false;
 
-            // 1. 🛡️ Si no es club, miramos la lista nueva de 'etapas'
-            if (item.etapas && Array.isArray(item.etapas)) {
-              return item.etapas.includes(etapaActiva);
-            }
-          
-            // 2. 🕰️ Para actividades antiguas
-            return item.etapa === etapaActiva;
+            // 3. Comprobamos si la actividad tiene la etapa que hemos pulsado
+            // Buscamos tanto en la lista moderna (etapas) como en el formato antiguo (etapa)
+            const coincideEnLista = Array.isArray(item.etapas) && item.etapas.includes(etapaActiva);
+            const coincideEtapaSimple = item.etapa === etapaActiva;
+
+            return coincideEnLista || coincideEtapaSimple;
           });
 
           return (
@@ -486,11 +479,11 @@ const [destino, setDestino] = useState(null);
               {/* 🚩 Mensaje si no hay nada que enseñar */}
               {itemsFiltrados.length === 0 && (
                 <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '50px', backgroundColor: 'white', borderRadius: '20px' }}>
-                  <p>No hay actividades ni clubes en <strong>{etapaActiva}</strong> todavía.</p>
-                  {isAdmin && <p style={{ color: '#ff6b6b' }}>¡Usa el panel de admin para añadir el primero!</p>}
+                  <p>No hay actividades de <strong>{empresaActiva === 'Todas' ? '' : empresaActiva}</strong> en <strong>{etapaActiva}</strong> todavía.</p>
+                  {isAdmin && <p style={{ color: '#ff6b6b' }}>¡Usa el panel de admin para añadir una!</p>}
                 </div>
               )}
-
+              
               {/* 🎨 Dibujamos las tarjetas (sirve para los dos tipos: Cole y Clubes) */}
               {itemsFiltrados.map((item) => (
   <div
