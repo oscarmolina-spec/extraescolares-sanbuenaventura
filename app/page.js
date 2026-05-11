@@ -483,11 +483,11 @@ const [destino, setDestino] = useState(null);
                   {isAdmin && <p style={{ color: '#ff6b6b' }}>¡Usa el panel de admin para añadir una!</p>}
                 </div>
               )}
-              
+
               {/* 🎨 Dibujamos las tarjetas (sirve para los dos tipos: Cole y Clubes) */}
               {itemsFiltrados.map((item) => (
   <div
-    key={item.id}
+    key={item.id} 
     style={{
       backgroundColor: 'white',
       borderRadius: '24px',
