@@ -266,184 +266,164 @@ const [destino, setDestino] = useState(null);
           paddingBottom: '100px',
         }}
       >
-        <header
+<header
+  style={{
+    background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)',
+    padding: '20px 20px 25px', // 👈 Reducimos aire arriba y abajo del header
+    textAlign: 'center',
+    borderRadius: '0 0 50px 50px',
+    boxShadow: '0 15px 30px rgba(0,0,0,0.2)',
+    marginBottom: '20px',
+    position: 'relative',
+    overflow: 'hidden',
+  }}
+>
+  {/* 🕹️ BOTONES SUPERIORES (MAPA Y ADMIN) */}
+  <div style={{
+    position: 'absolute',
+    top: '20px',
+    right: '20px',
+    display: 'flex',
+    gap: '10px',
+    zIndex: 100,
+  }}>
+    <button
+      onClick={() => setVista('mapa')}
+      style={{
+        padding: '8px 16px',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        color: 'white',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        fontSize: '0.8rem',
+        fontWeight: 'bold',
+        backdropFilter: 'blur(4px)',
+      }}
+    >
+      📍 Mapa Cole
+    </button>
+
+    {!isAdmin ? (
+      <button
+        onClick={() => {
+          const p = prompt('Clave:');
+          if (p === 'admin') setIsAdmin(true);
+        }}
+        style={{
+          padding: '8px 16px',
+          backgroundColor: '#3b82f6',
+          color: 'white',
+          border: 'none',
+          borderRadius: '12px',
+          cursor: 'pointer',
+          fontSize: '0.8rem',
+          fontWeight: 'bold',
+        }}
+      >
+        🔑 Admin
+      </button>
+    ) : (
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button
+          onClick={() => setVista('panel')}
           style={{
-            background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)', // Azul marino profundo
-            padding: '60px 20px 50px',
-            textAlign: 'center',
-            borderRadius: '0 0 50px 50px',
-            boxShadow: '0 15px 30px rgba(0,0,0,0.2)',
-            marginBottom: '30px',
-            position: 'relative',
-            overflow: 'hidden',
+            padding: '8px 16px',
+            backgroundColor: '#10ac84',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontSize: '0.8rem',
+            fontWeight: 'bold',
           }}
         >
-          {/* Un pequeño brillo decorativo en la esquina */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '-50px',
-              right: '-50px',
-              width: '150px',
-              height: '150px',
-              background: 'rgba(59, 130, 246, 0.1)',
-              borderRadius: '50%',
-              filter: 'blur(40px)',
-            }}
-          ></div>
+          ➕ Añadir
+        </button>
+        <button
+          onClick={() => setIsAdmin(false)}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: '#ef4444',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontSize: '0.8rem',
+          }}
+        >
+          Salir
+        </button>
+      </div>
+    )}
+  </div>
 
-          {/* ⭐ CONTENEDOR DEL ESCUDO "ELITE" - MÁS GRANDE Y BRILLANTE */}
-          <div
-            style={{
-              position: 'relative',
-              display: 'block', // Cambiamos a block para controlar mejor el centro
-              margin: '0 auto 50px', // Centrado y mucho espacio abajo para no pisar el título
-              width: 'fit-content',
-              padding: '20px',
-            }}
-          >
-            {/* 💡 EL TRUCO: Resplandor Blanco Intenso MEGA (Aura Pro) */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '550px', // 💪 ¡Casi el doble! Para que asome tras el escudo de 400px
-                height: '550px',
-                // He subido un pelín más la opacidad para que el contraste sea total
-                background:
-                  'radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(59, 130, 246, 0) 80%)',
-                borderRadius: '50%',
-                filter: 'blur(35px)', // Un poco más de difuminado para que parezca luz celestial
-                zIndex: 0,
-              }}
-            ></div>
+  {/* Brillo decorativo */}
+  <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '50%', filter: 'blur(40px)' }}></div>
 
-           {/* 🛡️ EL ESCUDO MEGA-GIGANTE (400px) CON EL CONTORNO BLANCO NÍTIDO Y EXACTO (COMO EN LA IMAGEN) */}
-           <img
-              src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd"
-              style={{
-                width: '400px', // Mantenemos el tamaño grande
-                height: 'auto',
-                position: 'relative',
-                zIndex: 1,
-                // ✨ EL TRUCO DEL CONTORNO NÍTIDO Y EXACTO ✨
-                // Usamos múltiples drop-shadows con 0 de 'blur' (desenfoque) para crear una línea sólida
-                filter: `
-                  drop-shadow(2px 0 0 white)   // ➡️ Trazo blanco nítido a la derecha
-                  drop-shadow(-2px 0 0 white)  // ⬅️ Trazo blanco nítido a la izquierda
-                  drop-shadow(0 2px 0 white)   // ⬇️ Trazo blanco nítido abajo
-                  drop-shadow(0 -2px 0 white)  // ⬆️ Trazo blanco nítido arriba
-                  drop-shadow(0 25px 35px rgba(0, 0, 0, 0.5)) // 🌑 Tu sombra profunda para flotar
-                `,
-                transition: 'all 0.4s ease',
-              }}
-            />
-          </div>
+  {/* ⭐ CONTENEDOR DEL ESCUDO REDUCIDO EN ESPACIOS */}
+  <div style={{ 
+    position: 'relative', 
+    display: 'block', 
+    margin: '-10px auto 0px', // 👈 ¡CLAVE! Quitamos los 50px de abajo y subimos 10px arriba
+    width: 'fit-content', 
+    padding: '0px' // 👈 Quitamos el padding de 20px que separaba todo
+  }}>
+    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(59, 130, 246, 0) 80%)', borderRadius: '50%', filter: 'blur(35px)', zIndex: 0 }}></div>
+    <img
+      src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd"
+      style={{
+        width: '400px',
+        height: 'auto',
+        position: 'relative',
+        zIndex: 1,
+        filter: `drop-shadow(2px 0 0 white) drop-shadow(-2px 0 0 white) drop-shadow(0 2px 0 white) drop-shadow(0 -2px 0 white) drop-shadow(0 25px 35px rgba(0, 0, 0, 0.5))`
+      }}
+    />
+  </div>
 
-          <h1
-            style={{
-              margin: 0,
-              fontSize: '2.4rem',
-              fontWeight: '800',
-              color: '#ffffff',
-              letterSpacing: '-1px',
-            }}
-          >
-            Extraescolares
-            <span
-              style={{
-                color: '#60a5fa',
-                display: 'block',
-                fontSize: '1.8rem',
-                marginTop: '5px',
-              }}
-            >
-              San Buenaventura
-            </span>
-          </h1>
+  {/* 🏆 TÍTULO SIMPLIFICADO Y CON ESPACIO */}
+  <h1 style={{ 
+    margin: '10px 0 0', // 👈 Un poco de margen arriba para que no choque con el escudo
+    fontSize: '2.5rem', 
+    fontWeight: '800', 
+    color: '#ffffff', 
+    letterSpacing: '-1px', 
+    position: 'relative', 
+    zIndex: 2 
+  }}>
+    Actividades Extraescolares
+  </h1>
 
-          <p
-            style={{
-              color: '#94a3b8',
-              marginTop: '10px',
-              fontSize: '1rem',
-              fontWeight: '500',
-              letterSpacing: '1px',
-            }}
-          >
-            PORTAL DE ACTIVIDADES 2026
-          </p>
+  <p style={{ 
+    color: '#94a3b8', 
+    marginTop: '8px', 
+    fontSize: '0.95rem', 
+    fontWeight: '500', 
+    letterSpacing: '0.5px',
+    fontStyle: 'italic'
+  }}>
+    "Estas actividades tienen carácter voluntario, no discriminatorio y no lucrativo"
+  </p>
 
-          {/* Selector de etapas moderno sobre fondo oscuro */}
-          <div
-            style={{
-              marginTop: '40px',
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '12px',
-              flexWrap: 'wrap',
-            }}
-          >
-            {['Infantil', 'Primaria', 'ESO','Clubes Amigos'].map((e) => (
-              <button
-                key={e}
-                onClick={() => setEtapaActiva(e)}
-                style={{
-                  padding: '14px 30px',
-                  borderRadius: '18px',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  backgroundColor:
-                    etapaActiva === e ? '#3b82f6' : 'rgba(255,255,255,0.05)',
-                  color: 'white',
-                  fontWeight: '800',
-                  fontSize: '1rem',
-                  boxShadow:
-                    etapaActiva === e
-                      ? '0 10px 25px -5px rgba(59, 130, 246, 0.5)'
-                      : 'none',
-                  transform: etapaActiva === e ? 'scale(1.05)' : 'scale(1)',
-                }}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-          {/* 🏢 2. NUEVO: SELECTOR DE EMPRESAS (Pégalo justo aquí) */}
-          <div
-            style={{
-              marginTop: '25px',
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '10px',
-              flexWrap: 'wrap',
-            }}
-          >
-            {['Todas', 'Alventus', '4life', 'Kids&Us', 'San Buenaventura'].map((emp) => (
-              <button
-                key={emp}
-                onClick={() => setEmpresaActiva(emp)}
-                style={{
-                  padding: '8px 20px',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  backgroundColor:
-                    empresaActiva === emp ? '#60a5fa' : 'transparent',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: '0.85rem',
-                }}
-              >
-                {emp}
-              </button>
-            ))}
-          </div>
-        </header>
+  {/* Selector de etapas (Más pegado arriba) */}
+  <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+    {['Infantil', 'Primaria', 'ESO','Clubes Amigos'].map((e) => (
+      <button key={e} onClick={() => setEtapaActiva(e)} style={{ padding: '12px 25px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', backgroundColor: etapaActiva === e ? '#3b82f6' : 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '800', fontSize: '0.95rem', transition: 'all 0.3s ease' }}>
+        {e}
+      </button>
+    ))}
+  </div>
+
+  {/* Selector de empresas (Más pegado arriba) */}
+  <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
+    {['Todas', 'Alventus', '4life', 'Kids&Us', 'San Buenaventura'].map((emp) => (
+      <button key={emp} onClick={() => setEmpresaActiva(emp)} style={{ padding: '6px 18px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', backgroundColor: empresaActiva === emp ? '#60a5fa' : 'transparent', color: 'white', fontWeight: '600', fontSize: '0.8rem' }}>
+        {emp}
+      </button>
+    ))}
+  </div>
+</header>
 
         <main
           style={{
@@ -736,102 +716,6 @@ const [destino, setDestino] = useState(null);
 
           </div>
         </footer>
-
-{/* 🗺️ BOTÓN FLOTANTE DEL MAPA - ¡Para que todos lo vean! */}
-<div
-  style={{
-    position: 'fixed',
-    bottom: '20px',
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '10px',
-    zIndex: 9999,
-  }}
->
-  <button
-    onClick={() => setVista('mapa')}
-    style={{
-      padding: '14px 28px',
-      backgroundColor: '#3b82f6',
-      color: 'white',
-      border: 'none',
-      borderRadius: '99px',
-      cursor: 'pointer',
-      fontWeight: '800',
-      fontSize: '1rem',
-      boxShadow: '0 10px 20px rgba(59, 130, 246, 0.4)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px',
-      transition: 'transform 0.2s ease',
-    }}
-  >
-    <span>📍</span> VER MAPA DEL COLE
-  </button>
-
-  {/* Lógica de Admin */}
-  {!isAdmin ? (
-    <button
-      onClick={() => {
-        const p = prompt('Clave:');
-        if (p === 'admin') setIsAdmin(true);
-      }}
-      style={{
-        padding: '8px 16px',
-        backgroundColor: '#cbd5e1',
-        border: 'none',
-        borderRadius: '10px',
-        cursor: 'pointer',
-        fontWeight: 'bold',
-        fontSize: '0.75rem',
-        opacity: 0.7,
-      }}
-    >
-      🔑 Acceso Admin
-    </button>
-  ) : (
-    <div style={{ display: 'flex', gap: '10px' }}>
-      <button
-        onClick={() => {
-          setNuevaAct({
-            nombre: '', etapa: 'Infantil', dias: '', horario: '', lugar: '',
-            info: '', imagen: '', recogidaMonitores: '', recogidaFamilias: '',
-            precio: '', enlace: '', latAct: '40.4079', lngAct: '-3.7469'
-          });
-          setEditandoId(null);
-          setVista('panel');
-        }}
-        style={{
-          padding: '15px 30px',
-          backgroundColor: '#10ac84',
-          color: 'white',
-          border: 'none',
-          borderRadius: '30px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          boxShadow: '0 4px 15px rgba(16,172,132,0.4)',
-        }}
-      >
-        + AÑADIR ACTIVIDAD
-      </button>
-      <button
-        onClick={() => setIsAdmin(false)}
-        style={{
-          padding: '15px 20px',
-          backgroundColor: '#1e293b',
-          color: 'white',
-          border: 'none',
-          borderRadius: '30px',
-          cursor: 'pointer',
-        }}
-      >
-        Salir
-      </button>
-    </div>
-  )}
-</div>
 </div>
 );
 }
