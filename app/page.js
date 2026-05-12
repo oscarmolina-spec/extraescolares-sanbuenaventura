@@ -486,6 +486,7 @@ const [destino, setDestino] = useState(null);
 
               {/* 🎨 Dibujamos las tarjetas (sirve para los dos tipos: Cole y Clubes) */}
               {itemsFiltrados.map((item) => (
+                
   <div
     key={item.id} 
     style={{
