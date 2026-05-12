@@ -369,7 +369,7 @@ const [destino, setDestino] = useState(null);
     width: 'fit-content', 
     padding: '0px' // 👈 Quitamos el padding de 20px que separaba todo
   }}>
-    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(59, 130, 246, 0) 80%)', borderRadius: '50%', filter: 'blur(35px)', zIndex: 0 }}></div>
+    
     <img
       src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd"
       style={{
@@ -443,36 +443,34 @@ const [destino, setDestino] = useState(null);
             ...clubes.map(c => ({ ...c, esClub: true }))
           ];
 
-          const itemsFiltrados = todoJunto.filter((item) => {
-            // 🌟 0. Identificamos si es Club Amigo
-            const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
+// 🔍 FILTRO ULTRA-RESISTENTE
+const itemsFiltrados = todoJunto.filter((item) => {
+  // 1. Limpiamos las palabras para que no haya fallos de espacios o mayúsculas
+  const etapaBoton = etapaActiva.trim().toLowerCase();
+  const empresaBoton = empresaActiva.trim().toLowerCase();
 
-            // --- 🏢 REGLA DE EMPRESA (CON EL TRADUCTOR) ---
-            const nombreEmpresaActividad = item.empresa || "";
-            const cumpleEmpresa = 
-              empresaActiva === 'Todas' || 
-              nombreEmpresaActividad === empresaActiva ||
-              (empresaActiva === 'San Buenaventura' && nombreEmpresaActividad === 'Colegio San Buenaventura');
+  // 2. REGLA DE EMPRESA
+  const empresaActividad = (item.empresa || "").trim().toLowerCase();
+  const cumpleEmpresa = 
+    empresaBoton === 'todas' || 
+    empresaActividad === empresaBoton ||
+    (empresaBoton === 'san buenaventura' && empresaActividad === 'colegio san buenaventura');
 
-            if (!cumpleEmpresa) return false; 
+  if (!cumpleEmpresa) return false;
 
-            // --- 🛡️ REGLA DE ETAPAS (EL ARREGLO PARA PRIMARIA Y ESO) ---
-            
-            // 1. Si pulsamos la pestaña "Clubes Amigos"
-            if (etapaActiva === 'Clubes Amigos') {
-              return esClub;
-            }
+  // 3. REGLA DE CLUBES
+  const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
+  if (etapaBoton === 'clubes amigos') return esClub;
+  if (esClub) return false;
 
-            // 2. Si pulsamos Infantil, Primaria o ESO, los Clubes no pueden pasar
-            if (esClub) return false;
+  // 4. REGLA DE ETAPAS (Primaria, ESO, Infantil...)
+  // Miramos en 'etapa' y en la lista 'etapas'
+  const etapaSimple = (item.etapa || "").trim().toLowerCase();
+  const enListaEtapas = Array.isArray(item.etapas) && 
+                        item.etapas.some(e => e.trim().toLowerCase() === etapaBoton);
 
-            // 3. Comprobamos si la actividad tiene la etapa que hemos pulsado
-            // Buscamos tanto en la lista moderna (etapas) como en el formato antiguo (etapa)
-            const coincideEnLista = Array.isArray(item.etapas) && item.etapas.includes(etapaActiva);
-            const coincideEtapaSimple = item.etapa === etapaActiva;
-
-            return coincideEnLista || coincideEtapaSimple;
-          });
+  return etapaSimple === etapaBoton || enListaEtapas;
+});
 
           return (
             <>
@@ -486,7 +484,7 @@ const [destino, setDestino] = useState(null);
 
               {/* 🎨 Dibujamos las tarjetas (sirve para los dos tipos: Cole y Clubes) */}
               {itemsFiltrados.map((item) => (
-                
+
   <div
     key={item.id} 
     style={{
