@@ -519,45 +519,60 @@ const itemsFiltrados = todoJunto.filter((item) => {
 
 {/* 📝 CONTENIDO */}
 <div style={{ padding: '20px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-      <h3 style={{ margin: '0 0 5px', fontSize: '1.2rem', color: '#0f172a', fontWeight: '700' }}>
-        {item.nombre}
-      </h3>
-      
-      {/* ⏰ HORARIO */}
-      <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 8px' }}>
-        ⏰ {item.horario || 'Horario a consultar'}
-      </p>
+  <h3 style={{ margin: '0 0 5px', fontSize: '1.2rem', color: '#0f172a', fontWeight: '700' }}>
+    {item.nombre}
+  </h3>
+  
+  {/* ⏰ HORARIO */}
+  <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 8px' }}>
+    ⏰ {item.horario || 'Horario a consultar'}
+  </p>
 
-      {/* 🗓️ DÍAS DE LA SEMANA (Sustituye al precio) */}
-      <div style={{ 
-        backgroundColor: '#eff6ff', 
-        color: '#1e40af', 
-        fontSize: '0.8rem', 
-        fontWeight: '800', 
-        padding: '6px 12px',
-        borderRadius: '10px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        alignSelf: 'flex-start',
-        border: '1px solid #dbeafe',
-        marginBottom: '10px'
-      }}>
-        <span>🗓️</span>
-        <span>{item.dias ? item.dias.toUpperCase() : 'DÍAS A CONSULTAR'}</span>
-      </div>
+  {/* 🗓️ DÍAS DE LA SEMANA */}
+  <div style={{ 
+    backgroundColor: '#eff6ff', 
+    color: '#1e40af', 
+    fontSize: '0.8rem', 
+    fontWeight: '800', 
+    padding: '6px 12px',
+    borderRadius: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    alignSelf: 'flex-start',
+    border: '1px solid #dbeafe',
+    marginBottom: '15px'
+  }}>
+    <span>🗓️</span>
+    <span>{item.dias ? item.dias.toUpperCase() : 'DÍAS A CONSULTAR'}</span>
+  </div>
 
-      <div style={{ marginTop: 'auto' }}>
-        <button
-          onClick={() => {
-            setActividadSeleccionada(item);
-            setVista('detalles');
-          }}
-          style={{
-            width: '100%', padding: '12px', borderRadius: '12px', border: 'none',
-            backgroundColor: '#f1f5f9', color: '#1e293b', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', marginBottom: '10px',
-          }}
-        >
+  <div style={{ marginTop: 'auto' }}>
+    {/* 💰 PRECIO DESTACADO (Lo añadimos aquí antes del botón) */}
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'baseline', 
+      marginBottom: '12px',
+      padding: '0 5px'
+    }}>
+      <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>PRECIO:</span>
+      <span style={{ fontSize: '1.3rem', fontWeight: '900', color: '#3b82f6' }}>
+        {item.precio ? `${item.precio}€` : '---'}
+        <small style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#94a3b8', marginLeft: '3px' }}>/mes</small>
+      </span>
+    </div>
+
+    <button
+      onClick={() => {
+        setActividadSeleccionada(item);
+        setVista('detalles');
+      }}
+      style={{
+        width: '100%', padding: '12px', borderRadius: '12px', border: 'none',
+        backgroundColor: '#f1f5f9', color: '#1e293b', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', marginBottom: '10px',
+      }}
+    >
           Ver información completa
         </button>
 
