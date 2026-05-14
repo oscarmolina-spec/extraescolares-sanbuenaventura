@@ -62,6 +62,7 @@ const [destino, setDestino] = useState(null);
   });
   const [clubes, setClubes] = useState([]); // Aquí guardaremos la lista que viene de la nube
   const [empresaActiva, setEmpresaActiva] = useState('Todas');
+  const [busqueda, setBusqueda] = useState('');
   const [nuevoClub, setNuevoClub] = useState({
     nombre: '',
     etapas: [],
@@ -405,6 +406,28 @@ const [destino, setDestino] = useState(null);
   }}>
     "Estas actividades tienen carácter voluntario, no discriminatorio y no lucrativo"
   </p>
+  {/* --- 🚀 AQUÍ PEGAS EL PASO 2 (EL BUSCADOR) --- */}
+  <div style={{ maxWidth: '400px', margin: '20px auto', padding: '0 20px' }}>
+    <div style={{ position: 'relative' }}>
+      <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', fontSize: '1.2rem' }}>🔍</span>
+      <input
+        type="text"
+        placeholder="Busca una actividad..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        style={{
+          width: '100%',
+          padding: '12px 15px 12px 45px',
+          borderRadius: '15px',
+          border: '2px solid rgba(255,255,255,0.1)',
+          backgroundColor: 'rgba(255,255,255,0.05)',
+          color: 'white',
+          fontSize: '1rem',
+          outline: 'none'
+        }}
+      />
+    </div>
+  </div>
 
   {/* Selector de etapas (Más pegado arriba) */}
   <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
@@ -443,8 +466,19 @@ const [destino, setDestino] = useState(null);
             ...clubes.map(c => ({ ...c, esClub: true }))
           ];
 
-// 🔍 FILTRO ULTRA-RESISTENTE
+// 🔍 FILTRO ULTRA-RESISTENTE (¡Ahora sin miedo a las tildes!)
 const itemsFiltrados = todoJunto.filter((item) => {
+  
+  // FUNCIÓN MÁGICA: Quita tildes y pone en minúsculas
+  const normalizar = (texto) => 
+    texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  // 0. REGLA DEL BUSCADOR (Limpia tildes en ambos lados)
+  const nombreActividad = normalizar(item.nombre || "");
+  const loQueEscribeLaFamilia = normalizar(busqueda);
+
+  if (!nombreActividad.includes(loQueEscribeLaFamilia)) return false;
+
   // 1. Limpiamos las palabras para que no haya fallos de espacios o mayúsculas
   const etapaBoton = etapaActiva.trim().toLowerCase();
   const empresaBoton = empresaActiva.trim().toLowerCase();
