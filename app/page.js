@@ -629,21 +629,60 @@ const itemsFiltrados = todoJunto.filter((item) => {
           Ver información completa
         </button>
 
-        {/* 🔗 BOTÓN DE INSCRIPCIÓN (Muy importante: busca los dos nombres posibles) */}
-        {(item.enlace || item.linkInscripcion) && (
-          <a
-            href={item.linkInscripcion || item.enlace}
-            target="_blank" rel="noopener noreferrer"
-            style={{
-              display: 'block', padding: '12px', 
-              backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
-              color: 'white', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold',
-              fontSize: '0.9rem', textAlign: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-            }}
-          >
-            📝 ¡INSCRIBIRSE AHORA!
-          </a>
-        )}
+        {/* 🔗 SECCIÓN DE BOTONES DE INSCRIPCIÓN INTELIGENTES */}
+<div style={{ marginTop: 'auto', width: '100%', paddingTop: '10px' }}>
+  
+  {item.linksMultiples && item.linksMultiples.length > 0 ? (
+    // 🌟 SI TIENE VARIOS ENLACES: Dibujamos un botón independiente por cada categoría/curso
+    item.linksMultiples.map((link, index) => (
+      <a
+        key={index}
+        href={link.url}
+        target="_blank" 
+        rel="noopener noreferrer"
+        style={{
+          display: 'block', 
+          padding: '10px 12px', 
+          backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b', // ¡Mantiene tu estilo!
+          color: 'white', 
+          borderRadius: '12px', 
+          textDecoration: 'none', 
+          fontWeight: 'bold',
+          fontSize: '0.85rem', 
+          textAlign: 'center', 
+          boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+          marginBottom: '8px' // Hueco entre botones para que no se peguen
+        }}
+      >
+        📝 {link.etiqueta.toUpperCase()}
+      </a>
+    ))
+  ) : (
+    // 🔄 SI NO TIENE ENLACES MÚLTIPLES: Tu botón clásico de siempre para que todo siga funcionando
+    (item.enlace || item.linkInscripcion) && (
+      <a
+        href={item.linkInscripcion || item.enlace}
+        target="_blank" 
+        rel="noopener noreferrer"
+        style={{
+          display: 'block', 
+          padding: '12px', 
+          backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
+          color: 'white', 
+          borderRadius: '12px', 
+          textDecoration: 'none', 
+          fontWeight: 'bold',
+          fontSize: '0.9rem', 
+          textAlign: 'center', 
+          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+        }}
+      >
+        📝 ¡INSCRIBIRSE AHORA!
+      </a>
+    )
+  )}
+
+</div>
 
 {/* BOTONES DE ADMIN */}
 {isAdmin && (
