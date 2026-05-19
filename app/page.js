@@ -64,16 +64,35 @@ const [destino, setDestino] = useState(null);
   const [empresaActiva, setEmpresaActiva] = useState('Todas');
   const [busqueda, setBusqueda] = useState('');
   const [nuevoClub, setNuevoClub] = useState({
-    nombre: '',
-    etapas: [],
-    horario: '',
-    descripcion: '',
-    imagen: '',   // Aquí irá el logo
-    contacto: '', // Teléfono o Email
-    linkInscripcion: '', // El enlace directo
-    latAct: '',   // Punto de interés (latitud)
-    lngAct: '',   // Punto de interés (longitud)
-  });
+  nombre: '',
+  etapas: [],
+  horario: '',
+  descripcion: '',
+  imagen: '',          // Aquí irá el logo
+  contacto: '',        // Teléfono o Email
+  linkInscripcion: '', // El enlace directo general
+  latAct: '',          // Punto de interés (latitud)
+  lngAct: '',          // Punto de interés (longitud)
+  linksMultiples: []   // 🌟 ¡NUEVO! Aquí guardaremos la lista de cursos y enlaces
+});
+// 🚀 ¡AQUÍ LAS PEGAS! LAS TRES FUNCIONES NUEVAS:
+  const agregarFilaLink = () => {
+    setNuevoClub({
+      ...nuevoClub,
+      linksMultiples: [...(nuevoClub.linksMultiples || []), { etiqueta: '', url: '' }]
+    });
+  };
+
+  const manejarCambioLink = (index, campo, valor) => {
+    const nuevosLinks = [...(nuevoClub.linksMultiples || [])];
+    nuevosLinks[index][campo] = valor;
+    setNuevoClub({ ...nuevoClub, linksMultiples: nuevosLinks });
+  };
+
+  const eliminarFilaLink = (index) => {
+    const nuevosLinks = (nuevoClub.linksMultiples || []).filter((_, i) => i !== index);
+    setNuevoClub({ ...nuevoClub, linksMultiples: nuevosLinks });
+  };
   // 🏰 El enlace mágico de tu escudo desde Storage
   const URL_ESCUDO =
     'https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/San%20%20uenaventura.png?alt=media&token=c70def71-3920-425e-9d68-a3519ed51960';
@@ -1542,6 +1561,74 @@ Miércoles)"
             />
           </div>
 
+          {/* 🔗 SECCIÓN DE ENLACES MÚLTIPLES POR CATEGORÍA / CURSO */}
+          <div style={{ 
+            backgroundColor: '#f8fafc', 
+            padding: '15px', 
+            borderRadius: '15px', 
+            border: '1px dashed #cbd5e1',
+            textAlign: 'left'
+          }}>
+            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '10px', fontSize: '0.9rem', color: '#1e293b' }}>
+              🔗 Enlaces por Categoría / Curso (Opcional)
+            </label>
+            
+            {/* Dibujamos cada fila de enlace */}
+            {(nuevaAct.linksMultiples || []).map((link, index) => (
+              <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Ej: Prebenjamín (1º/2º)"
+                  value={link.etiqueta}
+                  onChange={(e) => {
+                    const nuevosLinks = [...(nuevaAct.linksMultiples || [])];
+                    nuevosLinks[index].etiqueta = e.target.value;
+                    setNuevaAct({ ...nuevaAct, linksMultiples: nuevosLinks });
+                  }}
+                  style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', color: '#1e293b' }}
+                />
+                <input
+                  type="text"
+                  placeholder="https://enlace-formulario.com"
+                  value={link.url}
+                  onChange={(e) => {
+                    const nuevosLinks = [...(nuevaAct.linksMultiples || [])];
+                    nuevosLinks[index].url = e.target.value;
+                    setNuevaAct({ ...nuevaAct, linksMultiples: nuevosLinks });
+                  }}
+                  style={{ flex: 2, padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', color: '#1e293b' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nuevosLinks = (nuevaAct.linksMultiples || []).filter((_, i) => i !== index);
+                    setNuevaAct({ ...nuevaAct, linksMultiples: nuevosLinks });
+                  }}
+                  style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  ❌
+                </button>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => {
+                setNuevaAct({
+                  ...nuevaAct,
+                  linksMultiples: [...(nuevaAct.linksMultiples || []), { etiqueta: '', url: '' }]
+                });
+              }}
+              style={{
+                marginTop: '5px', padding: '8px 12px', backgroundColor: '#e0f2fe', color: '#0369a1',
+                border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem',
+                display: 'flex', alignItems: 'center', gap: '5px'
+              }}
+            >
+              ➕ Añadir otra categoría/enlace
+            </button>
+          </div>
+
           {/* 📁 FOTO */}
           <div
             style={{
@@ -1559,6 +1646,7 @@ Miércoles)"
                 color: '#9a3412',
               }}
             >
+          
               🖼️ Foto de la actividad:
             </p>
             <input
