@@ -629,36 +629,74 @@ const itemsFiltrados = todoJunto.filter((item) => {
           Ver información completa
         </button>
 
-        {/* 🔗 SECCIÓN DE BOTONES DE INSCRIPCIÓN INTELIGENTES */}
+        {/* 🔗 SECCIÓN DE INSCRIPCIÓN INTELIGENTE CON DESPLEGABLE */}
 <div style={{ marginTop: 'auto', width: '100%', paddingTop: '10px' }}>
   
   {item.linksMultiples && item.linksMultiples.length > 0 ? (
-    // 🌟 SI TIENE VARIOS ENLACES: Dibujamos un botón independiente por cada categoría/curso
-    item.linksMultiples.map((link, index) => (
+    // 🌟 SI TIENE VARIOS ENLACES: Mostramos el desplegable de categorías
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      
+      <select
+        id={`select-${item.id}`}
+        defaultValue=""
+        style={{
+          width: '100%',
+          padding: '10px',
+          borderRadius: '12px',
+          border: '2px solid #cbd5e1',
+          backgroundColor: '#f8fafc',
+          color: '#1e293b',
+          fontWeight: 'bold',
+          fontSize: '0.85rem',
+          outline: 'none',
+          cursor: 'pointer'
+        }}
+        onChange={(e) => {
+          // Guardamos temporalmente la URL elegida en el propio botón de abajo
+          const botonIr = document.getElementById(`btn-ir-${item.id}`);
+          if (botonIr) {
+            botonIr.href = e.target.value;
+            botonIr.style.opacity = e.target.value ? '1' : '0.5';
+            botonIr.style.pointerEvents = e.target.value ? 'auto' : 'none';
+          }
+        }}
+      >
+        <option value="" disabled>👇 Selecciona tu categoría / curso</option>
+        {item.linksMultiples.map((link, index) => (
+          <option key={index} value={link.url}>
+            {link.etiqueta}
+          </option>
+        ))}
+      </select>
+
+      {/* Botón de acción que se activa al elegir curso */}
       <a
-        key={index}
-        href={link.url}
+        id={`btn-ir-${item.id}`}
+        href=""
         target="_blank" 
         rel="noopener noreferrer"
         style={{
           display: 'block', 
-          padding: '10px 12px', 
-          backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b', // ¡Mantiene tu estilo!
+          padding: '11px', 
+          backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
           color: 'white', 
           borderRadius: '12px', 
           textDecoration: 'none', 
           fontWeight: 'bold',
-          fontSize: '0.85rem', 
+          fontSize: '0.9rem', 
           textAlign: 'center', 
-          boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
-          marginBottom: '8px' // Hueco entre botones para que no se peguen
+          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+          opacity: '0.5',          // Empieza semi-transparente hasta elegir curso
+          pointerEvents: 'none',   // Bloqueado hasta elegir curso
+          transition: 'all 0.2s ease'
         }}
       >
-        📝 {link.etiqueta.toUpperCase()}
+        📝 ¡INSCRIBIRSE AHORA!
       </a>
-    ))
+    </div>
+
   ) : (
-    // 🔄 SI NO TIENE ENLACES MÚLTIPLES: Tu botón clásico de siempre para que todo siga funcionando
+    // 🔄 SI NO TIENE ENLACES MÚLCIPLES: Tu botón clásico directo de siempre
     (item.enlace || item.linkInscripcion) && (
       <a
         href={item.linkInscripcion || item.enlace}
