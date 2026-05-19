@@ -1646,7 +1646,6 @@ Miércoles)"
                 color: '#9a3412',
               }}
             >
-          
               🖼️ Foto de la actividad:
             </p>
             <input
