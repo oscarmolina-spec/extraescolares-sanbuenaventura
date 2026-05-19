@@ -696,28 +696,29 @@ const itemsFiltrados = todoJunto.filter((item) => {
     </div>
 
   ) : (
-    // 🔄 SI NO TIENE ENLACES MÚLCIPLES: Tu botón clásico directo de siempre
-    (item.enlace || item.linkInscripcion) && (
-      <a
-        href={item.linkInscripcion || item.enlace}
-        target="_blank" 
-        rel="noopener noreferrer"
-        style={{
-          display: 'block', 
-          padding: '12px', 
-          backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
-          color: 'white', 
-          borderRadius: '12px', 
-          textDecoration: 'none', 
-          fontWeight: 'bold',
-          fontSize: '0.9rem', 
-          textAlign: 'center', 
-          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-        }}
-      >
-        📝 ¡INSCRIBIRSE AHORA!
-      </a>
-    )
+    // 🔄 SI NO TIENE ENLACES MÚLTIPLES: Tu botón clásico directo de siempre
+(item.linkInscripcion || item.enlace) && (
+  <a
+    // 🌟 Cambiamos el orden aquí para que lea primero el link de inscripción actualizado
+    href={item.linkInscripcion ? item.linkInscripcion : item.enlace}
+    target="_blank" 
+    rel="noopener noreferrer"
+    style={{
+      display: 'block', 
+      padding: '12px', 
+      backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
+      color: 'white', 
+      borderRadius: '12px', 
+      textDecoration: 'none', 
+      fontWeight: 'bold',
+      fontSize: '0.9rem', 
+      textAlign: 'center', 
+      boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+    }}
+  >
+    📝 ¡INSCRIBIRSE AHORA!
+  </a>
+)
   )}
 
 </div>
