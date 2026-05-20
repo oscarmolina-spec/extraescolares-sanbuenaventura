@@ -157,9 +157,15 @@ const [destino, setDestino] = useState(null);
       return alert('¡Debes elegir al menos una etapa para que aparezca en la web! 🚩');
     }
 
+    // 🚀 Preparamos el paquete limpiando los enlaces antiguos y nuevos
     const actividadFinal = {
       ...nuevaAct,
       etapas: nuevaAct.etapas,
+      // 🌟 EL TRUCO DE LA PISCINA: Aseguramos que la casilla principal guarde la web en los dos campos posibles
+      enlace: nuevaAct.enlace || '',
+      linkInscripcion: nuevaAct.enlace || '',
+      // 🌟 Añadimos también los links múltiples por si acaso
+      linksMultiples: nuevaAct.linksMultiples || [],
       latAct: parseFloat(nuevaAct.latAct) || 0,
       lngAct: parseFloat(nuevaAct.lngAct) || 0,
       latMon: parseFloat(nuevaAct.latMon) || 0,
@@ -179,21 +185,21 @@ const [destino, setDestino] = useState(null);
         alert('¡Publicado con éxito! ✨');
       }
 
-      // ✨ LIMPIEZA TOTAL (¡Actualizada!)
+      // ✨ LIMPIEZA TOTAL (¡Actualizada con los enlaces!)
       setNuevaAct({
         nombre: '',
         etapas: [],
-        // --- 🏢 LIMPIAMOS LOS CAMPOS DE EMPRESA NUEVOS ---
         empresa: '',
         logoEmpresa: '',
         nombreContacto: '',
-        // -----------------------------------------------
         contacto: '', // Este es el email
         dias: '',
         horario: '',
         lugar: '',
         info: '',
         imagen: '',
+        enlace: '',           // 🧹 Limpiamos el enlace principal antiguo
+        linksMultiples: [],   // 🧹 Limpiamos la nueva lista de enlaces múltiples
         recogidaMonitores: '',
         recogidaFamilias: '',
         precio: '',
@@ -216,7 +222,8 @@ const [destino, setDestino] = useState(null);
       alert('Vaya, parece que ha habido un error al conectar con la nube.');
     }
   };
-  // 🚀 El "brazo robótico" para guardar Clubes Amigos
+
+  // 🚀 El "brazo robótico" para guardar Clubes Amigos (¡También actualizado!)
   const guardarClub = async () => {
     if (!nuevoClub.nombre) return alert('¡Escribe el nombre del club! 🥋');
     if (nuevoClub.etapas.length === 0) return alert('¡Marca al menos una etapa! 🏁');
@@ -231,6 +238,7 @@ const [destino, setDestino] = useState(null);
         imagen: nuevoClub.imagen || '',
         contacto: nuevoClub.contacto || '',
         linkInscripcion: nuevoClub.linkInscripcion || '',
+        linksMultiples: nuevoClub.linksMultiples || [], // 🌟 ¡NUEVO! Añadimos esto para la nube de los clubes
         latAct: parseFloat(nuevoClub.latAct) || 0,
         lngAct: parseFloat(nuevoClub.lngAct) || 0
       };
@@ -249,7 +257,8 @@ const [destino, setDestino] = useState(null);
       // 🧹 Limpiamos el cajón y reseteamos el ID de edición
       setNuevoClub({
         nombre: '', etapas: [], horario: '', descripcion: '',
-        imagen: '', contacto: '', linkInscripcion: '', latAct: '', lngAct: ''
+        imagen: '', contacto: '', linkInscripcion: '', latAct: '', lngAct: '',
+        linksMultiples: [] // 🌟 ¡NUEVO! También limpiamos la lista de los clubes al terminar
       });
       setEditandoId(null); // 👈 ¡Súper importante para que el siguiente no sea una edición!
       
