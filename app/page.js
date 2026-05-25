@@ -534,290 +534,291 @@ const itemsFiltrados = todoJunto.filter((item) => {
   return etapaSimple === etapaBoton || enListaEtapas;
 });
 
-          return (
-            <>
-              {/* 🚩 Mensaje si no hay nada que enseñar */}
-              {itemsFiltrados.length === 0 && (
-                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '50px', backgroundColor: 'white', borderRadius: '20px' }}>
-                  <p>No hay actividades de <strong>{empresaActiva === 'Todas' ? '' : empresaActiva}</strong> en <strong>{etapaActiva}</strong> todavía.</p>
-                  {isAdmin && <p style={{ color: '#ff6b6b' }}>¡Usa el panel de admin para añadir una!</p>}
+return (
+  <>
+    {/* 🚩 Mensaje si no hay nada que enseñar */}
+    {itemsFiltrados.length === 0 && (
+      <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '50px', backgroundColor: 'white', borderRadius: '20px' }}>
+        <p>No hay actividades de <strong>{empresaActiva === 'Todas' ? '' : empresaActiva}</strong> en <strong>{etapaActiva}</strong> todavía.</p>
+        {isAdmin && <p style={{ color: '#ff6b6b' }}>¡Usa el panel de admin para añadir una!</p>}
+      </div>
+    )}
+
+    {/* 📦 CONTENEDOR INTELIGENTE: Pone el candado de tamaño para que no se hagan gigantes a lo ancho ni a lo alto */}
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 350px))', 
+      gap: '25px',
+      padding: '20px',
+      maxWidth: '1200px',
+      margin: '0 auto',
+      width: '100%',
+      alignItems: 'start', 
+      justifyContent: 'center' 
+    }}>
+
+      {/* 🎨 Dibujamos las tarjetas (sirve para los dos tipos: Cole y Clubes) */}
+      {itemsFiltrados.map((item) => (
+        <div
+          key={item.id} 
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '24px',
+            overflow: 'hidden',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)',
+            border: '1px solid #f1f5f9',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '460px', // 🌟 Mantiene la simetría perfecta de todas las tarjetas de la fila
+            transition: 'transform 0.2s ease',
+          }}
+        >
+          {/* 🖼️ IMAGEN / LOGO */}
+          <div style={{ position: 'relative' }}>
+            <img
+              src={item.imagen || item.foto || 'https://via.placeholder.com/400x200?text=San+Buenaventura'}
+              style={{ width: '100%', height: '180px', objectFit: 'cover', display: 'block' }}
+              onError={(e) => { e.target.src = 'https://via.placeholder.com/400x200?text=Imagen+No+Disponible'; }}
+            />
+            <div style={{
+              position: 'absolute', top: '12px', right: '12px',
+              backgroundColor: item.esClub ? '#d946ef' : 'rgba(255, 255, 255, 0.9)',
+              padding: '4px 12px', borderRadius: '99px', fontSize: '0.7rem', fontWeight: '800',
+              color: item.esClub ? 'white' : '#1e293b',
+              backdropFilter: 'blur(4px)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            }}>
+              {/* Mostramos "CLUB" o la primera etapa que tenga la lista */}
+              {item.esClub ? '🌟 CLUB AMIGO' : (item.etapas && item.etapas[0]) || item.etapa}
+            </div>
+          </div>
+
+          {/* 📝 CONTENIDO */}
+          <div style={{ padding: '20px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+            <h3 style={{ margin: '0 0 5px', fontSize: '1.2rem', color: '#0f172a', fontWeight: '700' }}>
+              {item.nombre}
+            </h3>
+            
+            {/* ⏰ HORARIO */}
+            <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 8px' }}>
+              ⏰ {item.horario || 'Horario a consultar'}
+            </p>
+
+            {/* 🗓️ DÍAS DE LA SEMANA */}
+            <div style={{ 
+              backgroundColor: '#eff6ff', 
+              color: '#1e40af', 
+              fontSize: '0.8rem', 
+              fontWeight: '800', 
+              padding: '6px 12px',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              alignSelf: 'flex-start',
+              border: '1px solid #dbeafe',
+              marginBottom: '15px'
+            }}>
+              <span>🗓️</span>
+              <span>{item.dias ? item.dias.toUpperCase() : 'DÍAS A CONSULTAR'}</span>
+            </div>
+
+            <div style={{ marginTop: 'auto' }}>
+              {/* 💰 PRECIO DESTACADO (Lo añadimos aquí antes del botón) */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'baseline', 
+                marginBottom: '12px',
+                padding: '0 5px'
+              }}>
+                <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>PRECIO:</span>
+                <span style={{ fontSize: '1.3rem', fontWeight: '900', color: '#3b82f6' }}>
+                  {item.precio ? `${item.precio}€` : '---'}
+                  <small style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#94a3b8', marginLeft: '3px' }}>/mes</small>
+                </span>
+              </div>
+
+              <button
+                onClick={() => {
+                  setActividadSeleccionada(item);
+                  setVista('detalles');
+                }}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: '12px', border: 'none',
+                  backgroundColor: '#f1f5f9', color: '#1e293b', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', marginBottom: '10px',
+                }}
+              >
+                Ver información completa
+              </button>
+
+              {/* 🔗 SECCIÓN DE INSCRIPCIÓN INTELIGENTE CON DESPLEGABLE */}
+              <div style={{ marginTop: 'auto', width: '100%', paddingTop: '10px' }}>
+                
+                {item.linksMultiples && item.linksMultiples.length > 0 ? (
+                  // 🌟 SI TIENE VARIOS ENLACES: Mostramos el desplegable de categorías
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    
+                    <select
+                      id={`select-${item.id}`}
+                      defaultValue=""
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '12px',
+                        border: '2px solid #cbd5e1',
+                        backgroundColor: '#f8fafc',
+                        color: '#1e293b',
+                        fontWeight: 'bold',
+                        fontSize: '0.85rem',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                      onChange={(e) => {
+                        // Guardamos temporalmente la URL elegida en el propio botón de abajo
+                        const botonIr = document.getElementById(`btn-ir-${item.id}`);
+                        if (botonIr) {
+                          botonIr.href = e.target.value;
+                          botonIr.style.opacity = e.target.value ? '1' : '0.5';
+                          botonIr.style.pointerEvents = e.target.value ? 'auto' : 'none';
+                        }
+                      }}
+                    >
+                      <option value="" disabled>👇 Selecciona tu categoría / curso</option>
+                      {item.linksMultiples.map((link, index) => (
+                        <option key={index} value={link.url}>
+                          {link.etiqueta}
+                        </option>
+                      ))}
+                    </select>
+
+                    {/* Botón de acción que se activa al elegir curso */}
+                    <a
+                      id={`btn-ir-${item.id}`}
+                      href=""
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'block', 
+                        padding: '11px', 
+                        backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
+                        color: 'white', 
+                        borderRadius: '12px', 
+                        textDecoration: 'none', 
+                        fontWeight: 'bold',
+                        fontSize: '0.9rem', 
+                        textAlign: 'center', 
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                        opacity: '0.5',          // Empieza semi-transparente hasta elegir curso
+                        pointerEvents: 'none',   // Bloqueado hasta elegir curso
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      📝 ¡INSCRIBIRSE AHORA!
+                    </a>
+                  </div>
+
+                ) : (
+                  // 🔄 SI NO TIENE ENLACES MÚLTIPLES: Tu botón clásico directo de siempre
+                  (item.linkInscripcion || item.enlace) && (
+                    <a
+                      href={item.linkInscripcion ? item.linkInscripcion : item.enlace}
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'block', 
+                        padding: '12px', 
+                        backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
+                        color: 'white', 
+                        borderRadius: '12px', 
+                        textDecoration: 'none', 
+                        fontWeight: 'bold',
+                        fontSize: '0.9rem', 
+                        textAlign: 'center', 
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      📝 ¡INSCRIBIRSE AHORA!
+                    </a>
+                  )
+                )}
+              </div>
+
+              {/* BOTONES DE ADMIN */}
+              {isAdmin && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '15px', paddingTop: '15px', borderTop: '1px dotted #e2e8f0' }}>
+                  
+                  {/* ✏️ BOTÓN DE EDITAR COMPLETO Y BLINDADO */}
+                  <button
+                    onClick={() => {
+                      setNuevaAct({
+                        ...item, 
+                        nombre: item.nombre || '',
+                        etapas: item.etapas || [], 
+                        horario: item.horario || '',
+                        dias: item.dias || '',
+                        lugar: item.lugar || '',
+                        info: item.info || item.descripcion || '',
+                        imagen: item.imagen || '',
+                        precio: item.precio || '',
+                        empresa: item.empresa || '',
+                        logoEmpresa: item.logoEmpresa || '',
+                        nombreContacto: item.nombreContacto || '',
+                        contacto: item.contacto || '', 
+                        latAct: item.latAct ? Number(item.latAct) : 40.407937755274425,
+                        lngAct: item.lngAct ? Number(item.lngAct) : -3.7469348757382366,
+                        latMon: item.latMon ? Number(item.latMon) : '',
+                        lngMon: item.lngMon ? Number(item.lngMon) : '',
+                        latFam: item.latFam ? Number(item.latFam) : '',
+                        lngFam: item.lngFam ? Number(item.lngFam) : '',
+                        fotoAct: item.fotoAct || '',
+                        fotoMon: item.fotoMon || '',
+                        fotoFam: item.fotoFam || '',
+                        recogidaMonitores: item.recogidaMonitores || '',
+                        recogidaFamilias: item.recogidaFamilias || '',
+                        linkInscripcion: item.linkInscripcion || item.enlace || ''
+                      });
+
+                      setEditandoId(item.id); 
+                      setVista('panel');      
+                    }}
+                    style={{ 
+                      flex: 1, 
+                      padding: '8px', 
+                      backgroundColor: '#fef3c7', 
+                      color: '#92400e',           
+                      border: 'none', 
+                      borderRadius: '8px', 
+                      fontSize: '0.8rem', 
+                      fontWeight: 'bold', 
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
+                    EDITAR
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      if (confirm('¿Quieres borrar esto?')) {
+                        const coleccion = item.esClub ? 'clubes_cole' : 'actividades_cole';
+                        await deleteDoc(doc(db, coleccion, item.id));
+                        item.esClub ? cargarClubes() : cargarActividades();
+                      }
+                    }}
+                    style={{ flex: 1, padding: '8px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}
+                  >
+                    BORRAR
+                  </button>
                 </div>
               )}
-
-              {/* 🎨 Dibujamos las tarjetas (sirve para los dos tipos: Cole y Clubes) */}
-              {itemsFiltrados.map((item) => (
-
-  <div
-    key={item.id} 
-    style={{
-      backgroundColor: 'white',
-      borderRadius: '24px',
-      overflow: 'hidden',
-      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)',
-      border: '1px solid #f1f5f9',
-      display: 'flex',
-      flexDirection: 'column',
-      transition: 'transform 0.2s ease',
-    }}
-  >
-    {/* 🖼️ IMAGEN / LOGO */}
-    <div style={{ position: 'relative' }}>
-      <img
-        src={item.imagen || item.foto || 'https://via.placeholder.com/400x200?text=San+Buenaventura'}
-        style={{ width: '100%', height: '180px', objectFit: 'cover', display: 'block' }}
-        onError={(e) => { e.target.src = 'https://via.placeholder.com/400x200?text=Imagen+No+Disponible'; }}
-      />
-      <div style={{
-        position: 'absolute', top: '12px', right: '12px',
-        backgroundColor: item.esClub ? '#d946ef' : 'rgba(255, 255, 255, 0.9)',
-        padding: '4px 12px', borderRadius: '99px', fontSize: '0.7rem', fontWeight: '800',
-        color: item.esClub ? 'white' : '#1e293b',
-        backdropFilter: 'blur(4px)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-      }}>
-        {/* Mostramos "CLUB" o la primera etapa que tenga la lista */}
-        {item.esClub ? '🌟 CLUB AMIGO' : (item.etapas && item.etapas[0]) || item.etapa}
-      </div>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
-
-{/* 📝 CONTENIDO */}
-<div style={{ padding: '20px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-  <h3 style={{ margin: '0 0 5px', fontSize: '1.2rem', color: '#0f172a', fontWeight: '700' }}>
-    {item.nombre}
-  </h3>
-  
-  {/* ⏰ HORARIO */}
-  <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 8px' }}>
-    ⏰ {item.horario || 'Horario a consultar'}
-  </p>
-
-  {/* 🗓️ DÍAS DE LA SEMANA */}
-  <div style={{ 
-    backgroundColor: '#eff6ff', 
-    color: '#1e40af', 
-    fontSize: '0.8rem', 
-    fontWeight: '800', 
-    padding: '6px 12px',
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    alignSelf: 'flex-start',
-    border: '1px solid #dbeafe',
-    marginBottom: '15px'
-  }}>
-    <span>🗓️</span>
-    <span>{item.dias ? item.dias.toUpperCase() : 'DÍAS A CONSULTAR'}</span>
-  </div>
-
-  <div style={{ marginTop: 'auto' }}>
-    {/* 💰 PRECIO DESTACADO (Lo añadimos aquí antes del botón) */}
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'baseline', 
-      marginBottom: '12px',
-      padding: '0 5px'
-    }}>
-      <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>PRECIO:</span>
-      <span style={{ fontSize: '1.3rem', fontWeight: '900', color: '#3b82f6' }}>
-        {item.precio ? `${item.precio}€` : '---'}
-        <small style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#94a3b8', marginLeft: '3px' }}>/mes</small>
-      </span>
-    </div>
-
-    <button
-      onClick={() => {
-        setActividadSeleccionada(item);
-        setVista('detalles');
-      }}
-      style={{
-        width: '100%', padding: '12px', borderRadius: '12px', border: 'none',
-        backgroundColor: '#f1f5f9', color: '#1e293b', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', marginBottom: '10px',
-      }}
-    >
-          Ver información completa
-        </button>
-
-        {/* 🔗 SECCIÓN DE INSCRIPCIÓN INTELIGENTE CON DESPLEGABLE */}
-<div style={{ marginTop: 'auto', width: '100%', paddingTop: '10px' }}>
-  
-  {item.linksMultiples && item.linksMultiples.length > 0 ? (
-    // 🌟 SI TIENE VARIOS ENLACES: Mostramos el desplegable de categorías
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      
-      <select
-        id={`select-${item.id}`}
-        defaultValue=""
-        style={{
-          width: '100%',
-          padding: '10px',
-          borderRadius: '12px',
-          border: '2px solid #cbd5e1',
-          backgroundColor: '#f8fafc',
-          color: '#1e293b',
-          fontWeight: 'bold',
-          fontSize: '0.85rem',
-          outline: 'none',
-          cursor: 'pointer'
-        }}
-        onChange={(e) => {
-          // Guardamos temporalmente la URL elegida en el propio botón de abajo
-          const botonIr = document.getElementById(`btn-ir-${item.id}`);
-          if (botonIr) {
-            botonIr.href = e.target.value;
-            botonIr.style.opacity = e.target.value ? '1' : '0.5';
-            botonIr.style.pointerEvents = e.target.value ? 'auto' : 'none';
-          }
-        }}
-      >
-        <option value="" disabled>👇 Selecciona tu categoría / curso</option>
-        {item.linksMultiples.map((link, index) => (
-          <option key={index} value={link.url}>
-            {link.etiqueta}
-          </option>
-        ))}
-      </select>
-
-      {/* Botón de acción que se activa al elegir curso */}
-      <a
-        id={`btn-ir-${item.id}`}
-        href=""
-        target="_blank" 
-        rel="noopener noreferrer"
-        style={{
-          display: 'block', 
-          padding: '11px', 
-          backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
-          color: 'white', 
-          borderRadius: '12px', 
-          textDecoration: 'none', 
-          fontWeight: 'bold',
-          fontSize: '0.9rem', 
-          textAlign: 'center', 
-          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-          opacity: '0.5',          // Empieza semi-transparente hasta elegir curso
-          pointerEvents: 'none',   // Bloqueado hasta elegir curso
-          transition: 'all 0.2s ease'
-        }}
-      >
-        📝 ¡INSCRIBIRSE AHORA!
-      </a>
-    </div>
-
-  ) : (
-    // 🔄 SI NO TIENE ENLACES MÚLTIPLES: Tu botón clásico directo de siempre
-(item.linkInscripcion || item.enlace) && (
-  <a
-    // 🌟 Cambiamos el orden aquí para que lea primero el link de inscripción actualizado
-    href={item.linkInscripcion ? item.linkInscripcion : item.enlace}
-    target="_blank" 
-    rel="noopener noreferrer"
-    style={{
-      display: 'block', 
-      padding: '12px', 
-      backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
-      color: 'white', 
-      borderRadius: '12px', 
-      textDecoration: 'none', 
-      fontWeight: 'bold',
-      fontSize: '0.9rem', 
-      textAlign: 'center', 
-      boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-    }}
-  >
-    📝 ¡INSCRIBIRSE AHORA!
-  </a>
-)
-  )}
-
-</div>
-
-{/* BOTONES DE ADMIN */}
-{isAdmin && (
-  <div style={{ display: 'flex', gap: '8px', marginTop: '15px', paddingTop: '15px', borderTop: '1px dotted #e2e8f0' }}>
-    
-   {/* ✏️ BOTÓN DE EDITAR COMPLETO Y BLINDADO */}
-<button
-  onClick={() => {
-    // 📝 Cargamos TODO en el formulario único (setNuevaAct)
-    setNuevaAct({
-      ...item, // Mantenemos todo lo que ya traía el objeto
-      nombre: item.nombre || '',
-      etapas: item.etapas || [], // Casillas de verificación (Cole/Clubes)
-      horario: item.horario || '',
-      dias: item.dias || '',
-      lugar: item.lugar || '',
-      info: item.info || item.descripcion || '',
-      imagen: item.imagen || '',
-      precio: item.precio || '',
-      
-      // --- 🏢 Datos de empresa y contacto ---
-      empresa: item.empresa || '',
-      logoEmpresa: item.logoEmpresa || '',
-      nombreContacto: item.nombreContacto || '',
-      contacto: item.contacto || '', // Email de contacto
-      
-      // --- 📍 Coordenadas (Convertidas a NÚMERO para que el mapa no de error) ---
-      latAct: item.latAct ? Number(item.latAct) : 40.407937755274425,
-      lngAct: item.lngAct ? Number(item.lngAct) : -3.7469348757382366,
-      latMon: item.latMon ? Number(item.latMon) : '',
-      lngMon: item.lngMon ? Number(item.lngMon) : '',
-      latFam: item.latFam ? Number(item.latFam) : '',
-      lngFam: item.lngFam ? Number(item.lngFam) : '',
-      
-      // --- 📸 Fotos de los puntos de encuentro ---
-      fotoAct: item.fotoAct || '',
-      fotoMon: item.fotoMon || '',
-      fotoFam: item.fotoFam || '',
-      
-      // --- 🚩 Textos de recogida y enlaces ---
-      recogidaMonitores: item.recogidaMonitores || '',
-      recogidaFamilias: item.recogidaFamilias || '',
-      linkInscripcion: item.linkInscripcion || item.enlace || ''
-    });
-
-    setEditandoId(item.id); // Guardamos el ID para saber cuál actualizar al guardar
-    setVista('panel');      // ¡Directos al panel con todo relleno!
-  }}
-  /* ✨ TU FORMATO ORIGINAL RECUPERADO ✨ */
-  style={{ 
-    flex: 1, 
-    padding: '8px', 
-    backgroundColor: '#fef3c7', // Amarillo suave de edición
-    color: '#92400e',           // Marrón oscuro para el texto
-    border: 'none', 
-    borderRadius: '8px', 
-    fontSize: '0.8rem', 
-    fontWeight: 'bold', 
-    cursor: 'pointer',
-    transition: 'background-color 0.2s'
-  }}
->
-  EDITAR
-</button>
-
-    {/* Y aquí debajo se queda tu botón de borrar como estaba */}
-    <button
-      onClick={async () => {
-        if (confirm('¿Quieres borrar esto?')) {
-          const coleccion = item.esClub ? 'clubes_cole' : 'actividades_cole';
-          await deleteDoc(doc(db, coleccion, item.id));
-          item.esClub ? cargarClubes() : cargarActividades();
-        }
-      }}
-      style={{ flex: 1, padding: '8px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}
-    >
-      BORRAR
-    </button>
-  </div>
-)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          );
-        })()}
+  </>
+);
+})()}
         </main>
         {/* 🛡️ FOOTER ULTRA-ESTRECHO Y MINIMALISTA */}
         <footer style={{
