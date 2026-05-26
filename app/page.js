@@ -400,8 +400,14 @@ const preguntasFrecuentes = [
     {!isAdmin ? (
       <button
         onClick={() => {
-          const p = prompt('Clave:');
-          if (p === 'admin') setIsAdmin(true);
+          const p = prompt('Introduce la clave de administración: 🔑');
+          
+          // 🛡️ ¡EL GRAN TRUCO! Comparamos lo que escribe el usuario con la contraseña oculta
+          if (p === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) {
+            setIsAdmin(true);
+          } else {
+            alert('¡Clave incorrecta! Acceso denegado. 🛑');
+          }
         }}
         style={{
           padding: '8px 16px',
@@ -451,7 +457,7 @@ const preguntasFrecuentes = [
       </div>
     )}
   </div>
-
+  
   {/* Brillo decorativo */}
   <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '50%', filter: 'blur(40px)' }}></div>
 
