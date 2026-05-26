@@ -603,7 +603,7 @@ const itemsFiltrados = todoJunto.filter((item) => {
     empresaBoton === 'todas' || 
     empresaActividad === empresaBoton ||
     (empresaBoton === 'san buenaventura' && empresaActividad === 'colegio san buenaventura');
-    
+
   if (!cumpleEmpresa) return false;
 
   const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
@@ -1530,35 +1530,8 @@ return (
       </div>
     );
   }
-  // 🚩 NUEVA PANTALLA EXCLUSIVA PARA LAS PREGUNTAS FRECUENTES (FAQ)
+// 🚩 NUEVA PANTALLA EXCLUSIVA PARA LAS PREGUNTAS FRECUENTES (FAQ)
 if (vista === 'faq') {
-  // 🌟 TRUCO MÁGICO: El estado vive aquí dentro para no romper el resto de la web
-  const [abiertaId, setAbiertaId] = useState(null);
-
-  // 📑 Textos oficiales correctos de tus preguntas frecuentes
-  const preguntasFrecuentes = [
-    {
-      id: 1,
-      pregunta: "❓ ¿Cómo recogen los monitores a los alumnos y dónde se entregan?",
-      respuesta: "¡Es súper fácil! Dentro de esta misma web, si pulsas en el botón 'Ver información completa' de cada actividad, verás detallado paso a paso el lugar exacto donde se realiza, dónde recogen los monitores a los niños y en qué punto se entregan a las familias al terminar. ¡Todo bien especificado para tu total tranquilidad!"
-    },
-    {
-      id: 2,
-      pregunta: "📋 ¿Cuándo se pasan los recibos mensuales de las actividades?",
-      respuesta: "Los recibos de las actividades extraescolares se cobran de forma cómoda para las familias siempre a principio de cada mes."
-    },
-    {
-      id: 3,
-      pregunta: "❌ ¿Cómo puedo solicitar la baja de una actividad?",
-      respuesta: "Si necesitas solicitar una baja, recuerda hacerlo siempre antes del día 25 del mes anterior. El trámite se realiza directamente a través de la página web de Alventus, a excepción de las actividades de piscina, las cuales se gestionan cómodamente desde la propia página web de la piscina."
-    },
-    {
-      id: 4,
-      pregunta: "🌧️ ¿Qué pasa si llueve y la actividad es al aire libre?",
-      respuesta: "¡La diversión nunca se detiene en el cole! En caso de lluvia o mal tiempo, los monitores tienen previstos espacios cubiertos alternativos dentro del colegio (como aulas asignadas, porches o el gimnasio) para realizar la actividad de forma segura y adaptada."
-    }
-  ];
-
   return (
     <div style={{ 
       fontFamily: 'sans-serif',
@@ -1605,7 +1578,9 @@ if (vista === 'faq') {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {preguntasFrecuentes.map((faq) => {
-              const estaAbierta = abiertaId === faq.id;
+              // 🌟 ¡SÚPER ESCUDO! Comprobamos de forma segura si esta pregunta está abierta
+              const estaAbierta = preguntaAbierta === faq.id;
+
               return (
                 <div 
                   key={faq.id}
@@ -1619,7 +1594,7 @@ if (vista === 'faq') {
                   }}
                 >
                   <button
-                    onClick={() => setAbiertaId(estaAbierta ? null : faq.id)}
+                    onClick={() => setPreguntaAbierta(estaAbierta ? null : faq.id)}
                     style={{
                       width: '100%', padding: '20px', background: 'none', border: 'none',
                       textAlign: 'left', cursor: 'pointer', display: 'flex', 
