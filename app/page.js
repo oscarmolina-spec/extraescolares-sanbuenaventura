@@ -556,9 +556,8 @@ return (
       alignItems: 'start', 
       justifyContent: 'center' 
     }}>
-
-      {/* 🎨 Dibujamos las tarjetas (sirve para los dos tipos: Cole y Clubes) */}
-      {itemsFiltrados.map((item) => (
+{/* 🎨 Dibujamos las tarjetas (sirve para los dos tipos: Cole y Clubes) */}
+{itemsFiltrados.map((item) => (
         <div
           key={item.id} 
           style={{
@@ -569,7 +568,8 @@ return (
             border: '1px solid #f1f5f9',
             display: 'flex',
             flexDirection: 'column',
-            minHeight: '460px', // 🌟 Mantiene la simetría perfecta de todas las tarjetas de la fila
+            // 🌟 ALTURA FIJA MÁGICA: Ahora todas miden exactamente 520px de alto, ¡formando bloques perfectos!
+            height: '520px', 
             transition: 'transform 0.2s ease',
           }}
         >
@@ -708,8 +708,8 @@ return (
                         fontSize: '0.9rem', 
                         textAlign: 'center', 
                         boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-                        opacity: '0.5',          // Empieza semi-transparente hasta elegir curso
-                        pointerEvents: 'none',   // Bloqueado hasta elegir curso
+                        opacity: '0.5',          
+                        pointerEvents: 'none',   
                         transition: 'all 0.2s ease'
                       }}
                     >
