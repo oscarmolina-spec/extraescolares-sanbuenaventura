@@ -693,19 +693,15 @@ return (
 {item.esClub ? '🌟 CLUB AMIGO' : (Array.isArray(item.etapas) && item.etapas.length > 0 ? item.etapas.join(', ') : item.etapa)}            </div>
           </div>
 
-          {/* 📝 CONTENIDO ESTILIZADO CON CONTRASTE REFORZADO */}
-          <div style={{ padding: '20px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-            {/* Título en negro puro para que se lea de maravilla */}
-            <h3 style={{ margin: '0 0 6px', fontSize: '1.25rem', color: '#0f172a', fontWeight: '900', letterSpacing: '-0.3px' }}>
+          {/* 📝 CONTENIDO ESTILIZADO CON CONTRASTE REFORZADO Y MEJOR JERARQUÍA VISUAL */}
+          <div style={{ padding: '24px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+            
+            {/* 👑 1. EL REY DE LA TARJETA: Título más grande en negro puro */}
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.4rem', color: '#0f172a', fontWeight: '900', letterSpacing: '-0.5px' }}>
               {item.nombre}
             </h3>
             
-            {/* ⏰ HORARIO CON COLOR MÁS INTENSO */}
-            <p style={{ color: '#334155', fontSize: '0.85rem', margin: '0 0 10px', fontWeight: '700' }}>
-              ⏰ {item.horario || 'Horario a consultar'}
-            </p>
-
-            {/* 🗓️ DÍAS DE LA SEMANA CON FONDOS MÁS VIVOS */}
+            {/* 🗓️ 2. LOS ESCUDEROS: Subimos los días justo debajo del título */}
             <div style={{ 
               backgroundColor: item.esClub ? '#fae8ff' : '#e0f2fe', 
               color: item.esClub ? '#701a75' : '#0369a1', 
@@ -718,29 +714,36 @@ return (
               gap: '6px',
               alignSelf: 'flex-start',
               border: item.esClub ? '1px solid #d8b4fe' : '1px solid #7dd3fc',
-              marginBottom: '15px'
+              marginBottom: '8px'
             }}>
               <span>🗓️</span>
               <span>{item.dias ? item.dias.toUpperCase() : 'DÍAS A CONSULTAR'}</span>
             </div>
 
+            {/* ⏰ El Horario pegado a los días, en un gris intermedio muy elegante */}
+            <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0 0 20px', fontWeight: '700' }}>
+              ⏰ {item.horario || 'Horario a consultar'}
+            </p>
+
+            {/* 🍃 EL COLCHÓN DE AIRE (marginTop: 'auto') empuja todo lo demás al fondo de forma limpia */}
             <div style={{ marginTop: 'auto' }}>
-              {/* 💰 PRECIO DESTACADO */}
+              
+              {/* 💰 3. EL IMÁN DE LAS MIRADAS: El precio con más tamaño y un gris suave de etiqueta */}
               <div style={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
                 alignItems: 'baseline', 
-                marginBottom: '14px',
+                marginBottom: '16px',
                 padding: '0 5px'
               }}>
-                <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 'bold' }}>PRECIO:</span>
-                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: item.esClub ? '#c026d3' : '#1d4ed8' }}>
+                <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold', letterSpacing: '0.5px' }}>PRECIO:</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: '900', color: item.esClub ? '#c026d3' : '#1d4ed8' }}>
                   {item.precio ? `${item.precio}€` : '---'}
-                  <small style={{ fontSize: '0.75rem', fontWeight: '700', color: '#475569', marginLeft: '3px' }}>/mes</small>
+                  <small style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', marginLeft: '3px' }}>/mes</small>
                 </span>
               </div>
 
-              {/* Botón principal oscuro para romper la monotonía y ganar contraste */}
+              {/* Botón principal oscuro */}
               <button
                 onClick={() => {
                   setActividadSeleccionada(item);
@@ -759,7 +762,7 @@ return (
               </button>
 
               {/* 🔗 SECCIÓN DE INSCRIPCIÓN INTELIGENTE */}
-              <div style={{ marginTop: 'auto', width: '100%', paddingTop: '5px' }}>
+              <div style={{ width: '100%', paddingTop: '5px' }}>
                 {item.linksMultiples && item.linksMultiples.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <select
@@ -843,7 +846,7 @@ return (
                 )}
               </div>
 
-              {/* BOTONES DE ADMIN */}
+              {/* 🛠️ BOTONES DE ADMINISTRACIÓN (¡A salvo e intactos!) */}
               {isAdmin && (
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px dotted rgba(0,0,0,0.2)' }}>
                   <button
@@ -897,6 +900,7 @@ return (
                   </button>
                 </div>
               )}
+
             </div>
           </div>
         </div>
