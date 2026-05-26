@@ -290,28 +290,35 @@ const [destino, setDestino] = useState(null);
       <div
         style={{
           fontFamily: 'sans-serif',
-          backgroundColor: '#f1f5f9', // 🎨 Fondo gris en toda la pantalla
+          backgroundColor: '#0f172a', // 🌌 Fondo noche profundo para que resalten las luces neón
           minHeight: '100vh',        // 📐 ¡Toda la altura de la pantalla obligatoria!
           
           // 🧲 ACTIVAMOS EL IMÁN ANTI-ESPACIOS BLANCOS:
           display: 'flex',          
           flexDirection: 'column',  
           justifyContent: 'space-between', 
-          
-          // 🧹 LIMPIEZA: Quitamos los 100px viejos que creaban la franja blanca por abajo
+          position: 'relative',
+          overflowX: 'hidden',
           paddingBottom: '0px',     
         }}
       >
+        {/* 🔮 CÍRCULOS DE LUZ NEÓN FLOTANTES EN EL FONDO GENERAL */}
+        <div style={{ position: 'absolute', top: '15%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
+        <div style={{ position: 'absolute', bottom: '20%', right: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,70,239,0.2) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0 }} />
+
 <header
   style={{
-    background: 'linear-gradient(145deg, #1e293b 0%, #0f172a 100%)',
-    padding: '20px 20px 25px', // 👈 Reducimos aire arriba y abajo del header
+    background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)',
+    backdropFilter: 'blur(20px)', // 💎 Efecto cristal esmerilado en el menú superior
+    padding: '20px 20px 25px', 
     textAlign: 'center',
     borderRadius: '0 0 50px 50px',
-    boxShadow: '0 15px 30px rgba(0,0,0,0.2)',
+    boxShadow: '0 15px 30px rgba(0,0,0,0.3)',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
     marginBottom: '20px',
     position: 'relative',
     overflow: 'hidden',
+    zIndex: 10,
   }}
 >
   {/* 🕹️ BOTONES SUPERIORES (MAPA Y ADMIN) */}
@@ -335,7 +342,10 @@ const [destino, setDestino] = useState(null);
         fontSize: '0.8rem',
         fontWeight: 'bold',
         backdropFilter: 'blur(4px)',
+        transition: 'background-color 0.2s',
       }}
+      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'}
+      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
     >
       📍 Mapa Cole
     </button>
@@ -355,6 +365,7 @@ const [destino, setDestino] = useState(null);
           cursor: 'pointer',
           fontSize: '0.8rem',
           fontWeight: 'bold',
+          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
         }}
       >
         🔑 Admin
@@ -395,17 +406,16 @@ const [destino, setDestino] = useState(null);
   </div>
 
   {/* Brillo decorativo */}
-  <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '50%', filter: 'blur(40px)' }}></div>
+  <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '50%', filter: 'blur(40px)' }}></div>
 
   {/* ⭐ CONTENEDOR DEL ESCUDO REDUCIDO EN ESPACIOS */}
   <div style={{ 
     position: 'relative', 
     display: 'block', 
-    margin: '-10px auto 0px', // 👈 ¡CLAVE! Quitamos los 50px de abajo y subimos 10px arriba
+    margin: '-10px auto 0px', 
     width: 'fit-content', 
-    padding: '0px' // 👈 Quitamos el padding de 20px que separaba todo
+    padding: '0px' 
   }}>
-    
     <img
       src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd"
       style={{
@@ -420,7 +430,7 @@ const [destino, setDestino] = useState(null);
 
   {/* 🏆 TÍTULO SIMPLIFICADO Y CON ESPACIO */}
   <h1 style={{ 
-    margin: '10px 0 0', // 👈 Un poco de margen arriba para que no choque con el escudo
+    margin: '10px 0 0', 
     fontSize: '2.5rem', 
     fontWeight: '800', 
     color: '#ffffff', 
@@ -441,7 +451,8 @@ const [destino, setDestino] = useState(null);
   }}>
     "Estas actividades tienen carácter voluntario, no discriminatorio y no lucrativo"
   </p>
-  {/* --- 🚀 AQUÍ PEGAS EL PASO 2 (EL BUSCADOR) --- */}
+
+  {/* --- BUSCADOR ESTILIZADO PREMIUM --- */}
   <div style={{ maxWidth: '400px', margin: '20px auto', padding: '0 20px' }}>
     <div style={{ position: 'relative' }}>
       <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', fontSize: '1.2rem' }}>🔍</span>
@@ -454,86 +465,101 @@ const [destino, setDestino] = useState(null);
           width: '100%',
           padding: '12px 15px 12px 45px',
           borderRadius: '15px',
-          border: '2px solid rgba(255,255,255,0.1)',
-          backgroundColor: 'rgba(255,255,255,0.05)',
+          border: '2px solid rgba(255,255,255,0.15)',
+          backgroundColor: 'rgba(255,255,255,0.07)',
           color: 'white',
           fontSize: '1rem',
-          outline: 'none'
+          outline: 'none',
+          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)',
+          transition: 'all 0.3s ease'
         }}
+        onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
+        onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'}
       />
     </div>
   </div>
 
-  {/* Selector de etapas (Más pegado arriba) */}
+  {/* Selector de etapas (Burbujas de cristal activo) */}
   <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
     {['Infantil', 'Primaria', 'ESO','Clubes Amigos'].map((e) => (
-      <button key={e} onClick={() => setEtapaActiva(e)} style={{ padding: '12px 25px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', backgroundColor: etapaActiva === e ? '#3b82f6' : 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '800', fontSize: '0.95rem', transition: 'all 0.3s ease' }}>
+      <button 
+        key={e} 
+        onClick={() => setEtapaActiva(e)} 
+        style={{ 
+          padding: '12px 25px', 
+          borderRadius: '18px', 
+          border: '1px solid rgba(255,255,255,0.15)', 
+          cursor: 'pointer', 
+          backgroundColor: etapaActiva === e ? '#3b82f6' : 'rgba(255,255,255,0.05)', 
+          color: 'white', 
+          fontWeight: '800', 
+          fontSize: '0.95rem', 
+          boxShadow: etapaActiva === e ? '0 8px 20px rgba(59, 130, 246, 0.4)' : 'none',
+          transition: 'all 0.3s ease' 
+        }}
+      >
         {e}
       </button>
     ))}
   </div>
 
-  {/* Selector de empresas (Más pegado arriba) */}
+  {/* Selector de empresas */}
   <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
     {['Todas', 'Alventus', '4life', 'Kids&Us', 'San Buenaventura'].map((emp) => (
-      <button key={emp} onClick={() => setEmpresaActiva(emp)} style={{ padding: '6px 18px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', backgroundColor: empresaActiva === emp ? '#60a5fa' : 'transparent', color: 'white', fontWeight: '600', fontSize: '0.8rem' }}>
+      <button 
+        key={emp} 
+        onClick={() => setEmpresaActiva(emp)} 
+        style={{ 
+          padding: '6px 18px', 
+          borderRadius: '12px', 
+          border: '1px solid rgba(255,255,255,0.2)', 
+          cursor: 'pointer', 
+          backgroundColor: empresaActiva === emp ? '#60a5fa' : 'transparent', 
+          color: 'white', 
+          fontWeight: '600', 
+          fontSize: '0.8rem',
+          boxShadow: empresaActiva === emp ? '0 4px 10px rgba(96, 165, 250, 0.3)' : 'none',
+          transition: 'all 0.2s ease'
+        }}
+      >
         {emp}
       </button>
     ))}
   </div>
 </header>
 
-        <main
-          style={{
-            maxWidth: '1100px',
-            margin: '40px auto',
-            padding: '0 20px',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '20px',
-          }}
-        >
-          {/* 🌟 AQUÍ EMPIEZA LA MAGIA: JUNTAMOS TODO */}
+        <main style={{ flex: 1, width: '100%', zIndex: 1 }}>
+          {/* 🌟 FILTROS Y RECORRIDO EN ACCIÓN */}
         {(() => {
-          // Juntamos todo en una sola lista para filtrar
           const todoJunto = [
             ...actividades.map(a => ({ ...a, esClub: false })),
             ...clubes.map(c => ({ ...c, esClub: true }))
           ];
 
-// 🔍 FILTRO ULTRA-RESISTENTE (¡Ahora sin miedo a las tildes!)
 const itemsFiltrados = todoJunto.filter((item) => {
-  
-  // FUNCIÓN MÁGICA: Quita tildes y pone en minúsculas
   const normalizar = (texto) => 
     texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-  // 0. REGLA DEL BUSCADOR (Limpia tildes en ambos lados)
   const nombreActividad = normalizar(item.nombre || "");
   const loQueEscribeLaFamilia = normalizar(busqueda);
 
   if (!nombreActividad.includes(loQueEscribeLaFamilia)) return false;
 
-  // 1. Limpiamos las palabras para que no haya fallos de espacios o mayúsculas
   const etapaBoton = etapaActiva.trim().toLowerCase();
   const empresaBoton = empresaActiva.trim().toLowerCase();
 
-  // 2. REGLA DE EMPRESA
-  const empresaActividad = (item.empresa || "").trim().toLowerCase();
   const cumpleEmpresa = 
     empresaBoton === 'todas' || 
     empresaActividad === empresaBoton ||
     (empresaBoton === 'san buenaventura' && empresaActividad === 'colegio san buenaventura');
 
+  const empresaActividad = (item.empresa || "").trim().toLowerCase();
   if (!cumpleEmpresa) return false;
 
-  // 3. REGLA DE CLUBES
   const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
   if (etapaBoton === 'clubes amigos') return esClub;
   if (esClub) return false;
 
-  // 4. REGLA DE ETAPAS (Primaria, ESO, Infantil...)
-  // Miramos en 'etapa' y en la lista 'etapas'
   const etapaSimple = (item.etapa || "").trim().toLowerCase();
   const enListaEtapas = Array.isArray(item.etapas) && 
                         item.etapas.some(e => e.trim().toLowerCase() === etapaBoton);
@@ -545,17 +571,17 @@ return (
   <>
     {/* 🚩 Mensaje si no hay nada que enseñar */}
     {itemsFiltrados.length === 0 && (
-      <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '50px', backgroundColor: 'white', borderRadius: '20px' }}>
-        <p>No hay actividades de <strong>{empresaActiva === 'Todas' ? '' : empresaActiva}</strong> en <strong>{etapaActiva}</strong> todavía.</p>
-        {isAdmin && <p style={{ color: '#ff6b6b' }}>¡Usa el panel de admin para añadir una!</p>}
+      <div style={{ textAlign: 'center', padding: '50px', backgroundColor: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: 'white', borderRadius: '24px', margin: '40px auto', maxWidth: '600px', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <p style={{ fontSize: '1.1rem' }}>No hay actividades de <strong>{empresaActiva === 'Todas' ? '' : empresaActiva}</strong> en <strong>{etapaActiva}</strong> todavía.</p>
+        {isAdmin && <p style={{ color: '#ff6b6b', fontWeight: 'bold', marginTop: '10px' }}>¡Usa el panel de admin para añadir una!</p>}
       </div>
     )}
 
-    {/* 📦 CONTENEDOR INTELIGENTE: Pone el candado de tamaño para que no se hagan gigantes a lo ancho ni a lo alto */}
+    {/* 📦 CONTENEDOR INTELIGENTE EN REJILLA */}
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 350px))', 
-      gap: '25px',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 350px))', 
+      gap: '30px',
       padding: '20px',
       maxWidth: '1200px',
       margin: '0 auto',
@@ -563,66 +589,79 @@ return (
       alignItems: 'start', 
       justifyContent: 'center' 
     }}>
-{/* 🎨 Dibujamos las tarjetas (sirve para los dos tipos: Cole y Clubes) */}
-{itemsFiltrados.map((item) => (
+      {/* 🎨 DIBUJAMOS LAS TARJETAS DE CRISTAL (GLASSMORPHISM) */}
+      {itemsFiltrados.map((item) => (
         <div
           key={item.id} 
           style={{
-            backgroundColor: 'white',
-            borderRadius: '24px',
+            // 🌟 EL SECRETO DEL CRISTAL: Fondo blanco translúcido + desenfoque profundo de fondo
+            background: 'rgba(255, 255, 255, 0.82)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: '28px', // Bordes más suaves estilo iOS
             overflow: 'hidden',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)',
-            border: '1px solid #f1f5f9',
+            boxShadow: '0 20px 35px rgba(0, 0, 0, 0.15)',
+            // 💎 Micro-borde de luz real para separar la tarjeta del fondo oscuro
+            border: '1px solid rgba(255, 255, 255, 0.4)', 
             display: 'flex',
             flexDirection: 'column',
-            // 🌟 ALTURA FIJA MÁGICA: Ahora todas miden exactamente 520px de alto, ¡formando bloques perfectos!
-            height: '520px', 
-            transition: 'transform 0.2s ease',
+            height: '530px', // Un pelín más de holgura para respirar mejor
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+          // ✨ INTERACTIVO: Flota mágicamente hacia arriba y cambia su borde al tocarlo
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-10px)';
+            e.currentTarget.style.boxShadow = '0 30px 50px rgba(0, 0, 0, 0.3)';
+            e.currentTarget.style.borderColor = item.esClub ? '#d946ef' : '#3b82f6';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 20px 35px rgba(0, 0, 0, 0.15)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
           }}
         >
           {/* 🖼️ IMAGEN / LOGO */}
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', height: '180px', overflow: 'hidden' }}>
             <img
               src={item.imagen || item.foto || 'https://via.placeholder.com/400x200?text=San+Buenaventura'}
-              style={{ width: '100%', height: '180px', objectFit: 'cover', display: 'block' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               onError={(e) => { e.target.src = 'https://via.placeholder.com/400x200?text=Imagen+No+Disponible'; }}
             />
             <div style={{
               position: 'absolute', top: '12px', right: '12px',
-              backgroundColor: item.esClub ? '#d946ef' : 'rgba(255, 255, 255, 0.9)',
-              padding: '4px 12px', borderRadius: '99px', fontSize: '0.7rem', fontWeight: '800',
-              color: item.esClub ? 'white' : '#1e293b',
-              backdropFilter: 'blur(4px)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              backgroundColor: item.esClub ? '#d946ef' : 'rgba(15, 23, 42, 0.85)',
+              padding: '5px 14px', borderRadius: '99px', fontSize: '0.7rem', fontWeight: '800',
+              color: 'white',
+              backdropFilter: 'blur(4px)', boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
             }}>
-              {/* Mostramos "CLUB" o la primera etapa que tenga la lista */}
               {item.esClub ? '🌟 CLUB AMIGO' : (item.etapas && item.etapas[0]) || item.etapa}
             </div>
           </div>
 
-          {/* 📝 CONTENIDO */}
+          {/* 📝 CONTENIDO ESTILIZADO */}
           <div style={{ padding: '20px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-            <h3 style={{ margin: '0 0 5px', fontSize: '1.2rem', color: '#0f172a', fontWeight: '700' }}>
+            <h3 style={{ margin: '0 0 6px', fontSize: '1.25rem', color: '#0f172a', fontWeight: '800', letterSpacing: '-0.3px' }}>
               {item.nombre}
             </h3>
             
             {/* ⏰ HORARIO */}
-            <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 8px' }}>
+            <p style={{ color: '#475569', fontSize: '0.85rem', margin: '0 0 10px', fontWeight: '500' }}>
               ⏰ {item.horario || 'Horario a consultar'}
             </p>
 
             {/* 🗓️ DÍAS DE LA SEMANA */}
             <div style={{ 
-              backgroundColor: '#eff6ff', 
-              color: '#1e40af', 
-              fontSize: '0.8rem', 
+              backgroundColor: item.esClub ? '#fdf4ff' : '#eff6ff', 
+              color: item.esClub ? '#86198f' : '#1e40af', 
+              fontSize: '0.75rem', 
               fontWeight: '800', 
-              padding: '6px 12px',
-              borderRadius: '10px',
+              padding: '6px 14px',
+              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               alignSelf: 'flex-start',
-              border: '1px solid #dbeafe',
+              border: item.esClub ? '1px solid #f5d0fe' : '1px solid #dbeafe',
               marginBottom: '15px'
             }}>
               <span>🗓️</span>
@@ -630,18 +669,18 @@ return (
             </div>
 
             <div style={{ marginTop: 'auto' }}>
-              {/* 💰 PRECIO DESTACADO (Lo añadimos aquí antes del botón) */}
+              {/* 💰 PRECIO DESTACADO */}
               <div style={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
                 alignItems: 'baseline', 
-                marginBottom: '12px',
+                marginBottom: '14px',
                 padding: '0 5px'
               }}>
-                <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold' }}>PRECIO:</span>
-                <span style={{ fontSize: '1.3rem', fontWeight: '900', color: '#3b82f6' }}>
+                <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 'bold' }}>PRECIO:</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: item.esClub ? '#d946ef' : '#3b82f6' }}>
                   {item.precio ? `${item.precio}€` : '---'}
-                  <small style={{ fontSize: '0.75rem', fontWeight: 'normal', color: '#94a3b8', marginLeft: '3px' }}>/mes</small>
+                  <small style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', marginLeft: '3px' }}>/mes</small>
                 </span>
               </div>
 
@@ -651,37 +690,36 @@ return (
                   setVista('detalles');
                 }}
                 style={{
-                  width: '100%', padding: '12px', borderRadius: '12px', border: 'none',
-                  backgroundColor: '#f1f5f9', color: '#1e293b', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem', marginBottom: '10px',
+                  width: '100%', padding: '12px', borderRadius: '14px', border: 'none',
+                  backgroundColor: 'rgba(15, 23, 42, 0.06)', color: '#0f172a', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '10px',
+                  transition: 'background-color 0.2s'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.06)'}
               >
                 Ver información completa
               </button>
 
-              {/* 🔗 SECCIÓN DE INSCRIPCIÓN INTELIGENTE CON DESPLEGABLE */}
-              <div style={{ marginTop: 'auto', width: '100%', paddingTop: '10px' }}>
-                
+              {/* 🔗 SECCIÓN DE INSCRIPCIÓN INTELIGENTE */}
+              <div style={{ marginTop: 'auto', width: '100%', paddingTop: '5px' }}>
                 {item.linksMultiples && item.linksMultiples.length > 0 ? (
-                  // 🌟 SI TIENE VARIOS ENLACES: Mostramos el desplegable de categorías
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    
                     <select
                       id={`select-${item.id}`}
                       defaultValue=""
                       style={{
                         width: '100%',
-                        padding: '10px',
-                        borderRadius: '12px',
-                        border: '2px solid #cbd5e1',
+                        padding: '11px',
+                        borderRadius: '14px',
+                        border: '2px solid rgba(15, 23, 42, 0.15)',
                         backgroundColor: '#f8fafc',
-                        color: '#1e293b',
+                        color: '#0f172a',
                         fontWeight: 'bold',
                         fontSize: '0.85rem',
                         outline: 'none',
                         cursor: 'pointer'
                       }}
                       onChange={(e) => {
-                        // Guardamos temporalmente la URL elegida en el propio botón de abajo
                         const botonIr = document.getElementById(`btn-ir-${item.id}`);
                         if (botonIr) {
                           botonIr.href = e.target.value;
@@ -698,7 +736,6 @@ return (
                       ))}
                     </select>
 
-                    {/* Botón de acción que se activa al elegir curso */}
                     <a
                       id={`btn-ir-${item.id}`}
                       href=""
@@ -706,15 +743,15 @@ return (
                       rel="noopener noreferrer"
                       style={{
                         display: 'block', 
-                        padding: '11px', 
+                        padding: '12px', 
                         backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
                         color: 'white', 
-                        borderRadius: '12px', 
+                        borderRadius: '14px', 
                         textDecoration: 'none', 
-                        fontWeight: 'bold',
-                        fontSize: '0.9rem', 
+                        fontWeight: '900',
+                        fontSize: '0.85rem', 
                         textAlign: 'center', 
-                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                         opacity: '0.5',          
                         pointerEvents: 'none',   
                         transition: 'all 0.2s ease'
@@ -723,9 +760,7 @@ return (
                       📝 ¡INSCRIBIRSE AHORA!
                     </a>
                   </div>
-
                 ) : (
-                  // 🔄 SI NO TIENE ENLACES MÚLTIPLES: Tu botón clásico directo de siempre
                   (item.linkInscripcion || item.enlace) && (
                     <a
                       href={item.linkInscripcion ? item.linkInscripcion : item.enlace}
@@ -736,12 +771,12 @@ return (
                         padding: '12px', 
                         backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
                         color: 'white', 
-                        borderRadius: '12px', 
+                        borderRadius: '14px', 
                         textDecoration: 'none', 
-                        fontWeight: 'bold',
-                        fontSize: '0.9rem', 
+                        fontWeight: '900',
+                        fontSize: '0.85rem', 
                         textAlign: 'center', 
-                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                       }}
                     >
                       📝 ¡INSCRIBIRSE AHORA!
@@ -752,9 +787,7 @@ return (
 
               {/* BOTONES DE ADMIN */}
               {isAdmin && (
-                <div style={{ display: 'flex', gap: '8px', marginTop: '15px', paddingTop: '15px', borderTop: '1px dotted #e2e8f0' }}>
-                  
-                  {/* ✏️ BOTÓN DE EDITAR COMPLETO Y BLINDADO */}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px dotted rgba(0,0,0,0.1)' }}>
                   <button
                     onClick={() => {
                       setNuevaAct({
@@ -784,22 +817,10 @@ return (
                         recogidaFamilias: item.recogidaFamilias || '',
                         linkInscripcion: item.linkInscripcion || item.enlace || ''
                       });
-
                       setEditandoId(item.id); 
                       setVista('panel');      
                     }}
-                    style={{ 
-                      flex: 1, 
-                      padding: '8px', 
-                      backgroundColor: '#fef3c7', 
-                      color: '#92400e',           
-                      border: 'none', 
-                      borderRadius: '8px', 
-                      fontSize: '0.8rem', 
-                      fontWeight: 'bold', 
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s'
-                    }}
+                    style={{ flex: 1, padding: '8px', backgroundColor: '#fef3c7', color: '#92400e', border: 'none', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
                   >
                     EDITAR
                   </button>
@@ -812,7 +833,7 @@ return (
                         item.esClub ? cargarClubes() : cargarActividades();
                       }
                     }}
-                    style={{ flex: 1, padding: '8px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}
+                    style={{ flex: 1, padding: '8px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
                   >
                     BORRAR
                   </button>
