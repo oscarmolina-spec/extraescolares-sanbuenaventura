@@ -583,39 +583,48 @@ const preguntasFrecuentes = [
             ...clubes.map(c => ({ ...c, esClub: true }))
           ];
 
-const itemsFiltrados = todoJunto.filter((item) => {
-  const normalizar = (texto) => 
-    texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-  const nombreActividad = normalizar(item.nombre || "");
-  const loQueEscribeLaFamilia = normalizar(busqueda);
-
-  if (!nombreActividad.includes(loQueEscribeLaFamilia)) return false;
-
-  const etapaBoton = etapaActiva.trim().toLowerCase();
-  const empresaBoton = empresaActiva.trim().toLowerCase();
-
-  // 🌟 ¡TRUCO MÁGICO! Primero creamos la variable para que el ordenador la conozca
-  const empresaActividad = (item.empresa || "").trim().toLowerCase();
-
-  // 📊 Y ahora ya podemos usarla aquí abajo sin ningún error
-  const cumpleEmpresa = 
-    empresaBoton === 'todas' || 
-    empresaActividad === empresaBoton ||
-    (empresaBoton === 'san buenaventura' && empresaActividad === 'colegio san buenaventura');
-
-  if (!cumpleEmpresa) return false;
-
-  const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
-  if (etapaBoton === 'clubes amigos') return esClub;
-  if (esClub) return false;
-
-  const etapaSimple = (item.etapa || "").trim().toLowerCase();
-  const enListaEtapas = Array.isArray(item.etapas) && 
-                        item.etapas.some(e => e.trim().toLowerCase() === etapaBoton);
-
-  return etapaSimple === etapaBoton || enListaEtapas;
-});
+          const itemsFiltrados = todoJunto.filter((item) => {
+            const normalizar = (texto) => 
+              texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+          
+            const nombreActividad = normalizar(item.nombre || "");
+            const loQueEscribeLaFamilia = normalizar(busqueda);
+          
+            if (!nombreActividad.includes(loQueEscribeLaFamilia)) return false;
+          
+            const etapaBoton = etapaActiva.trim().toLowerCase();
+            const empresaBoton = empresaActiva.trim().toLowerCase();
+          
+            // 🌟 Primero creamos la variable para que el ordenador la conozca
+            const empresaActividad = (item.empresa || "").trim().toLowerCase();
+          
+            // 📊 Y ahora ya podemos usarla aquí abajo sin ningún error
+            const cumpleEmpresa = 
+              empresaBoton === 'todas' || 
+              empresaActividad === empresaBoton ||
+              (empresaBoton === 'san buenaventura' && empresaActividad === 'colegio san buenaventura');
+          
+            if (!cumpleEmpresa) return false;
+          
+            const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
+            if (etapaBoton === 'clubes amigos') return esClub;
+            if (esClub) return false;
+          
+            // ========================================================
+            // 🚀 ¡NUEVA LÓGICA MULTI-ETAPA REFORZADA AQUÍ MISMO!
+            // ========================================================
+            
+            // 1️⃣ Comprobamos si la etapa del botón está dentro de la lista de etapas de la actividad
+            const estaEnListaEtapas = Array.isArray(item.etapas) && 
+                                      item.etapas.some(e => e.trim().toLowerCase() === etapaBoton);
+          
+            // 2️⃣ Por si acaso, revisamos también el campo viejo para no romper actividades antiguas
+            const etapaSimple = (item.etapa || "").trim().toLowerCase();
+            const esEtapaVieja = etapaSimple === etapaBoton;
+          
+            // 🏁 ¡EL GRAN TRUCO!: Si cumple cualquiera de las dos cosas, ¡se muestra en la pantalla!
+            return estaEnListaEtapas || esEtapaVieja;
+          });
 
 return (
   <>
@@ -682,8 +691,7 @@ return (
               color: 'white',
               boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
             }}>
-              {item.esClub ? '🌟 CLUB AMIGO' : (item.etapas && item.etapas[0]) || item.etapa}
-            </div>
+{item.esClub ? '🌟 CLUB AMIGO' : (Array.isArray(item.etapas) && item.etapas.length > 0 ? item.etapas.join(', ') : item.etapa)}            </div>
           </div>
 
           {/* 📝 CONTENIDO ESTILIZADO CON CONTRASTE REFORZADO */}
