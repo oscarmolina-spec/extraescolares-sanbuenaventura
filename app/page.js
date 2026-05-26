@@ -528,8 +528,7 @@ const preguntasFrecuentes = [
 
   {/* Selector de etapas (Burbujas de cristal activo) */}
   <div style={{ marginTop: '25px', display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
-    {['Infantil', 'Primaria', 'ESO','Clubes Amigos'].map((e) => (
-      <button 
+  {['Infantil', 'Primaria', 'ESO', 'Adultos', 'Clubes Amigos'].map((e) => (      <button 
         key={e} 
         onClick={() => setEtapaActiva(e)} 
         style={{ 
