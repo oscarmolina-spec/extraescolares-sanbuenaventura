@@ -290,9 +290,16 @@ const [destino, setDestino] = useState(null);
       <div
         style={{
           fontFamily: 'sans-serif',
-          backgroundColor: '#f1f5f9',
-          minHeight: '100vh',
-          paddingBottom: '100px',
+          backgroundColor: '#f1f5f9', // 🎨 Fondo gris en toda la pantalla
+          minHeight: '100vh',        // 📐 ¡Toda la altura de la pantalla obligatoria!
+          
+          // 🧲 ACTIVAMOS EL IMÁN ANTI-ESPACIOS BLANCOS:
+          display: 'flex',          
+          flexDirection: 'column',  
+          justifyContent: 'space-between', 
+          
+          // 🧹 LIMPIEZA: Quitamos los 100px viejos que creaban la franja blanca por abajo
+          paddingBottom: '0px',     
         }}
       >
 <header
@@ -819,7 +826,7 @@ return (
   </>
 );
 })()}
-        </main>
+       </main>
         {/* 🛡️ FOOTER ULTRA-ESTRECHO Y MINIMALISTA */}
         <footer style={{
           backgroundColor: '#1e293b',
@@ -827,7 +834,11 @@ return (
           padding: '15px 20px',      // ↕️ ¡Súper estrecho! Solo 15px de aire
           marginTop: '40px',         // Menos separación con lo de arriba
           borderTop: '2px solid #3b82f6', // Línea más fina
-          borderRadius: '20px 20px 0 0'    // Curva más suave
+          borderRadius: '20px 20px 0 0',   // Curva más suave
+          // 🌟 ¡LOS TRUCOS MÁGICOS MEJORADOS AQUÍ!
+          marginBottom: '0px',        // 🧹 Quitamos cualquier margen de abajo que empuje la web hacia arriba
+          position: 'relative',       // 📌 Lo fijamos bien en su sitio para que no flote
+          boxShadow: '0 50vh 0 #1e293b' // 🎨 ¡EL ESCUDO OSCURO! Rellena hasta 50 partes de la pantalla hacia abajo con el mismo color oscuro, tapando todo lo blanco por completo.
         }}>
           <div style={{ 
             maxWidth: '900px', 
