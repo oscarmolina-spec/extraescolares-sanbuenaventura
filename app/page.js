@@ -576,7 +576,7 @@ const preguntasFrecuentes = [
 </header>
 
         <main style={{ flex: 1, width: '100%', zIndex: 1 }}>
-          {/* 🌟 FILTROS Y RECORRIDO EN ACCIÓN */}
+         {/* 🌟 FILTROS Y RECORRIDO EN ACCIÓN */}
         {(() => {
           const todoJunto = [
             ...actividades.map(a => ({ ...a, esClub: false })),
@@ -595,12 +595,15 @@ const itemsFiltrados = todoJunto.filter((item) => {
   const etapaBoton = etapaActiva.trim().toLowerCase();
   const empresaBoton = empresaActiva.trim().toLowerCase();
 
+  // 🌟 ¡TRUCO MÁGICO! Primero creamos la variable para que el ordenador la conozca
+  const empresaActividad = (item.empresa || "").trim().toLowerCase();
+
+  // 📊 Y ahora ya podemos usarla aquí abajo sin ningún error
   const cumpleEmpresa = 
     empresaBoton === 'todas' || 
     empresaActividad === empresaBoton ||
     (empresaBoton === 'san buenaventura' && empresaActividad === 'colegio san buenaventura');
-
-  const empresaActividad = (item.empresa || "").trim().toLowerCase();
+    
   if (!cumpleEmpresa) return false;
 
   const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
@@ -1529,7 +1532,10 @@ return (
   }
   // 🚩 NUEVA PANTALLA EXCLUSIVA PARA LAS PREGUNTAS FRECUENTES (FAQ)
 if (vista === 'faq') {
-  // 📑 Aquí dentro guardamos los textos correctos que me pediste
+  // 🌟 TRUCO MÁGICO: El estado vive aquí dentro para no romper el resto de la web
+  const [abiertaId, setAbiertaId] = useState(null);
+
+  // 📑 Textos oficiales correctos de tus preguntas frecuentes
   const preguntasFrecuentes = [
     {
       id: 1,
@@ -1556,7 +1562,7 @@ if (vista === 'faq') {
   return (
     <div style={{ 
       fontFamily: 'sans-serif',
-      backgroundColor: '#f1f5f9', // Fondo claro a juego con tu catálogo
+      backgroundColor: '#f1f5f9', 
       minHeight: '100vh', 
       display: 'flex', 
       flexDirection: 'column', 
@@ -1564,12 +1570,12 @@ if (vista === 'faq') {
       position: 'relative',
       overflowX: 'hidden'
     }}>
-      {/* 🔮 Toques de luz de fondo para que quede súper moderno */}
+      {/* 🔮 Toques de luz de fondo */}
       <div style={{ position: 'absolute', top: '10%', left: '-10%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', bottom: '20%', right: '-10%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,70,239,0.08) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
 
       <div style={{ zIndex: 1, width: '100%' }}>
-        {/* 🗂️ Barra superior con botón brillante para regresar al catálogo */}
+        {/* 🗂️ Barra superior */}
         <div style={{ 
           padding: '15px 20px', 
           backgroundColor: 'rgba(30, 41, 59, 0.95)', 
@@ -1584,17 +1590,14 @@ if (vista === 'faq') {
             style={{ 
               padding: '10px 20px', borderRadius: '12px', border: 'none', 
               backgroundColor: '#3b82f6', color: 'white', fontWeight: 'bold', cursor: 'pointer',
-              boxShadow: '0 4px 10px rgba(59,130,246,0.3)',
-              transition: 'background-color 0.2s'
+              boxShadow: '0 4px 10px rgba(59,130,246,0.3)'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
           >
             ⬅️ Volver al Catálogo
           </button>
         </div>
 
-        {/* 💬 Acordeón de preguntas frecuentes */}
+        {/* 💬 Contenedor de preguntas */}
         <div style={{ maxWidth: '750px', margin: '50px auto 40px', padding: '0 20px' }}>
           <h2 style={{ textAlign: 'center', color: '#0f172a', fontSize: '2rem', fontWeight: '900', marginBottom: '30px', letterSpacing: '-0.5px' }}>
             💬 Preguntas Frecuentes
@@ -1602,7 +1605,7 @@ if (vista === 'faq') {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {preguntasFrecuentes.map((faq) => {
-              const estaAbierta = preguntaAbierta === faq.id;
+              const estaAbierta = abiertaId === faq.id;
               return (
                 <div 
                   key={faq.id}
@@ -1615,16 +1618,15 @@ if (vista === 'faq') {
                     transition: 'all 0.3s ease'
                   }}
                 >
-                  {/* Botón de la pregunta */}
                   <button
-                    onClick={() => setPreguntaAbierta(estaAbierta ? null : faq.id)}
+                    onClick={() => setAbiertaId(estaAbierta ? null : faq.id)}
                     style={{
                       width: '100%', padding: '20px', background: 'none', border: 'none',
                       textAlign: 'left', cursor: 'pointer', display: 'flex', 
                       justifyContent: 'space-between', alignItems: 'center', gap: '15px'
                     }}
                   >
-                    <span style={{ fontSize: '1rem', fontWeight: '800', color: estaAbierta ? '#3b82f6' : '#0f172a', transition: 'color 0.2s' }}>
+                    <span style={{ fontSize: '1rem', fontWeight: '800', color: estaAbierta ? '#3b82f6' : '#0f172a' }}>
                       {faq.pregunta}
                     </span>
                     <span style={{ 
@@ -1635,7 +1637,6 @@ if (vista === 'faq') {
                     </span>
                   </button>
 
-                  {/* Respuesta animada */}
                   <div style={{
                     maxHeight: estaAbierta ? '220px' : '0px', opacity: estaAbierta ? 1 : 0,
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1652,12 +1653,11 @@ if (vista === 'faq') {
         </div>
       </div>
 
-      {/* Footer oficial para cerrar la pantalla */}
       <footer style={{ backgroundColor: '#1e293b', color: '#f8fafc', padding: '15px 20px', borderTop: '2px solid #3b82f6', boxShadow: '0 50vh 0 #1e293b', position: 'relative' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd" style={{ width: '100px', filter: 'brightness(0) invert(1)', opacity: '0.8' }} />
-            <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Colegio San Buenaventura, Madrid</span>
+            <span style={{ fontSize: '#0.85rem', fontWeight: 'bold' }}>Colegio San Buenaventura, Madrid</span>
           </div>
           <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>📞 915 267 161  |  📧 extraescolares@sanbuenaventura.org</div>
           <div style={{ fontSize: '0.7rem', color: '#64748b' }}>© {new Date().getFullYear()} Extraescolares</div>
