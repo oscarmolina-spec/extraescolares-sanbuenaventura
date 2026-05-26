@@ -290,7 +290,8 @@ const [destino, setDestino] = useState(null);
       <div
         style={{
           fontFamily: 'sans-serif',
-          backgroundColor: '#0f172a', // 🌌 Fondo noche profundo para que resalten las luces neón
+          // 🎨 ¡CAMBIO MÁGICO! Fondo claro, limpio y con un contraste del 100%
+          backgroundColor: '#f1f5f9', 
           minHeight: '100vh',        // 📐 ¡Toda la altura de la pantalla obligatoria!
           
           // 🧲 ACTIVAMOS EL IMÁN ANTI-ESPACIOS BLANCOS:
@@ -302,13 +303,13 @@ const [destino, setDestino] = useState(null);
           paddingBottom: '0px',     
         }}
       >
-        {/* 🔮 CÍRCULOS DE LUZ NEÓN FLOTANTES EN EL FONDO GENERAL */}
-        <div style={{ position: 'absolute', top: '15%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
-        <div style={{ position: 'absolute', bottom: '20%', right: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,70,239,0.2) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0 }} />
+        {/* 🔮 CÍRCULOS DE LUZ SUAVES EN EL FONDO GENERAL (Ahora más sutiles para fondo claro) */}
+        <div style={{ position: 'absolute', top: '15%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
+        <div style={{ position: 'absolute', bottom: '20%', right: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,70,239,0.08) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0 }} />
 
 <header
   style={{
-    background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%)',
+    background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 1) 100%)',
     backdropFilter: 'blur(20px)', // 💎 Efecto cristal esmerilado en el menú superior
     padding: '20px 20px 25px', 
     textAlign: 'center',
@@ -589,29 +590,27 @@ return (
       alignItems: 'start', 
       justifyContent: 'center' 
     }}>
-      {/* 🎨 DIBUJAMOS LAS TARJETAS DE CRISTAL (GLASSMORPHISM) */}
-      {itemsFiltrados.map((item) => (
+{/* 🎨 DIBUJAMOS LAS TARJETAS DE CRISTAL (GLASSMORPHISM) CON ALTO CONTRASTE */}
+{itemsFiltrados.map((item) => (
         <div
           key={item.id} 
           style={{
-            // 🌟 EL SECRETO DEL CRISTAL: Fondo blanco translúcido + desenfoque profundo de fondo
-            background: 'rgba(255, 255, 255, 0.82)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            borderRadius: '28px', // Bordes más suaves estilo iOS
+            // 🌟 CLAVE: Fondo más blanco y opaco para que las letras resalten al máximo
+            background: 'rgba(255, 255, 255, 0.94)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderRadius: '28px', 
             overflow: 'hidden',
-            boxShadow: '0 20px 35px rgba(0, 0, 0, 0.15)',
-            // 💎 Micro-borde de luz real para separar la tarjeta del fondo oscuro
-            border: '1px solid rgba(255, 255, 255, 0.4)', 
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)', // Sombra más marcada sobre el fondo oscuro
+            border: '1px solid rgba(255, 255, 255, 0.6)', 
             display: 'flex',
             flexDirection: 'column',
-            height: '530px', // Un pelín más de holgura para respirar mejor
+            height: '530px', 
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
-          // ✨ INTERACTIVO: Flota mágicamente hacia arriba y cambia su borde al tocarlo
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-10px)';
-            e.currentTarget.style.boxShadow = '0 30px 50px rgba(0, 0, 0, 0.3)';
+            e.currentTarget.style.boxShadow = '0 30px 60px rgba(59, 130, 246, 0.25)';
             e.currentTarget.style.borderColor = item.esClub ? '#d946ef' : '#3b82f6';
           }}
           onMouseLeave={(e) => {
@@ -629,39 +628,40 @@ return (
             />
             <div style={{
               position: 'absolute', top: '12px', right: '12px',
-              backgroundColor: item.esClub ? '#d946ef' : 'rgba(15, 23, 42, 0.85)',
-              padding: '5px 14px', borderRadius: '99px', fontSize: '0.7rem', fontWeight: '800',
+              backgroundColor: item.esClub ? '#d946ef' : '#1e293b', // Color más sólido y visible
+              padding: '6px 14px', borderRadius: '99px', fontSize: '0.7rem', fontWeight: '800',
               color: 'white',
-              backdropFilter: 'blur(4px)', boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
             }}>
               {item.esClub ? '🌟 CLUB AMIGO' : (item.etapas && item.etapas[0]) || item.etapa}
             </div>
           </div>
 
-          {/* 📝 CONTENIDO ESTILIZADO */}
+          {/* 📝 CONTENIDO ESTILIZADO CON CONTRASTE REFORZADO */}
           <div style={{ padding: '20px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-            <h3 style={{ margin: '0 0 6px', fontSize: '1.25rem', color: '#0f172a', fontWeight: '800', letterSpacing: '-0.3px' }}>
+            {/* Título en negro puro para que se lea de maravilla */}
+            <h3 style={{ margin: '0 0 6px', fontSize: '1.25rem', color: '#0f172a', fontWeight: '900', letterSpacing: '-0.3px' }}>
               {item.nombre}
             </h3>
             
-            {/* ⏰ HORARIO */}
-            <p style={{ color: '#475569', fontSize: '0.85rem', margin: '0 0 10px', fontWeight: '500' }}>
+            {/* ⏰ HORARIO CON COLOR MÁS INTENSO */}
+            <p style={{ color: '#334155', fontSize: '0.85rem', margin: '0 0 10px', fontWeight: '700' }}>
               ⏰ {item.horario || 'Horario a consultar'}
             </p>
 
-            {/* 🗓️ DÍAS DE LA SEMANA */}
+            {/* 🗓️ DÍAS DE LA SEMANA CON FONDOS MÁS VIVOS */}
             <div style={{ 
-              backgroundColor: item.esClub ? '#fdf4ff' : '#eff6ff', 
-              color: item.esClub ? '#86198f' : '#1e40af', 
+              backgroundColor: item.esClub ? '#fae8ff' : '#e0f2fe', 
+              color: item.esClub ? '#701a75' : '#0369a1', 
               fontSize: '0.75rem', 
-              fontWeight: '800', 
+              fontWeight: '950', 
               padding: '6px 14px',
               borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               alignSelf: 'flex-start',
-              border: item.esClub ? '1px solid #f5d0fe' : '1px solid #dbeafe',
+              border: item.esClub ? '1px solid #d8b4fe' : '1px solid #7dd3fc',
               marginBottom: '15px'
             }}>
               <span>🗓️</span>
@@ -678,12 +678,13 @@ return (
                 padding: '0 5px'
               }}>
                 <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 'bold' }}>PRECIO:</span>
-                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: item.esClub ? '#d946ef' : '#3b82f6' }}>
+                <span style={{ fontSize: '1.4rem', fontWeight: '900', color: item.esClub ? '#c026d3' : '#1d4ed8' }}>
                   {item.precio ? `${item.precio}€` : '---'}
-                  <small style={{ fontSize: '0.75rem', fontWeight: '600', color: '#64748b', marginLeft: '3px' }}>/mes</small>
+                  <small style={{ fontSize: '0.75rem', fontWeight: '700', color: '#475569', marginLeft: '3px' }}>/mes</small>
                 </span>
               </div>
 
+              {/* Botón principal oscuro para romper la monotonía y ganar contraste */}
               <button
                 onClick={() => {
                   setActividadSeleccionada(item);
@@ -691,11 +692,12 @@ return (
                 }}
                 style={{
                   width: '100%', padding: '12px', borderRadius: '14px', border: 'none',
-                  backgroundColor: 'rgba(15, 23, 42, 0.06)', color: '#0f172a', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '10px',
+                  backgroundColor: '#0f172a', color: '#ffffff', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '10px',
+                  boxShadow: '0 4px 10px rgba(15, 23, 42, 0.2)',
                   transition: 'background-color 0.2s'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.1)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(15, 23, 42, 0.06)'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e293b'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0f172a'}
               >
                 Ver información completa
               </button>
@@ -711,8 +713,8 @@ return (
                         width: '100%',
                         padding: '11px',
                         borderRadius: '14px',
-                        border: '2px solid rgba(15, 23, 42, 0.15)',
-                        backgroundColor: '#f8fafc',
+                        border: '2px solid #0f172a',
+                        backgroundColor: '#ffffff',
                         color: '#0f172a',
                         fontWeight: 'bold',
                         fontSize: '0.85rem',
@@ -751,7 +753,7 @@ return (
                         fontWeight: '900',
                         fontSize: '0.85rem', 
                         textAlign: 'center', 
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                         opacity: '0.5',          
                         pointerEvents: 'none',   
                         transition: 'all 0.2s ease'
@@ -776,7 +778,7 @@ return (
                         fontWeight: '900',
                         fontSize: '0.85rem', 
                         textAlign: 'center', 
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                       }}
                     >
                       📝 ¡INSCRIBIRSE AHORA!
@@ -787,7 +789,7 @@ return (
 
               {/* BOTONES DE ADMIN */}
               {isAdmin && (
-                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px dotted rgba(0,0,0,0.1)' }}>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px dotted rgba(0,0,0,0.2)' }}>
                   <button
                     onClick={() => {
                       setNuevaAct({
@@ -820,7 +822,7 @@ return (
                       setEditandoId(item.id); 
                       setVista('panel');      
                     }}
-                    style={{ flex: 1, padding: '8px', backgroundColor: '#fef3c7', color: '#92400e', border: 'none', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
+                    style={{ flex: 1, padding: '8px', backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
                   >
                     EDITAR
                   </button>
@@ -833,7 +835,7 @@ return (
                         item.esClub ? cargarClubes() : cargarActividades();
                       }
                     }}
-                    style={{ flex: 1, padding: '8px', backgroundColor: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
+                    style={{ flex: 1, padding: '8px', backgroundColor: '#fee2e2', color: '#991b1b', border: '1px solid #ef4444', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
                   >
                     BORRAR
                   </button>
