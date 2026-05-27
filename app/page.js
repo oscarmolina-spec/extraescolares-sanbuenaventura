@@ -580,7 +580,59 @@ const preguntasFrecuentes = [
   </div>
 </header>
 
-        <main style={{ flex: 1, width: '100%', zIndex: 1 }}>
+<main style={{ 
+  flex: 1, 
+  width: '100%', 
+  position: 'relative', // 📌 Obligatorio para fijar las esferas líquidas
+  overflow: 'hidden',   // 🛑 Evita que salgan barras de scroll raras
+  zIndex: 1 
+}}>
+  
+  {/* 🔮 ESFERA LÍQUIDA 1: Arriba a la izquierda (Azul Pastel) */}
+  <div style={{
+    position: 'absolute',
+    top: '-50px',
+    left: '-100px',
+    width: '400px',
+    height: '400px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(186,230,253,0.5) 0%, rgba(186,230,253,0) 70%)',
+    filter: 'blur(60px)',
+    zIndex: 0,
+    pointerEvents: 'none' // 🖱️ Los clics pasan de largo
+  }} />
+
+  {/* 🔮 ESFERA LÍQUIDA 2: En el medio a la derecha (Rosa/Morado Pastel) */}
+  <div style={{
+    position: 'absolute',
+    top: '25%',
+    right: '-150px',
+    width: '500px',
+    height: '500px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(250,232,255,0.6) 0%, rgba(250,232,255,0) 70%)',
+    filter: 'blur(80px)',
+    zIndex: 0,
+    pointerEvents: 'none'
+  }} />
+
+  {/* 🔮 ESFERA LÍQUIDA 3: Más abajo a la izquierda (Turquesa Suave) */}
+  <div style={{
+    position: 'absolute',
+    bottom: '10%',
+    left: '-120px',
+    width: '450px',
+    height: '450px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(204,251,241,0.5) 0%, rgba(204,251,241,0) 70%)',
+    filter: 'blur(70px)',
+    zIndex: 0,
+    pointerEvents: 'none'
+  }} />
+
+  {/* 🛡️ CAPA PROTECTORA: Envuelve tus tarjetas para que floten POR ENCIMA de los colores de fondo */}
+  <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+
          {/* 🌟 FILTROS Y RECORRIDO EN ACCIÓN */}
         {(() => {
           const todoJunto = [
@@ -691,7 +743,7 @@ return (
             />
             <div style={{
               position: 'absolute', top: '12px', right: '12px',
-              backgroundColor: item.esClub ? '#d946ef' : '#1e293b', // Color más sólido y visible
+              backgroundColor: item.esClub ? '#d946ef' : '#1e293b', 
               padding: '6px 14px', borderRadius: '99px', fontSize: '0.7rem', fontWeight: '800',
               color: 'white',
               boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
@@ -852,7 +904,7 @@ return (
                 )}
               </div>
 
-              {/* 🛠️ BOTONES DE ADMINISTRACIÓN (¡A salvo e intactos!) */}
+              {/* 🛠️ BOTONES DE ADMINISTRACIÓN */}
               {isAdmin && (
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px dotted rgba(0,0,0,0.2)' }}>
                   <button
@@ -915,7 +967,8 @@ return (
   </>
 );
 })()}
-       </main>
+  </div> {/* 🏁 CIERRA LA CAPA DE COBERTURA DE LAS ESFERAS */}
+</main>
         {/* 🛡️ FOOTER ULTRA-ESTRECHO Y MINIMALISTA */}
         <footer style={{
           backgroundColor: '#1e293b',
