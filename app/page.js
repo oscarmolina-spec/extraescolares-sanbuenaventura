@@ -476,7 +476,18 @@ const preguntasFrecuentes = [
       Actividades Extraescolares
     </h1>
   </div>
-
+{/* 📜 ¡FRASE RESCATADA Y EN SU SITIO EXACTO! */}
+<p style={{ 
+    color: '#94a3b8', 
+    marginTop: '8px', 
+    fontSize: '0.95rem', 
+    fontWeight: '500', 
+    letterSpacing: '0.5px',
+    fontStyle: 'italic',
+    marginBottom: '25px'
+  }}>
+    "Estas actividades tienen carácter voluntario, no discriminatorio y no lucrativo"
+  </p>
 {/* --- 🛒 MEJORA 2: CAJA CONTENEDORA EN VERTICAL (¡CENTRADO ULTRA REFORZADO!) --- */}
 <div style={{ 
     display: 'flex', 
