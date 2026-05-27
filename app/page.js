@@ -757,8 +757,15 @@ return (
           {/* 📝 CONTENIDO ESTILIZADO CON CONTRASTE REFORZADO Y MEJOR JERARQUÍA VISUAL */}
           <div style={{ padding: '24px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
             
-            {/* 👑 1. EL REY DE LA TARJETA: Título más grande en negro puro */}
-            <h3 style={{ margin: '0 0 8px', fontSize: '1.4rem', color: '#0f172a', fontWeight: '900', letterSpacing: '-0.5px' }}>
+            {/* 👑 1. EL REY DE LA TARJETA: ¡Título más grande y dominante! */}
+            <h3 style={{ 
+              margin: '0 0 12px', 
+              fontSize: '1.6rem', // 🚀 ¡Subido de 1.4rem a 1.6rem para mandar en la tarjeta!
+              color: '#0f172a', 
+              fontWeight: '950', // Más gordita la letra para destacar
+              letterSpacing: '-0.7px',
+              lineHeight: '1.2'
+            }}>
               {item.nombre}
             </h3>
             
@@ -789,7 +796,7 @@ return (
             {/* 🍃 EL COLCHÓN DE AIRE (marginTop: 'auto') empuja todo lo demás al fondo de forma limpia */}
             <div style={{ marginTop: 'auto' }}>
               
-              {/* 💰 3. EL IMÁN DE LAS MIRADAS: El precio con más tamaño y un gris suave de etiqueta */}
+              {/* 💰 3. EL PRECIO: ¡Ahora más estilizado y secundario para no competir! */}
               <div style={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
@@ -798,7 +805,11 @@ return (
                 padding: '0 5px'
               }}>
                 <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold', letterSpacing: '0.5px' }}>PRECIO:</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: '900', color: item.esClub ? '#c026d3' : '#1d4ed8' }}>
+                <span style={{ 
+                  fontSize: '1.25rem', // 📉 ¡Bajado de 1.5rem a 1.25rem para respetar la jerarquía!
+                  fontWeight: '900', 
+                  color: item.esClub ? '#c026d3' : '#1d4ed8' 
+                }}>
                   {item.precio ? `${item.precio}€` : '---'}
                   <small style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', marginLeft: '3px' }}>/mes</small>
                 </span>
