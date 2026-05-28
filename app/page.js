@@ -1394,15 +1394,14 @@ return (
                   wordBreak: 'break-word' 
                 }}
               >
-                {/* 🧹 ¡LIMPIEZA MÁGICA!: Cogemos el texto y le borramos el enlace feo de Firebase para que no se vea */}
-                {(act.info || item.descripcion || '')
-                  .split('https://firebasestorage.googleapis.com')[0]
-                  .trim()} 
+                {/* 🧹 ¡LIMPIEZA MÁGICA SEGURA!: Quitamos la palabra "item" y dejamos solo "act.info" para que no dé ningún error */}
+                {act.info && act.info.includes('https://firebasestorage.googleapis.com')
+                  ? act.info.split('https://firebasestorage.googleapis.com')[0].trim()
+                  : act.info || ''} 
               </p>
 
-              {/* 🎽 ¡LA FOTO SE QUEDA AQUÍ ABAJO PRECIOSA! */}
-              {((act.info && act.info.includes('firebasestorage.googleapis.com')) || 
-                (item.descripcion && item.descripcion.includes('firebasestorage.googleapis.com'))) && (
+              {/* 🎽 ¡LA FOTO SE QUEDA AQUÍ ABAJO PRECIOSA!: Supersegura y sin "item" */}
+              {act.info && act.info.includes('firebasestorage.googleapis.com') && (
                 <div style={{ marginTop: '20px', textAlign: 'center' }}>
                   <img 
                     src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/futbol-pack.jpg.png?alt=media&token=5c92d35d-7d50-4a82-8c14-1323a82e7ee2" 
