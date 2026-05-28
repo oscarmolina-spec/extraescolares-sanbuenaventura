@@ -1382,7 +1382,7 @@ return (
                 marginBottom: '25px',
               }}
             >
-            <h4 style={{ color: '#1e293b', marginBottom: '10px' }}>
+<h4 style={{ color: '#1e293b', marginBottom: '10px' }}>
                 Sobre la actividad
               </h4>
               <p
@@ -1390,12 +1390,33 @@ return (
                   color: '#475569',
                   lineHeight: '1.8',
                   fontSize: '1.05rem',
-                  whiteSpace: 'pre-wrap', // 👈 ¡ESTA ES LA CLAVE! 
-                  wordBreak: 'break-word' // Para que las palabras largas no se salgan
+                  whiteSpace: 'pre-wrap', 
+                  wordBreak: 'break-word' 
                 }}
               >
-                {act.info || item.descripcion} 
+                {/* 🧹 ¡LIMPIEZA MÁGICA!: Cogemos el texto y le borramos el enlace feo de Firebase para que no se vea */}
+                {(act.info || item.descripcion || '')
+                  .split('https://firebasestorage.googleapis.com')[0]
+                  .trim()} 
               </p>
+
+              {/* 🎽 ¡LA FOTO SE QUEDA AQUÍ ABAJO PRECIOSA! */}
+              {((act.info && act.info.includes('firebasestorage.googleapis.com')) || 
+                (item.descripcion && item.descripcion.includes('firebasestorage.googleapis.com'))) && (
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                  <img 
+                    src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/futbol-pack.jpg.png?alt=media&token=5c92d35d-7d50-4a82-8c14-1323a82e7ee2" 
+                    alt="Pack Equipación Fútbol" 
+                    style={{
+                      maxWidth: '100%',
+                      height: 'auto',
+                      borderRadius: '16px',
+                      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
+                      border: '3px solid #3b82f6'
+                    }}
+                  />
+                </div>
+              )}
               {act.material && (
                 <div
                   style={{
