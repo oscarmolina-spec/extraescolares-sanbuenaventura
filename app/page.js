@@ -439,7 +439,7 @@ const preguntasFrecuentes = [
         onClick={() => {
           const p = prompt('Clave:');
           // 🔐 ¡CONEXIÓN MÁGICA!: Apuntamos directo a tu archivo .env.local
-          if (p === process.env.localNEXT_PUBLIC_ADMIN_PASSWORD) { 
+          if (p === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) { 
             setIsAdmin(true); // 🌟 ¡Solo activa tus superpoderes, pero no te mueve de pantalla!
           } else {
             alert('❌ ¡Clave incorrecta!');
