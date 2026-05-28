@@ -45,7 +45,7 @@ export default function Page() {
   const [vista, setVista] = useState('catalogo');
   const [fotoFondoHeader, setFotoFondoHeader] = useState('');
   const [preguntaAbierta, setPreguntaAbierta] = useState(null);
-  const [etapaActiva, setEtapaActiva] = useState('Infantil');
+  const [etapaActiva, setEtapaActiva] = useState('Todos');
   const [actividades, setActividades] = useState([]);
   const [puntosInteres, setPuntosInteres] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -769,14 +769,24 @@ return (
         <div
           key={item.id} 
           style={{
-            // 🌟 CLAVE: Fondo más blanco y opaco para que las letras resalten al máximo
             background: 'rgba(255, 255, 255, 0.94)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderRadius: '28px', 
             overflow: 'hidden',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)', // Sombra más marcada sobre el fondo oscuro
-            border: '1px solid rgba(255, 255, 255, 0.6)', 
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)', 
+            
+            // 🎽 ¡EL COLOR MORADO EN ACCIÓN PARA LAS MULTI-ETAPAS!
+            border: `3px solid ${
+              // 1️⃣ ¿Tiene varias etapas? (Contamos si tiene más de una)
+              (['Infantil', 'Primaria', 'ESO', 'Adultos'].filter(e => item[e] || (item.etapa === e) || (item.etapas && item.etapas.includes(e))).length > 1) ? '#a855f7' : // 🔮 Morado Eléctrico para varias etapas
+              // 2️⃣ Si solo tiene una, miramos cuál es:
+              (item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'))) ? '#d946ef' : // 🦄 Rosa
+              (item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'))) ? '#22c55e' : // 🟢 Verde
+              (item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'))) ? '#f97316' : // 🟠 Naranja
+              '#3b82f6' // 🔵 Azul Claro para Primaria
+            }`, 
+            
             display: 'flex',
             flexDirection: 'column',
             height: '530px', 
@@ -785,12 +795,14 @@ return (
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-10px)';
             e.currentTarget.style.boxShadow = '0 30px 60px rgba(59, 130, 246, 0.25)';
-            e.currentTarget.style.borderColor = item.esClub ? '#d946ef' : '#3b82f6';
+            const m = ['Infantil', 'Primaria', 'ESO', 'Adultos'].filter(e => item[e] || (item.etapa === e) || (item.etapas && item.etapas.includes(e))).length > 1;
+            e.currentTarget.style.borderColor = m ? '#a855f7' : (item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'))) ? '#d946ef' : (item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'))) ? '#22c55e' : (item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'))) ? '#f97316' : '#3b82f6';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
             e.currentTarget.style.boxShadow = '0 20px 35px rgba(0, 0, 0, 0.15)';
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+            const m = ['Infantil', 'Primaria', 'ESO', 'Adultos'].filter(e => item[e] || (item.etapa === e) || (item.etapas && item.etapas.includes(e))).length > 1;
+            e.currentTarget.style.borderColor = m ? '#a855f7' : (item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'))) ? '#d946ef' : (item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'))) ? '#22c55e' : (item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'))) ? '#f97316' : '#3b82f6';
           }}
         >
           {/* 🖼️ IMAGEN / LOGO */}
