@@ -402,7 +402,12 @@ const preguntasFrecuentes = [
       <button
         onClick={() => {
           const p = prompt('Clave:');
-          if (p === 'admin') setIsAdmin(true);
+          // 🔐 ¡CONEXIÓN MÁGICA!: Apuntamos directo a tu archivo .env.local
+          if (p === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) { 
+            setIsAdmin(true); // 🌟 ¡Solo activa tus superpoderes, pero no te mueve de pantalla!
+          } else {
+            alert('❌ ¡Clave incorrecta!');
+          }
         }}
         style={{
           padding: '8px 16px',
@@ -475,19 +480,21 @@ const preguntasFrecuentes = [
     }}>
       Actividades Extraescolares
     </h1>
+{/* 🌟 ¡TU FRASE AJUSTADA: CURSIVA, CON COMILLAS Y MÁS PEQUEÑA! */}
+<p style={{
+      color: 'rgba(255, 255, 255, 0.85)', // Blanco suave y elegante
+      fontSize: '0.85rem', // 📐 ¡Tamaño reducido para que quede fina!
+      fontWeight: '500',
+      fontStyle: 'italic', // 🪄 ¡Cursiva activada!
+      margin: '12px 0 0 0',
+      textAlign: 'center',
+      maxWidth: '500px',
+      textShadow: '0 2px 4px rgba(0,0,0,0.6)'
+    }}>
+      "Estas actividades tienen carácter voluntario, no discriminatorio y no lucrativo"
+    </p>
   </div>
-{/* 📜 ¡FRASE RESCATADA Y EN SU SITIO EXACTO! */}
-  <p style={{ 
-    color: '#94a3b8', 
-    marginTop: '8px', 
-    fontSize: '0.95rem', 
-    fontWeight: '500', 
-    letterSpacing: '0.5px',
-    fontStyle: 'italic',
-    marginBottom: '25px'
-  }}>
-    "Estas actividades tienen carácter voluntario, no discriminatorio y no lucrativo"
-  </p>
+
 {/* --- 🛒 MEJORA 2: CAJA CONTENEDORA EN VERTICAL (¡CENTRADO ULTRA REFORZADO!) --- */}
 <div style={{ 
     display: 'flex', 
