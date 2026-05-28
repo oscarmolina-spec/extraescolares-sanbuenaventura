@@ -486,7 +486,7 @@ const preguntasFrecuentes = [
             borderRadius: '12px',
             cursor: 'pointer',
             fontSize: '0.8rem',
-          }}
+          }} 
         >
           Salir
         </button>
