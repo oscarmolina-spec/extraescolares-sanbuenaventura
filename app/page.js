@@ -43,6 +43,7 @@ const MapaPuntosInteres = dynamic(() => import('./MapaPuntosInteres'), {
 
 export default function Page() {
   const [vista, setVista] = useState('catalogo');
+  const [fotoFondoHeader, setFotoFondoHeader] = useState('');
   const [preguntaAbierta, setPreguntaAbierta] = useState(null);
   const [etapaActiva, setEtapaActiva] = useState('Infantil');
   const [actividades, setActividades] = useState([]);
@@ -61,6 +62,23 @@ const [destino, setDestino] = useState(null);
     latF: '',
     lngF: '',
   });
+  // 2️⃣ SEGUNDO: ¡AQUÍ JUSTO VA TU NUEVO ROBOT (useEffect)!
+  // Colócalo aquí mismo, libre y sin meterlo en ningún "if"
+  useEffect(() => {
+    const cargarConfiguracionCole = async () => {
+      try {
+        const { doc, getDoc } = await import('firebase/firestore');
+        // 🔍 Buscamos en el rincón seguro de las actividades
+        const docSnap = await getDoc(doc(db, "actividades_cole", "configuracion_header"));
+        if (docSnap.exists() && docSnap.data().fotoFondoHeader) {
+          setFotoFondoHeader(docSnap.data().fotoFondoHeader);
+        }
+      } catch (error) {
+        console.error("Error al cargar la foto del header:", error);
+      }
+    };
+    cargarConfiguracionCole();
+  }, []);
   const [clubes, setClubes] = useState([]); // Aquí guardaremos la lista que viene de la nube
   const [empresaActiva, setEmpresaActiva] = useState('Todas');
   const [busqueda, setBusqueda] = useState('');
@@ -349,6 +367,24 @@ const preguntasFrecuentes = [
     zIndex: 10,
   }}
 >
+  {/* 🌫️ ¡EL EFECTO SILUETA REFORZADO!: Ocupa todo tu header por detrás de las letras con más fuerza */}
+  {typeof fotoFondoHeader !== 'undefined' && fotoFondoHeader && (
+    <img
+      src={fotoFondoHeader}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',   // 🍿 Obliga a la foto a cubrir todo el espacio sin deformarse
+        opacity: 0.15,        // 📈 ¡SUBIDO!: Pasamos del 6% al 15% para que la silueta tenga más cuerpo
+        filter: 'blur(1.5px) grayscale(100%)', // 🌫️ ¡MÁS NÍTIDO!: Bajamos el difuminado de 3px a 1.5px para que se reconozcan mejor las ventanas y paredes
+        zIndex: 0,            // Envía la foto al piso de abajo del todo
+        pointerEvents: 'none' // 🖱️ Los clics pasan a través de ella sin molestar a los botones
+      }}
+    />
+  )}
  {/* 🕹️ BOTONES SUPERIORES (MAPA, PREGUNTAS Y ADMIN) */}
  <div style={{
     position: 'absolute',
@@ -2310,6 +2346,74 @@ Miércoles)"
           </button>
 
         </div> {/* 👈 AQUÍ CERRAMOS EL GRID DE LA ACTIVIDAD */}
+        {/* ======================================================== */}
+        {/* 📸 CAJA MÁGICA: SUBIR LA FOTO SUTIL DEL COLEGIO AL STORAGE */}
+        {/* ======================================================== */}
+        <div style={{
+          backgroundColor: '#f8fafc',
+          padding: '20px',
+          borderRadius: '20px',
+          border: '2px dashed #cbd5e1',
+          marginTop: '30px',
+          textAlign: 'left'
+        }}>
+          <h3 style={{ color: '#1e293b', margin: '0 0 8px', fontSize: '1.1rem', fontWeight: 'bold', textAlign: 'center' }}>
+            🖼️ Foto de Fondo del Header General
+          </h3>
+          <p style={{ color: '#64748b', fontSize: '0.8rem', margin: '0 0 15px', textAlign: 'center' }}>
+            Pega el enlace de la foto que has subido a Firebase. Se aplicará el efecto silueta sutil automáticamente.
+          </p>
+          
+          <input
+            placeholder="Pega aquí el enlace 'https://...' de tu foto de Firebase"
+            value={fotoFondoHeader}
+            onChange={(e) => setFotoFondoHeader(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: '12px',
+              border: '1px solid #cbd5e1',
+              fontSize: '0.9rem',
+              color: '#334155',
+              boxSizing: 'border-box',
+              marginBottom: '12px'
+            }}
+          />
+
+          <button
+            type="button"
+            onClick={async () => {
+              if (!fotoFondoHeader) return alert('¡Escribe o pega primero el enlace de la foto! 📝');
+              try {
+                alert('⏳ Guardando el enlace de la foto en la zona segura...');
+                const { doc, setDoc } = await import('firebase/firestore');
+                
+                // 💾 ¡EL TRUCO!: Lo guardamos en un rincón de la tabla "actividades_cole" que nunca falla
+                await setDoc(doc(db, "actividades_cole", "configuracion_header"), { fotoFondoHeader: fotoFondoHeader }, { merge: true });
+                
+                alert('🎉 ¡Foto de fondo vinculada con éxito!');
+              } catch (error) {
+                console.error("Error al guardar la URL:", error);
+                alert('❌ ¡Vaya! Algo ha fallado al guardar el enlace.');
+              }
+            }}
+            style={{
+              padding: '12px 18px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              width: '100%',
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+            }}
+          >
+            💾 GUARDAR ENLACE DE FONDO
+          </button>
+        </div>
+        {/* ======================================================== */}
 
         {/* 📍 AHORA EL MAPA ESTÁ FUERA, EN SU PROPIA ISLA AZUL */}
         <div style={{ 
