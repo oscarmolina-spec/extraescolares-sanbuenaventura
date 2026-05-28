@@ -436,13 +436,26 @@ const preguntasFrecuentes = [
 
     {!isAdmin ? (
       <button
-        onClick={() => {
+        /* 🚀 Ponemos async para que el botón pueda hacer llamadas a Firebase volando */
+        onClick={async () => {
           const p = prompt('Clave:');
-          // 🔐 ¡CONEXIÓN MÁGICA!: Apuntamos directo a tu archivo .env.local
-          if (p === process.env.NEXT_PUBLIC_ADMIN_PASSWORD) { 
-            setIsAdmin(true); // 🌟 ¡Solo activa tus superpoderes, pero no te mueve de pantalla!
-          } else {
-            alert('❌ ¡Clave incorrecta!');
+          if (!p) return; // Si cancela o lo deja vacío, no hacemos nada
+          
+          try {
+            const { doc, getDoc } = await import('firebase/firestore');
+            
+            /* 🔍 Buscamos en el documento que ya existe de tu colección (el de tu foto) */
+            const docSnap = await getDoc(doc(db, "actividades_cole", "configuracion_header"));
+            
+            /* 🔐 ¡EL TRUCO DIRECTO!: Compara lo que has escrito con el campo claveAdmin de Firebase */
+            if (docSnap.exists() && p === docSnap.data().claveAdmin) { 
+              setIsAdmin(true); // 🌟 ¡Activa tus superpoderes de administrador!
+            } else {
+              alert('❌ ¡Clave incorrecta!');
+            }
+          } catch (error) {
+            console.error("Error al comprobar la clave:", error);
+            alert('❌ ¡Vaya! Hubo un problema al conectar con Firebase.');
           }
         }}
         style={{
