@@ -2460,15 +2460,15 @@ Miércoles)"
         </div>
         {/* ======================================================== */}
 
-        {/* 📍 AHORA EL MAPA ESTÁ FUERA, EN SU PROPIA ISLA AZUL */}
-        <div style={{ 
+  {/* 📍 AHORA EL MAPA ESTÁ FUERA, EN SU PROPIA ISLA AZUL */}
+  <div style={{ 
           marginTop: '40px', 
           padding: '25px', 
           backgroundColor: '#eff6ff', 
           borderRadius: '20px',
           border: '2px dashed #3b82f6' 
         }}>
-          <h3 style={{ color: '#1e293b', margin: '0 0 10px', textAlign: 'center' }}>📍 Gestionar Mapa Maestro</h3>
+          <h3 style={{ color: '#1e293b', margin: '0 0 10px', textAlign: 'center', fontWeight: 'bold' }}>📍 Gestionar Mapa Maestro</h3>
           <p style={{ fontSize: '0.8rem', color: '#64748b', textAlign: 'center', marginBottom: '20px' }}>
             (Estos puntos son independientes de las actividades)
           </p>
@@ -2506,9 +2506,10 @@ Miércoles)"
                 const lng = document.getElementById('nuevoPuntoLng').value;
                 const foto = document.getElementById('nuevoPuntoFoto').value;
 
-                if(!nombre || !lat || !lng) return alert('¡Oye! Faltan datos (Nombre, Lat y Lng)');
+                if(!nombre || !lat || !lng) return alert('¡Oye! Faltan datos (Nombre, Lat y Lng) 📝');
 
                 try {
+                    const { collection, addDoc } = await import('firebase/firestore');
                     await addDoc(collection(db, 'puntos_interes_cole'), {
                       nombre,
                       descripcion: desc,
@@ -2519,10 +2520,8 @@ Miércoles)"
                     });
                     
                     alert('¡Chincheta guardada con éxito! 📍');
-                    cargarPuntosInteres();
                     
-                    // ✨ ¡ESTA ES LA LÍNEA MÁGICA! 
-                    // Te saca del panel y te lleva al catálogo automáticamente
+                    // ✨ ¡ESTA ES LA LÍNEA MÁGICA! Te saca del panel y te lleva al catálogo
                     setVista('catalogo'); 
                     
                     // Limpiar los campos (por si acaso vuelves luego)
@@ -2546,69 +2545,109 @@ Miércoles)"
                 borderRadius: '15px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                marginTop: '10px'
+                marginTop: '10px',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
               }}
             >
               🚀 GUARDAR SOLO LA CHINCHETA
             </button>
-            {/* 🗑️ LISTA PARA BORRAR PUNTOS (Pégalo justo aquí) */}
+
+            {/* 🗑️ LISTA PARA EDITAR Y BORRAR PUNTOS */}
             <div style={{ 
               marginTop: '25px', 
               paddingTop: '20px', 
               borderTop: '1px solid #cbd5e1' 
             }}>
               <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#1e293b', marginBottom: '10px' }}>
-                🗑️ Tus puntos actuales (Toca para borrar):
+                📋 Tus puntos actuales (Toca para editar o borrar):
               </p>
               
               <div style={{ display: 'grid', gap: '8px' }}>
-                {puntosInteres.map((p) => (
-                  <div key={p.id} style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    backgroundColor: 'white',
-                    padding: '10px 15px',
-                    borderRadius: '12px',
-                    fontSize: '0.85rem',
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                  }}>
-                    <span style={{ fontWeight: 'bold', color: '#334155' }}>📍 {p.nombre}</span>
-                    <button
-                      type="button"
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        if (confirm(`¿Quieres borrar "${p.nombre}"?`)) {
-                          try {
-                            const { deleteDoc, doc } = await import('firebase/firestore');
-                            await deleteDoc(doc(db, 'puntos_interes_cole', p.id));
-                            alert('¡Punto borrado! ✨');
-                            cargarPuntosInteres(); // Esto hace que la lista se actualice sola
-                          } catch (error) {
-                            alert('No se pudo borrar');
-                          }
-                        }
-                      }}
-                      style={{
-                        backgroundColor: '#fee2e2',
-                        color: '#ef4444',
-                        border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '0.75rem'
-                      }}
-                    >
-                      ELIMINAR
-                    </button>
-                  </div>
-                ))}
+                {typeof puntosInteres !== 'undefined' && puntosInteres.length > 0 ? (
+                  puntosInteres.map((p) => (
+                    <div key={p.id} style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      backgroundColor: 'white',
+                      padding: '10px 15px',
+                      borderRadius: '12px',
+                      fontSize: '0.85rem',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                    }}>
+                      <div style={{ textAlign: 'left' }}>
+                        <span style={{ fontWeight: 'bold', color: '#334155' }}>📍 {p.nombre}</span>
+                        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#64748b' }}>{p.descripcion || 'Sin descripción'}</p>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        {/* 📝 BOTÓN MÁGICO PARA EDITAR: ¡Sube los datos para modificarlos arriba! */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            document.getElementById('nuevoPuntoNombre').value = p.nombre || '';
+                            document.getElementById('nuevoPuntoDesc').value = p.descripcion || '';
+                            document.getElementById('nuevoPuntoLat').value = p.lat || '';
+                            document.getElementById('nuevoPuntoLng').value = p.lng || '';
+                            document.getElementById('nuevoPuntoFoto').value = p.foto || '';
+                            alert('📝 ¡Datos cargados arriba! Modifícalos y pulsa el botón de Guardar.');
+                          }}
+                          style={{
+                            backgroundColor: '#e0f2fe',
+                            color: '#0369a1',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          EDITAR
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            if (confirm(`¿Quieres borrar "${p.nombre}"?`)) {
+                              try {
+                                const { deleteDoc, doc } = await import('firebase/firestore');
+                                await deleteDoc(doc(db, 'puntos_interes_cole', p.id));
+                                alert('¡Punto borrado! ✨');
+                                if (typeof cargarPuntosInteres === 'function') cargarPuntosInteres();
+                              } catch (error) {
+                                alert('No se pudo borrar');
+                              }
+                            }
+                          }}
+                          style={{
+                            backgroundColor: '#fee2e2',
+                            color: '#ef4444',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          ELIMINAR
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic', textAlign: 'center' }}>
+                    No hay chinchetas creadas todavía. ¡Añade la primera arriba! 🔄
+                  </p>
+                )}
               </div>
             </div>
-          </div>
-        </div>
+          </div> {/* 🔌 CIERRA LA REJILLA INTERNA (display: 'grid') */}
+        </div> {/* 🏝️ CIERRA LA ISLA AZUL */}
       </div> // 👈 CIERRA EL CONTENEDOR BLANCO DEL PANEL
     );
   }
