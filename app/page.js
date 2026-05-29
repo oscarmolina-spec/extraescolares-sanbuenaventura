@@ -2410,7 +2410,7 @@ Miércoles)"
           </p>
           
           <input
-            placeholder="Pega aquí el enlace 'https://...' de tu foto de Firebase"
+            placeholder="Pega aquí el enlace 'https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/COLE-1.jpg?alt=media&token=33998315-56c3-43a6-9928-98346ea6bfa8"
             value={fotoFondoHeader}
             onChange={(e) => setFotoFondoHeader(e.target.value)}
             style={{
