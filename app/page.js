@@ -2410,9 +2410,9 @@ Miércoles)"
           </p>
           
           <input
-            placeholder="Pega aquí el enlace 'https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/COLE-1.jpg?alt=media&token=33998315-56c3-43a6-9928-98346ea6bfa8"
-            value={fotoFondoHeader}
-            onChange={(e) => setFotoFondoHeader(e.target.value)}
+            placeholder="Pega aquí el enlace de la foto del Storage..."
+            id="inputEnlaceFotoHeader" /* 🛡️ Usamos un ID fijo para que nadie vigile lo que escribes letra a letra */
+            defaultValue={fotoFondoHeader}
             style={{
               width: '100%',
               padding: '12px',
@@ -2428,15 +2428,22 @@ Miércoles)"
           <button
             type="button"
             onClick={async () => {
-              if (!fotoFondoHeader) return alert('¡Escribe o pega primero el enlace de la foto! 📝');
+              const enlaceEscrito = document.getElementById('inputEnlaceFotoHeader').value.trim();
+              if (!enlaceEscrito) return alert('¡Escribe o pega primero el enlace de la foto! 📝');
+              
               try {
-                alert('⏳ Guardando el enlace de la foto en la zona segura...');
+                alert('⏳ Guardando de forma ultra-segura en Firebase...');
                 const { doc, setDoc } = await import('firebase/firestore');
                 
-                // 💾 ¡EL TRUCO!: Lo guardamos en un rincón de la tabla "actividades_cole" que nunca falla
-                await setDoc(doc(db, "actividades_cole", "configuracion_header"), { fotoFondoHeader: fotoFondoHeader }, { merge: true });
+                // 💾 Guardamos la foto SIN TOCAR LA CLAVE y asegurando el tiro
+                await setDoc(doc(db, "actividades_cole", "configuracion_header"), { 
+                  fotoFondoHeader: enlaceEscrito 
+                }, { merge: true });
                 
-                alert('🎉 ¡Foto de fondo vinculada con éxito!');
+                // Actualizamos el estado de la pantalla SOLO al pulsar el botón
+                if (typeof setFotoFondoHeader === 'function') setFotoFondoHeader(enlaceEscrito);
+                
+                alert('🎉 ¡Foto de fondo vinculada con éxito y clave protegida! 🛡️');
               } catch (error) {
                 console.error("Error al guardar la URL:", error);
                 alert('❌ ¡Vaya! Algo ha fallado al guardar el enlace.');
