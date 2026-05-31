@@ -7,7 +7,8 @@ import {
   query,
   doc,
   deleteDoc,
-  updateDoc, // 👈 ¡Añade esta palabra mágica aquí!
+  updateDoc,
+  onSnapshot, // 👈 ¡Sincronización en tiempo real activa!
 } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
@@ -41,6 +42,266 @@ const MapaPuntosInteres = dynamic(() => import('./MapaPuntosInteres'), {
   ),
 });
 
+// 🔔 Componente Toast Premium para notificaciones elegantes
+function ToastContainer({ toasts }) {
+  if (!toasts || toasts.length === 0) return null;
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '20px',
+      right: '20px',
+      zIndex: 999999,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+      maxWidth: '350px',
+      width: '100%',
+      pointerEvents: 'none'
+    }}>
+      {toasts.map(t => (
+        <div key={t.id} style={{
+          padding: '16px 20px',
+          borderRadius: '16px',
+          backgroundColor: t.tipo === 'exito' ? '#10b981' : t.tipo === 'error' ? '#ef4444' : t.tipo === 'advertencia' ? '#f59e0b' : '#3b82f6',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '0.9rem',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '15px',
+          pointerEvents: 'auto',
+          animation: 'slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards, fadeOut 0.3s ease-in 3.2s forwards',
+          borderLeft: '5px solid rgba(0,0,0,0.2)'
+        }}>
+          <span>{t.mensaje}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// 🔑 Componente Modal de Login Admin Premium (Glassmorphism con Firebase Auth)
+function AdminPasswordModal({ mostrar, onClose, db, setIsAdmin, lanzarToast }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [mostrarOjo, setMostrarOjo] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (mostrar) {
+      setEmail('');
+      setPassword('');
+      setLoading(false);
+    }
+  }, [mostrar]);
+
+  if (!mostrar) return null;
+
+  const validar = async (e) => {
+    e.preventDefault();
+    if (!email) return lanzarToast('¡Escribe tu correo de administrador! 📧', 'advertencia');
+    if (!password) return lanzarToast('¡Escribe tu contraseña! 🔑', 'advertencia');
+    setLoading(true);
+
+    try {
+      // 🔐 AUTENTICACIÓN REAL CONTRA FIREBASE AUTH EN TIEMPO REAL
+      const { getAuth, signInWithEmailAndPassword } = await import('firebase/auth');
+      const auth = getAuth();
+      
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      setIsAdmin(true);
+      lanzarToast('¡Superpoderes de Admin activados! 🌟 (Autenticado de forma 100% segura)', 'exito');
+      onClose();
+    } catch (err) {
+      console.error(err);
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        lanzarToast('❌ Correo o contraseña incorrectos', 'error');
+      } else {
+        lanzarToast('❌ Error de conexión al autenticar', 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: 'rgba(15, 23, 42, 0.65)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 999999,
+      animation: 'fadeIn 0.2s ease-out'
+    }}>
+      <form onSubmit={validar} style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        padding: '35px',
+        borderRadius: '32px',
+        maxWidth: '400px',
+        width: '90%',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)',
+        border: '1px solid rgba(255, 255, 255, 0.4)',
+        textAlign: 'center',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: '15px' }}>🔑</div>
+        <h3 style={{ margin: '0 0 10px', color: '#0f172a', fontWeight: '900', fontSize: '1.5rem', letterSpacing: '-0.5px' }}>
+          Área de Administración
+        </h3>
+        <p style={{ margin: '0 0 25px', color: '#64748b', fontSize: '0.9rem', fontWeight: '500' }}>
+          Introduce tu correo y contraseña de Firebase para activar los superpoderes de edición de forma 100% segura.
+        </p>
+
+        {/* Campo de Correo Electrónico */}
+        <div style={{ position: 'relative', marginBottom: '15px' }}>
+          <input
+            type="email"
+            placeholder="Correo del administrador..."
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '14px 16px',
+              borderRadius: '16px',
+              border: '2px solid #e2e8f0',
+              fontSize: '1rem',
+              outline: 'none',
+              boxSizing: 'border-box',
+              fontWeight: 'bold',
+              transition: 'border-color 0.2s'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+          />
+        </div>
+
+        {/* Campo de Contraseña */}
+        <div style={{ position: 'relative', marginBottom: '20px' }}>
+          <input
+            type={mostrarOjo ? 'text' : 'password'}
+            placeholder="Introduce la contraseña..."
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '14px 45px 14px 16px',
+              borderRadius: '16px',
+              border: '2px solid #e2e8f0',
+              fontSize: '1rem',
+              outline: 'none',
+              boxSizing: 'border-box',
+              fontWeight: 'bold',
+              transition: 'border-color 0.2s'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+          />
+          <button
+            type="button"
+            onClick={() => setMostrarOjo(!mostrarOjo)}
+            style={{
+              position: 'absolute',
+              right: '15px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '1.2rem'
+            }}
+          >
+            {mostrarOjo ? '👁️' : '🙈'}
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: '14px',
+              backgroundColor: '#f1f5f9',
+              color: '#475569',
+              border: 'none',
+              borderRadius: '16px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              flex: 1,
+              padding: '14px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '16px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            {loading ? 'Validando...' : 'Validar'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// 💀 Componente de Carga Esqueleto (Skeleton Card)
+function SkeletonCard() {
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '28px',
+      height: '530px',
+      overflow: 'hidden',
+      border: '3px solid #e2e8f0',
+      display: 'flex',
+      flexDirection: 'column',
+      boxShadow: '0 20px 35px rgba(0, 0, 0, 0.05)',
+      animation: 'pulse 1.5s infinite ease-in-out'
+    }}>
+      {/* Img Box */}
+      <div style={{ height: '180px', backgroundColor: '#e2e8f0' }} />
+      {/* Content Box */}
+      <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', flexGrow: 1, gap: '12px' }}>
+        <div style={{ height: '24px', backgroundColor: '#e2e8f0', borderRadius: '6px', width: '70%' }} />
+        <div style={{ height: '30px', backgroundColor: '#e2e8f0', borderRadius: '12px', width: '45%', marginTop: '5px' }} />
+        <div style={{ height: '18px', backgroundColor: '#e2e8f0', borderRadius: '6px', width: '55%' }} />
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', height: '24px' }}>
+            <div style={{ height: '18px', backgroundColor: '#e2e8f0', borderRadius: '4px', width: '25%' }} />
+            <div style={{ height: '28px', backgroundColor: '#e2e8f0', borderRadius: '6px', width: '35%' }} />
+          </div>
+          <div style={{ height: '42px', backgroundColor: '#e2e8f0', borderRadius: '14px', width: '100%' }} />
+          <div style={{ height: '42px', backgroundColor: '#e2e8f0', borderRadius: '14px', width: '100%' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Page() {
   const [vista, setVista] = useState('catalogo');
   const [fotoFondoHeader, setFotoFondoHeader] = useState('');
@@ -50,7 +311,7 @@ export default function Page() {
   const [puntosInteres, setPuntosInteres] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   // Este es el estado que le dirá al mapa a dónde volar
-const [destino, setDestino] = useState(null);
+  const [destino, setDestino] = useState(null);
   const [actividadSeleccionada, setActividadSeleccionada] = useState(null);
   const [editandoId, setEditandoId] = useState(null); // Para saber si estamos creando o editando
   const [pestaña, setPestaña] = useState('info'); // Puede ser 'info' o 'mapa'
@@ -62,6 +323,60 @@ const [destino, setDestino] = useState(null);
     latF: '',
     lngF: '',
   });
+
+  // 🌟 NUEVOS ESTADOS PREMIUM
+  const [toasts, setToasts] = useState([]); // [{ id, mensaje, tipo }]
+  const [mostrarAdminModal, setMostrarAdminModal] = useState(false);
+  const [claveInput, setClaveInput] = useState('');
+  const [mostrarOjo, setMostrarOjo] = useState(false);
+  const [cargando, setCargando] = useState(true); // Control del Skeleton Loading
+  const [modoOscuro, setModoOscuro] = useState(false); // 🌓 Control del Modo Oscuro
+  const [capturandoCoordenadasPara, setCapturandoCoordenadasPara] = useState(null); // 📡 Indica qué campo se está rellenando al hacer clic en el mapa
+  const [mostrarSubirArriba, setMostrarSubirArriba] = useState(false); // ⬆️ Control de visibilidad del botón para volver arriba
+
+  // 🔔 FUNCIÓN DE TOASTS PERSONALIZADOS
+  const lanzarToast = (mensaje, tipo = 'exito') => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, mensaje, tipo }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+  };
+
+  // 🔑 ESCUCHA EN TIEMPO REAL PARA MANTENER LA SESIÓN DEL ADMINISTRADOR ACTIVA
+  useEffect(() => {
+    const escucharAuth = async () => {
+      try {
+        const { getAuth, onAuthStateChanged } = await import('firebase/auth');
+        const auth = getAuth();
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            setIsAdmin(true);
+            lanzarToast('¡Sesión de administrador recuperada! 🔑', 'info');
+          } else {
+            setIsAdmin(false);
+          }
+        });
+      } catch (err) {
+        console.error("Error al inicializar escucha de autenticación:", err);
+      }
+    };
+    escucharAuth();
+  }, []);
+
+  // ⬆️ ESCUCHA DE SCROLL PARA MOSTRAR U OCULTAR EL BOTÓN "VOLVER ARRIBA"
+  useEffect(() => {
+    const manejarScroll = () => {
+      if (window.scrollY > 400) {
+        setMostrarSubirArriba(true);
+      } else {
+        setMostrarSubirArriba(false);
+      }
+    };
+    window.addEventListener('scroll', manejarScroll);
+    return () => window.removeEventListener('scroll', manejarScroll);
+  }, []);
+
   // 2️⃣ SEGUNDO: ¡AQUÍ JUSTO VA TU NUEVO ROBOT (useEffect)!
   // Colócalo aquí mismo, libre y sin meterlo en ningún "if"
   useEffect(() => {
@@ -79,6 +394,65 @@ const [destino, setDestino] = useState(null);
     };
     cargarConfiguracionCole();
   }, []);
+
+  // 📡 HOOK GLOBAL PARA INTERCEPTAR CLICS EN LOS MAPAS DE LEAFLET
+  useEffect(() => {
+    const hookLeaflet = () => {
+      if (typeof window !== 'undefined' && window.L && window.L.Map) {
+        if (!window.L.Map.prototype._hasAntigravityClickHook) {
+          window.L.Map.prototype._hasAntigravityClickHook = true;
+          window.L.Map.addInitHook(function () {
+            this.on('click', (e) => {
+              window.dispatchEvent(new CustomEvent('leaflet-map-click', { 
+                detail: { lat: e.latlng.lat, lng: e.latlng.lng } 
+              }));
+            });
+          });
+        }
+      }
+    };
+
+    hookLeaflet();
+    const interval = setInterval(hookLeaflet, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleMapClick = (e) => {
+      const { lat, lng } = e.detail;
+      if (!capturandoCoordenadasPara) return;
+
+      const latFijo = lat.toFixed(6);
+      const lngFijo = lng.toFixed(6);
+
+      if (capturandoCoordenadasPara === 'maestro') {
+        const inputLat = document.getElementById('nuevoPuntoLat');
+        const inputLng = document.getElementById('nuevoPuntoLng');
+        if (inputLat && inputLng) {
+          inputLat.value = latFijo;
+          inputLng.value = lngFijo;
+          inputLat.dispatchEvent(new Event('input', { bubbles: true }));
+          inputLng.dispatchEvent(new Event('input', { bubbles: true }));
+          lanzarToast('¡Coordenadas del mapa maestro capturadas! 📍', 'exito');
+        }
+      } else if (capturandoCoordenadasPara === 'actividad') {
+        setNuevaAct(prev => ({ ...prev, latAct: latFijo, lngAct: lngFijo }));
+        lanzarToast('¡Coordenadas de la actividad capturadas! 🎒', 'exito');
+      } else if (capturandoCoordenadasPara === 'monitores') {
+        setNuevaAct(prev => ({ ...prev, latMon: latFijo, lngMon: lngFijo }));
+        lanzarToast('¡Coordenadas de monitores capturadas! 🚶‍♂️', 'exito');
+      } else if (capturandoCoordenadasPara === 'familias') {
+        setNuevaAct(prev => ({ ...prev, latFam: latFijo, lngFam: lngFijo }));
+        lanzarToast('¡Coordenadas de familias capturadas! 👨‍👩‍👧', 'exito');
+      }
+
+      setCapturandoCoordenadasPara(null); // Desactivar modo captura
+    };
+
+    window.addEventListener('leaflet-map-click', handleMapClick);
+    return () => window.removeEventListener('leaflet-map-click', handleMapClick);
+  }, [capturandoCoordenadasPara]);
+
   const [clubes, setClubes] = useState([]); // Aquí guardaremos la lista que viene de la nube
   const [empresaActiva, setEmpresaActiva] = useState('Todas');
   const [busqueda, setBusqueda] = useState('');
@@ -136,46 +510,63 @@ const [destino, setDestino] = useState(null);
       fotoFam: '', 
     });
 
-  const cargarActividades = async () => {
-    try {
-      const q = query(collection(db, 'actividades_cole'));
-      const querySnapshot = await getDocs(q);
-      const docs = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setActividades(docs);
-    } catch (e) {
-      console.error('Error cargando:', e);
-    }
-  };
-
+  // 📡 SINCRONIZACIÓN EN TIEMPO REAL CON FIRESTORE (onSnapshot)
   useEffect(() => {
-    cargarActividades();
-    cargarPuntosInteres();
-    cargarClubes();
+    setCargando(true);
+
+    // 1. Actividades reales en tiempo real
+    const qAct = query(collection(db, 'actividades_cole'));
+    const unsubAct = onSnapshot(qAct, (snapshot) => {
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const actividadesReales = docs.filter(
+        (item) =>
+          item.id !== 'configuracion_header' &&
+          item.id !== 'configuración header' &&
+          !item.id.toLowerCase().includes('configuracio')
+      );
+      setActividades(actividadesReales);
+      setCargando(false);
+    }, (error) => {
+      console.error("Error al cargar actividades:", error);
+      lanzarToast("Error al conectar con la base de datos de actividades ☁️", "error");
+      setCargando(false);
+    });
+
+    // 2. Puntos de interés en tiempo real (Mapa Maestro)
+    const qPuntos = query(collection(db, 'puntos_interes_cole'));
+    const unsubPuntos = onSnapshot(qPuntos, (snapshot) => {
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPuntosInteres(docs);
+    }, (error) => {
+      console.error("Error al cargar puntos de interés:", error);
+    });
+
+    // 3. Clubes Amigos en tiempo real
+    const qClubes = query(collection(db, 'clubes_cole'));
+    const unsubClubes = onSnapshot(qClubes, (snapshot) => {
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setClubes(docs);
+    }, (error) => {
+      console.error("Error al cargar clubes:", error);
+    });
+
+    return () => {
+      unsubAct();
+      unsubPuntos();
+      unsubClubes();
+    };
   }, []);
-  // 📍 Esta función es la que va a buscar las chinchetas del Mapa Maestro
-  const cargarPuntosInteres = async () => {
-    try {
-      const q = query(collection(db, 'puntos_interes_cole'));
-      const querySnapshot = await getDocs(q);
-      const docs = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setPuntosInteres(docs); // Guardamos las chinchetas en su estado
-      console.log("¡Chinchetas cargadas!", docs.length);
-    } catch (e) {
-      console.error('Error cargando puntos de interés:', e);
-    }
-  };
+
+  // Funciones de compatibilidad para evitar errores al guardar/borrar
+  const cargarActividades = () => {};
+  const cargarPuntosInteres = () => {};
 
   const guardarActividad = async () => {
-    if (!nuevaAct.nombre) return alert('¡Escribe el nombre de la actividad! 📝');
+    if (!isAdmin) return lanzarToast('🛑 ¡Acceso denegado! No tienes permisos de administrador. 🔐', 'error');
+    if (!nuevaAct.nombre) return lanzarToast('¡Escribe el nombre de la actividad! 📝', 'advertencia');
     
     if (!nuevaAct.etapas || nuevaAct.etapas.length === 0) {
-      return alert('¡Debes elegir al menos una etapa para que aparezca en la web! 🚩');
+      return lanzarToast('¡Debes elegir al menos una etapa para que aparezca en la web! 🚩', 'advertencia');
     }
 
     // 🚀 Preparamos el paquete limpiando los enlaces antiguos y nuevos
@@ -200,10 +591,10 @@ const [destino, setDestino] = useState(null);
     try {
       if (editandoId) {
         await updateDoc(doc(db, 'actividades_cole', editandoId), actividadFinal);
-        alert('¡Actividad actualizada con éxito! 🔄');
+        lanzarToast('¡Actividad actualizada con éxito! 🔄', 'exito');
       } else {
         await addDoc(collection(db, 'actividades_cole'), actividadFinal);
-        alert('¡Publicado con éxito! ✨');
+        lanzarToast('¡Publicado con éxito! ✨', 'exito');
       }
 
       // ✨ LIMPIEZA TOTAL (¡Actualizada con los enlaces!)
@@ -240,14 +631,15 @@ const [destino, setDestino] = useState(null);
       cargarActividades();
     } catch (e) {
       console.error('Error al guardar:', e);
-      alert('Vaya, parece que ha habido un error al conectar con la nube.');
+      lanzarToast('Vaya, parece que ha habido un error al conectar con la nube.', 'error');
     }
   };
 
   // 🚀 El "brazo robótico" para guardar Clubes Amigos (¡También actualizado!)
   const guardarClub = async () => {
-    if (!nuevoClub.nombre) return alert('¡Escribe el nombre del club! 🥋');
-    if (nuevoClub.etapas.length === 0) return alert('¡Marca al menos una etapa! 🏁');
+    if (!isAdmin) return lanzarToast('🛑 ¡Acceso denegado! No tienes permisos de administrador. 🔐', 'error');
+    if (!nuevoClub.nombre) return lanzarToast('¡Escribe el nombre del club! 🥋', 'advertencia');
+    if (nuevoClub.etapas.length === 0) return lanzarToast('¡Marca al menos una etapa! 🏁', 'advertencia');
 
     try {
       // 🚀 Preparamos el paquete como siempre
@@ -268,11 +660,11 @@ const [destino, setDestino] = useState(null);
       if (editandoId) {
         // ✏️ SI HAY UN ID: Usamos updateDoc para sobrescribir el viejo
         await updateDoc(doc(db, 'clubes_cole', editandoId), clubFinal);
-        alert('¡Club Amigo actualizado! ✨');
+        lanzarToast('¡Club Amigo actualizado! ✨', 'exito');
       } else {
         // 🆕 SI NO HAY ID: Usamos addDoc para crear uno nuevo
         await addDoc(collection(db, 'clubes_cole'), clubFinal);
-        alert('¡Club Amigo guardado con éxito! 🌟');
+        lanzarToast('¡Club Amigo guardado con éxito! 🌟', 'exito');
       }
 
       // 🧹 Limpiamos el cajón y reseteamos el ID de edición
@@ -288,23 +680,10 @@ const [destino, setDestino] = useState(null);
 
     } catch (e) {
       console.error('Error al guardar/actualizar:', e);
-      alert('¡Uy! Ha fallado el envío a la nube.');
+      lanzarToast('¡Uy! Ha fallado el envío a la nube.', 'error');
     }
   };
-  const cargarClubes = async () => {
-    try {
-      const q = query(collection(db, 'clubes_cole'));
-      const querySnapshot = await getDocs(q);
-      const docs = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setClubes(docs); // Esto llena la lista de clubes
-      console.log("¡Clubes bajados de la nube!", docs.length);
-    } catch (e) {
-      console.error('Error cargando los clubes:', e);
-    }
-  };
+  const cargarClubes = () => {};
 // 📑 Lista de preguntas frecuentes corregidas y adaptadas para las familias
 const preguntasFrecuentes = [
   {
@@ -335,8 +714,9 @@ const preguntasFrecuentes = [
       <div
         style={{
           fontFamily: 'sans-serif',
-          // 🎨 ¡CAMBIO MÁGICO! Fondo claro, limpio y con un contraste del 100%
-          backgroundColor: '#f1f5f9', 
+          // 🎨 ¡CAMBIO MÁGICO! Fondo claro, limpio y con un contraste del 100% (Modo oscuro compatible!)
+          backgroundColor: modoOscuro ? '#0a0f1d' : '#f1f5f9', 
+          color: modoOscuro ? '#f1f5f9' : '#1e293b',
           minHeight: '100vh',        // 📐 ¡Toda la altura de la pantalla obligatoria!
           
           // 🧲 ACTIVAMOS EL IMÁN ANTI-ESPACIOS BLANCOS:
@@ -346,8 +726,38 @@ const preguntasFrecuentes = [
           position: 'relative',
           overflowX: 'hidden',
           paddingBottom: '0px',     
+          transition: 'background-color 0.3s ease, color 0.3s ease',
         }}
       >
+        <style>{`
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+          @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(-10px); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          .card-premium {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          .card-premium:hover {
+            transform: translateY(-10px) !important;
+          }
+          .card-img-zoom {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          .card-premium:hover .card-img-zoom {
+            transform: scale(1.05) !important;
+          }
+        `}</style>
         {/* 🔮 CÍRCULOS DE LUZ SUAVES EN EL FONDO GENERAL (Ahora más sutiles para fondo claro) */}
         <div style={{ position: 'absolute', top: '15%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
         <div style={{ position: 'absolute', bottom: '20%', right: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,70,239,0.08) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0 }} />
@@ -394,6 +804,29 @@ const preguntasFrecuentes = [
     gap: '10px',
     zIndex: 100,
   }}>
+    {/* 🌓 BOTÓN DE MODO OSCURO */}
+    <button
+      type="button"
+      onClick={() => setModoOscuro(!modoOscuro)}
+      style={{
+        padding: '8px 16px',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        color: 'white',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        borderRadius: '12px',
+        cursor: 'pointer',
+        fontSize: '0.8rem',
+        fontWeight: 'bold',
+        backdropFilter: 'blur(4px)',
+        transition: 'all 0.2s',
+        outline: 'none'
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'}
+      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+    >
+      {modoOscuro ? '☀️ Claro' : '🌙 Oscuro'}
+    </button>
+
     <button
       onClick={() => setVista('mapa')}
       style={{
@@ -436,27 +869,9 @@ const preguntasFrecuentes = [
 
     {!isAdmin ? (
       <button
-        /* 🚀 Ponemos async para que el botón pueda hacer llamadas a Firebase volando */
-        onClick={async () => {
-          const p = prompt('Clave:');
-          if (!p) return; // Si cancela o lo deja vacío, no hacemos nada
-          
-          try {
-            const { doc, getDoc } = await import('firebase/firestore');
-            
-            /* 🔍 Buscamos en el documento que ya existe de tu colección (el de tu foto) */
-            const docSnap = await getDoc(doc(db, "actividades_cole", "configuracion_header"));
-            
-            /* 🔐 ¡EL TRUCO DIRECTO!: Compara lo que has escrito con el campo claveAdmin de Firebase */
-            if (docSnap.exists() && p === docSnap.data().claveAdmin) { 
-              setIsAdmin(true); // 🌟 ¡Activa tus superpoderes de administrador!
-            } else {
-              alert('❌ ¡Clave incorrecta!');
-            }
-          } catch (error) {
-            console.error("Error al comprobar la clave:", error);
-            alert('❌ ¡Vaya! Hubo un problema al conectar con Firebase.');
-          }
+        onClick={() => {
+          setClaveInput('');
+          setMostrarAdminModal(true);
         }}
         style={{
           padding: '8px 16px',
@@ -490,7 +905,17 @@ const preguntasFrecuentes = [
           ➕ Añadir
         </button>
         <button
-          onClick={() => setIsAdmin(false)}
+          onClick={async () => {
+            try {
+              const { getAuth } = await import('firebase/auth');
+              await getAuth().signOut();
+              setIsAdmin(false);
+              lanzarToast('¡Sesión de administrador cerrada! 🔐', 'info');
+            } catch (err) {
+              console.error(err);
+              lanzarToast('Error al cerrar sesión', 'error');
+            }
+          }}
           style={{
             padding: '8px 12px',
             backgroundColor: '#ef4444',
@@ -499,7 +924,12 @@ const preguntasFrecuentes = [
             borderRadius: '12px',
             cursor: 'pointer',
             fontSize: '0.8rem',
+            fontWeight: 'bold',
+            transition: 'all 0.2s',
+            outline: 'none'
           }} 
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
         >
           Salir
         </button>
@@ -620,60 +1050,136 @@ const preguntasFrecuentes = [
   {mostrarFiltros && (
     <div style={{
       display: 'flex',
-      gap: '12px',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
+      flexDirection: 'column',
+      gap: '20px',
       marginTop: '25px',
-      padding: '20px',
-      backgroundColor: 'rgba(15, 23, 42, 0.6)',
-      borderRadius: '24px',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      backdropFilter: 'blur(10px)',
+      padding: '24px',
+      backgroundColor: 'rgba(15, 23, 42, 0.65)',
+      borderRadius: '28px',
+      border: '1px solid rgba(255, 255, 255, 0.12)',
+      backdropFilter: 'blur(16px)',
+      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
       maxWidth: '650px',
       margin: '25px auto 0'
     }}>
       
       {/* Selector 1: Etapas */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-        <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 'bold', marginLeft: '4px' }}>ETAPA</span>
-        <select 
-          value={etapaActiva} 
-          onChange={(e) => setEtapaActiva(e.target.value)}
-          style={{ padding: '10px 16px', borderRadius: '12px', backgroundColor: '#1e293b', color: 'white', border: '1px solid rgba(255,255,255,0.2)', fontWeight: 'bold', outline: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
-        >
-          <option value="Todos">🎒 Todas las Etapas</option>
-          {['Infantil', 'Primaria', 'ESO', 'Adultos', 'Clubes Amigos'].map(e => <option key={e} value={e}>{e}</option>)}
-        </select>
+      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '0.05em', textTransform: 'uppercase' }}>🎒 ETAPA</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+          {[
+            { value: 'Todos', label: 'Todas las Etapas' },
+            { value: 'Infantil', label: 'Infantil' },
+            { value: 'Primaria', label: 'Primaria' },
+            { value: 'ESO', label: 'ESO' },
+            { value: 'Adultos', label: 'Adultos' },
+            { value: 'Clubes Amigos', label: 'Clubes Amigos' }
+          ].map(opt => {
+            const activo = etapaActiva === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setEtapaActiva(opt.value)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  border: activo ? '1px solid #60a5fa' : '1px solid rgba(255,255,255,0.1)',
+                  background: activo ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'rgba(255, 255, 255, 0.05)',
+                  color: activo ? 'white' : '#94a3b8',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: activo ? '0 4px 12px rgba(59, 130, 246, 0.4)' : 'none',
+                  transform: activo ? 'scale(1.05)' : 'scale(1)',
+                  outline: 'none'
+                }}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Selector 2: Empresas */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-        <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 'bold', marginLeft: '4px' }}>EMPRESA</span>
-        <select 
-          value={empresaActiva} 
-          onChange={(e) => setEmpresaActiva(e.target.value)}
-          style={{ padding: '10px 16px', borderRadius: '12px', backgroundColor: '#1e293b', color: 'white', border: '1px solid rgba(255,255,255,0.2)', fontWeight: 'bold', outline: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
-        >
-          <option value="Todas">🏢 Todas las Empresas</option>
-          {['Alventus', '4life', 'Kids&Us', 'San Buenaventura'].map(emp => <option key={emp} value={emp}>{emp}</option>)}
-        </select>
+      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '0.05em', textTransform: 'uppercase' }}>🏢 EMPRESA</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+          {[
+            { value: 'Todas', label: 'Todas las Empresas' },
+            { value: 'Alventus', label: 'Alventus' },
+            { value: '4life', label: '4life' },
+            { value: 'Kids&Us', label: 'Kids&Us' },
+            { value: 'San Buenaventura', label: 'San Buenaventura' }
+          ].map(opt => {
+            const activo = empresaActiva === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setEmpresaActiva(opt.value)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  border: activo ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
+                  background: activo ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(255, 255, 255, 0.05)',
+                  color: activo ? 'white' : '#94a3b8',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: activo ? '0 4px 12px rgba(16, 185, 129, 0.4)' : 'none',
+                  transform: activo ? 'scale(1.05)' : 'scale(1)',
+                  outline: 'none'
+                }}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Selector 3: Filtro por Días */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
-        <span style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 'bold', marginLeft: '4px' }}>DÍA SEMANA</span>
-        <select 
-          value={diaActivo} 
-          onChange={(e) => setDiaActivo(e.target.value)}
-          style={{ padding: '10px 16px', borderRadius: '12px', backgroundColor: '#3b82f6', color: 'white', border: '1px solid rgba(255,255,255,0.2)', fontWeight: 'bold', outline: 'none', cursor: 'pointer', fontSize: '0.85rem', boxShadow: '0 4px 10px rgba(59, 130, 246, 0.2)' }}
-        >
-          <option value="Todos">📅 Todos los Días</option>
-          <option value="lunes">Lunes</option>
-          <option value="martes">Martes</option>
-          <option value="miércoles">Miércoles</option>
-          <option value="jueves">Jueves</option>
-          <option value="viernes">Viernes</option>
-        </select>
+      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', letterSpacing: '0.05em', textTransform: 'uppercase' }}>📅 DÍA SEMANA</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+          {[
+            { value: 'Todos', label: 'Todos los Días' },
+            { value: 'lunes', label: 'Lunes' },
+            { value: 'martes', label: 'Martes' },
+            { value: 'miércoles', label: 'Miércoles' },
+            { value: 'jueves', label: 'Jueves' },
+            { value: 'viernes', label: 'Viernes' }
+          ].map(opt => {
+            const activo = diaActivo === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setDiaActivo(opt.value)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  border: activo ? '1px solid #a78bfa' : '1px solid rgba(255,255,255,0.1)',
+                  background: activo ? 'linear-gradient(135deg, #8b5cf6, #6366f1)' : 'rgba(255, 255, 255, 0.05)',
+                  color: activo ? 'white' : '#94a3b8',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: activo ? '0 4px 12px rgba(139, 92, 246, 0.4)' : 'none',
+                  transform: activo ? 'scale(1.05)' : 'scale(1)',
+                  outline: 'none'
+                }}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
     </div>
@@ -744,11 +1250,108 @@ const preguntasFrecuentes = [
 
 return (
   <>
-    {/* 🚩 Mensaje si no hay nada que enseñar */}
-    {itemsFiltrados.length === 0 && (
-      <div style={{ textAlign: 'center', padding: '50px', backgroundColor: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', color: 'white', borderRadius: '24px', margin: '40px auto', maxWidth: '600px', border: '1px solid rgba(255,255,255,0.1)' }}>
-        <p style={{ fontSize: '1.1rem' }}>No hay actividades de <strong>{empresaActiva === 'Todas' ? '' : empresaActiva}</strong> en <strong>{etapaActiva}</strong> todavía.</p>
-        {isAdmin && <p style={{ color: '#ff6b6b', fontWeight: 'bold', marginTop: '10px' }}>¡Usa el panel de admin para añadir una!</p>}
+    {/* 🚩 Mensaje si no hay nada que enseñar (Solo si no está cargando) */}
+    {!cargando && itemsFiltrados.length === 0 && (
+      <div style={{ 
+        textAlign: 'center', 
+        padding: '50px 30px', 
+        background: modoOscuro ? 'rgba(30, 41, 59, 0.45)' : 'rgba(255, 255, 255, 0.45)', 
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        color: modoOscuro ? '#f8fafc' : '#0f172a', 
+        borderRadius: '32px', 
+        margin: '40px auto', 
+        maxWidth: '650px', 
+        border: modoOscuro ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.08)', 
+        boxShadow: modoOscuro ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : '0 20px 40px -15px rgba(0, 0, 0, 0.1)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '20px',
+        animation: 'fadeIn 0.6s ease-out'
+      }}>
+        {/* Floating animated icon container */}
+        <div style={{
+          width: '80px',
+          height: '80px',
+          borderRadius: '24px',
+          background: modoOscuro ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          fontSize: '2.5rem',
+          boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.1)',
+          animation: 'pulse 3s infinite ease-in-out'
+        }}>
+          🔍
+        </div>
+        
+        <h3 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>
+          Sin resultados
+        </h3>
+        
+        <p style={{ 
+          fontSize: '1rem', 
+          margin: 0, 
+          color: modoOscuro ? '#94a3b8' : '#475569', 
+          lineHeight: '1.6', 
+          maxWidth: '85%',
+          fontWeight: '550'
+        }}>
+          No hay actividades que coincidan con 
+          {busqueda ? ` "${busqueda}"` : ''} 
+          {empresaActiva !== 'Todas' ? ` de ${empresaActiva}` : ''}
+          {etapaActiva !== 'Todos' ? ` en la etapa ${etapaActiva}` : ''}
+          {diaActivo !== 'Todos' ? ` los ${diaActivo}` : ''}.
+        </p>
+
+        {isAdmin && (
+          <p style={{ 
+            color: '#10b981', 
+            fontWeight: '700', 
+            fontSize: '0.9rem', 
+            margin: '0', 
+            backgroundColor: modoOscuro ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
+            padding: '6px 16px',
+            borderRadius: '12px'
+          }}>
+            💡 ¡Usa el panel de administrador para añadir una!
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={() => {
+            setBusqueda('');
+            setEtapaActiva('Todos');
+            setEmpresaActiva('Todas');
+            setDiaActivo('Todos');
+            lanzarToast('Filtros restaurados correctamente', 'exito');
+          }}
+          style={{
+            marginTop: '10px',
+            padding: '12px 24px',
+            borderRadius: '16px',
+            border: 'none',
+            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+            color: 'white',
+            fontWeight: '750',
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            boxShadow: '0 10px 20px rgba(37, 99, 235, 0.2)',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 12px 24px rgba(37, 99, 235, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 10px 20px rgba(37, 99, 235, 0.2)';
+          }}
+        >
+          🔄 Restaurar Filtros
+        </button>
       </div>
     )}
 
@@ -764,17 +1367,27 @@ return (
       alignItems: 'start', 
       justifyContent: 'center' 
     }}>
-{/* 🎨 DIBUJAMOS LAS TARJETAS DE CRISTAL (GLASSMORPHISM) CON ALTO CONTRASTE */}
-{itemsFiltrados.map((item) => (
+      {cargando ? (
+        <>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </>
+      ) : (
+        itemsFiltrados.map((item) => (
         <div
           key={item.id} 
+          className="card-premium"
           style={{
-            background: 'rgba(255, 255, 255, 0.94)',
+            background: modoOscuro ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.94)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             borderRadius: '28px', 
             overflow: 'hidden',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)', 
+            boxShadow: modoOscuro ? '0 20px 40px rgba(0, 0, 0, 0.6)' : '0 20px 40px rgba(0, 0, 0, 0.15)', 
             
             // 🎽 ¡EL COLOR MORADO EN ACCIÓN PARA LAS MULTI-ETAPAS!
             border: `3px solid ${
@@ -794,13 +1407,13 @@ return (
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-10px)';
-            e.currentTarget.style.boxShadow = '0 30px 60px rgba(59, 130, 246, 0.25)';
+            e.currentTarget.style.boxShadow = modoOscuro ? '0 30px 60px rgba(96, 165, 250, 0.2)' : '0 30px 60px rgba(59, 130, 246, 0.25)';
             const m = ['Infantil', 'Primaria', 'ESO', 'Adultos'].filter(e => item[e] || (item.etapa === e) || (item.etapas && item.etapas.includes(e))).length > 1;
             e.currentTarget.style.borderColor = m ? '#a855f7' : (item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'))) ? '#d946ef' : (item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'))) ? '#22c55e' : (item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'))) ? '#f97316' : '#3b82f6';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 20px 35px rgba(0, 0, 0, 0.15)';
+            e.currentTarget.style.boxShadow = modoOscuro ? '0 20px 40px rgba(0, 0, 0, 0.6)' : '0 20px 35px rgba(0, 0, 0, 0.15)';
             const m = ['Infantil', 'Primaria', 'ESO', 'Adultos'].filter(e => item[e] || (item.etapa === e) || (item.etapas && item.etapas.includes(e))).length > 1;
             e.currentTarget.style.borderColor = m ? '#a855f7' : (item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'))) ? '#d946ef' : (item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'))) ? '#22c55e' : (item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'))) ? '#f97316' : '#3b82f6';
           }}
@@ -809,31 +1422,77 @@ return (
           <div style={{ position: 'relative', height: '180px', overflow: 'hidden' }}>
             <img
               src={item.imagen || item.foto || 'https://via.placeholder.com/400x200?text=San+Buenaventura'}
+              className="card-img-zoom"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               onError={(e) => { e.target.src = 'https://via.placeholder.com/400x200?text=Imagen+No+Disponible'; }}
             />
             <div style={{
               position: 'absolute', top: '12px', right: '12px',
-              backgroundColor: item.esClub ? '#d946ef' : '#1e293b', // Color más sólido y visible
-              padding: '6px 14px', borderRadius: '99px', fontSize: '0.7rem', fontWeight: '800',
-              color: 'white',
-              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+              display: 'flex', gap: '6px', flexWrap: 'wrap',
+              justifyContent: 'flex-end', maxWidth: '85%'
             }}>
-{item.esClub ? '🌟 CLUB AMIGO' : (Array.isArray(item.etapas) && item.etapas.length > 0 ? item.etapas.join(', ') : item.etapa)}            </div>
+              {item.esClub ? (
+                <div style={{
+                  backgroundColor: '#d946ef',
+                  padding: '6px 12px', borderRadius: '99px', fontSize: '0.65rem', fontWeight: '800',
+                  color: 'white',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                  letterSpacing: '0.5px'
+                }}>
+                  🌟 CLUB AMIGO
+                </div>
+              ) : (
+                (() => {
+                  const etapasArray = Array.isArray(item.etapas) ? item.etapas : (item.etapa ? [item.etapa] : []);
+                  return etapasArray.map((et, index) => {
+                    let bgColor = '#64748b'; // default slate
+                    let text = et;
+                    const lowerEt = et.toLowerCase().trim();
+                    if (lowerEt.includes('infantil')) {
+                      bgColor = '#22c55e';
+                      text = '👶 INFANTIL';
+                    } else if (lowerEt.includes('primaria')) {
+                      bgColor = '#3b82f6';
+                      text = '🎒 PRIMARIA';
+                    } else if (lowerEt.includes('eso') || lowerEt.includes('secundaria')) {
+                      bgColor = '#f97316';
+                      text = '⚡ ESO';
+                    } else if (lowerEt.includes('adulto')) {
+                      bgColor = '#6366f1';
+                      text = '👥 ADULTOS';
+                    } else if (lowerEt.includes('club')) {
+                      bgColor = '#d946ef';
+                      text = '🌟 CLUB';
+                    }
+                    return (
+                      <div key={index} style={{
+                        backgroundColor: bgColor,
+                        padding: '5px 10px', borderRadius: '99px', fontSize: '0.65rem', fontWeight: '800',
+                        color: 'white',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                        letterSpacing: '0.5px'
+                      }}>
+                        {text}
+                      </div>
+                    );
+                  });
+                })()
+              )}
+            </div>
           </div>
 
           {/* 📝 CONTENIDO ESTILIZADO CON CONTRASTE REFORZADO Y MEJOR JERARQUÍA VISUAL */}
           <div style={{ padding: '24px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
             
             {/* 👑 1. EL REY DE LA TARJETA: Título más grande en negro puro */}
-            <h3 style={{ margin: '0 0 8px', fontSize: '1.4rem', color: '#0f172a', fontWeight: '900', letterSpacing: '-0.5px' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.4rem', color: modoOscuro ? '#f8fafc' : '#0f172a', fontWeight: '900', letterSpacing: '-0.5px' }}>
               {item.nombre}
             </h3>
             
             {/* 🗓️ 2. LOS ESCUDEROS: Subimos los días justo debajo del título */}
             <div style={{ 
-              backgroundColor: item.esClub ? '#fae8ff' : '#e0f2fe', 
-              color: item.esClub ? '#701a75' : '#0369a1', 
+              backgroundColor: modoOscuro ? (item.esClub ? '#4c1d95' : '#0c4a6e') : (item.esClub ? '#fae8ff' : '#e0f2fe'), 
+              color: modoOscuro ? (item.esClub ? '#f5d0fe' : '#bae6fd') : (item.esClub ? '#701a75' : '#0369a1'), 
               fontSize: '0.75rem', 
               fontWeight: '950', 
               padding: '6px 14px',
@@ -842,7 +1501,7 @@ return (
               alignItems: 'center',
               gap: '6px',
               alignSelf: 'flex-start',
-              border: item.esClub ? '1px solid #d8b4fe' : '1px solid #7dd3fc',
+              border: modoOscuro ? (item.esClub ? '1px solid #701a75' : '1px solid #0369a1') : (item.esClub ? '1px solid #d8b4fe' : '1px solid #7dd3fc'),
               marginBottom: '8px'
             }}>
               <span>🗓️</span>
@@ -850,7 +1509,7 @@ return (
             </div>
 
             {/* ⏰ El Horario pegado a los días, en un gris intermedio muy elegante */}
-            <p style={{ color: '#475569', fontSize: '0.9rem', margin: '0 0 20px', fontWeight: '700' }}>
+            <p style={{ color: modoOscuro ? '#94a3b8' : '#475569', fontSize: '0.9rem', margin: '0 0 20px', fontWeight: '700' }}>
               ⏰ {item.horario || 'Horario a consultar'}
             </p>
 
@@ -865,27 +1524,29 @@ return (
                 marginBottom: '16px',
                 padding: '0 5px'
               }}>
-                <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'bold', letterSpacing: '0.5px' }}>PRECIO:</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: '900', color: item.esClub ? '#c026d3' : '#1d4ed8' }}>
+                <span style={{ fontSize: '0.8rem', color: modoOscuro ? '#94a3b8' : '#64748b', fontWeight: 'bold', letterSpacing: '0.5px' }}>PRECIO:</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: '900', color: item.esClub ? '#d946ef' : (modoOscuro ? '#60a5fa' : '#1d4ed8') }}>
                   {item.precio ? `${item.precio}€` : '---'}
-                  <small style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', marginLeft: '3px' }}>/mes</small>
+                  <small style={{ fontSize: '0.75rem', fontWeight: '700', color: modoOscuro ? '#94a3b8' : '#64748b', marginLeft: '3px' }}>/mes</small>
                 </span>
               </div>
 
               {/* Botón principal oscuro */}
               <button
+                type="button"
                 onClick={() => {
                   setActividadSeleccionada(item);
                   setVista('detalles');
                 }}
                 style={{
                   width: '100%', padding: '12px', borderRadius: '14px', border: 'none',
-                  backgroundColor: '#0f172a', color: '#ffffff', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '10px',
-                  boxShadow: '0 4px 10px rgba(15, 23, 42, 0.2)',
-                  transition: 'background-color 0.2s'
+                  backgroundColor: modoOscuro ? '#3b82f6' : '#0f172a', color: '#ffffff', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '10px',
+                  boxShadow: modoOscuro ? '0 4px 12px rgba(59, 130, 246, 0.3)' : '0 4px 10px rgba(15, 23, 42, 0.2)',
+                  transition: 'all 0.2s',
+                  outline: 'none'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e293b'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0f172a'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = modoOscuro ? '#60a5fa' : '#1e293b'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = modoOscuro ? '#3b82f6' : '#0f172a'}
               >
                 Ver información completa
               </button>
@@ -1017,6 +1678,7 @@ return (
 
                   <button
                     onClick={async () => {
+                      if (!isAdmin) return lanzarToast('🛑 ¡No tienes permiso! 🔐', 'error');
                       if (confirm('¿Quieres borrar esto?')) {
                         const coleccion = item.esClub ? 'clubes_cole' : 'actividades_cole';
                         await deleteDoc(doc(db, coleccion, item.id));
@@ -1033,7 +1695,8 @@ return (
             </div>
           </div>
         </div>
-      ))}
+      ))
+      )}
     </div>
   </>
 );
@@ -1088,7 +1751,51 @@ return (
 
           </div>
         </footer>
-</div>
+
+        {/* 🌟 COMPONENTES PREMIUM GLOBALES */}
+        <ToastContainer toasts={toasts} />
+        <AdminPasswordModal 
+          mostrar={mostrarAdminModal} 
+          onClose={() => setMostrarAdminModal(false)}
+          db={db}
+          setIsAdmin={setIsAdmin}
+          lanzarToast={lanzarToast}
+        />
+
+        {/* ⬆️ BOTÓN FLOTANTE "VOLVER ARRIBA" DILUIDO CON GLASSMORPHISM */}
+        {mostrarSubirArriba && (
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            style={{
+              position: 'fixed',
+              bottom: '30px',
+              right: '30px',
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.75)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              fontSize: '1.4rem',
+              cursor: 'pointer',
+              zIndex: 99999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
+              animation: 'fadeIn 0.3s ease-out',
+              transition: 'transform 0.2s',
+              outline: 'none'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            ▲
+          </button>
+        )}
+      </div>
 );
 }
 
@@ -1133,9 +1840,11 @@ return (
           maxWidth: '650px',
           margin: '0 auto',
           padding: '20px',
-          backgroundColor: '#f8fafc',
+          backgroundColor: modoOscuro ? '#0a0f1d' : '#f8fafc',
           minHeight: '100vh',
           fontFamily: 'sans-serif',
+          color: modoOscuro ? '#f1f5f9' : '#1e293b',
+          transition: 'all 0.3s ease',
         }}
       >
         {/* 🔙 Botón Volver Minimalista */}
@@ -1147,7 +1856,7 @@ return (
             gap: '8px',
             background: 'none',
             border: 'none',
-            color: '#64748b',
+            color: modoOscuro ? '#94a3b8' : '#64748b',
             fontWeight: 'bold',
             cursor: 'pointer',
             marginBottom: '20px',
@@ -1160,11 +1869,12 @@ return (
         {/* 🖼️ Tarjeta Principal de Imagen */}
         <div
           style={{
-            backgroundColor: 'white',
+            backgroundColor: modoOscuro ? '#1e293b' : 'white',
             borderRadius: '32px',
             overflow: 'hidden',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05)',
+            boxShadow: modoOscuro ? '0 20px 25px -5px rgba(0,0,0,0.3)' : '0 20px 25px -5px rgba(0,0,0,0.05)',
             marginBottom: '25px',
+            border: modoOscuro ? '1px solid rgba(255,255,255,0.08)' : 'none',
           }}
         >
           <img
@@ -1688,6 +2398,8 @@ return (
             </div>
           </div>
         )}
+        {/* 🌟 NOTIFICACIONES TOASTS */}
+        <ToastContainer toasts={toasts} />
       </div>
     );
   }
@@ -1696,13 +2408,15 @@ if (vista === 'faq') {
   return (
     <div style={{ 
       fontFamily: 'sans-serif',
-      backgroundColor: '#f1f5f9', 
+      backgroundColor: modoOscuro ? '#0a0f1d' : '#f1f5f9', 
+      color: modoOscuro ? '#f1f5f9' : '#1e293b',
       minHeight: '100vh', 
       display: 'flex', 
       flexDirection: 'column', 
       justifyContent: 'space-between',
       position: 'relative',
-      overflowX: 'hidden'
+      overflowX: 'hidden',
+      transition: 'all 0.3s ease',
     }}>
       {/* 🔮 Toques de luz de fondo */}
       <div style={{ position: 'absolute', top: '10%', left: '-10%', width: '400px', height: '400px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
@@ -1733,7 +2447,7 @@ if (vista === 'faq') {
 
         {/* 💬 Contenedor de preguntas */}
         <div style={{ maxWidth: '750px', margin: '50px auto 40px', padding: '0 20px' }}>
-          <h2 style={{ textAlign: 'center', color: '#0f172a', fontSize: '2rem', fontWeight: '900', marginBottom: '30px', letterSpacing: '-0.5px' }}>
+          <h2 style={{ textAlign: 'center', color: modoOscuro ? '#f8fafc' : '#0f172a', fontSize: '2rem', fontWeight: '900', marginBottom: '30px', letterSpacing: '-0.5px' }}>
             💬 Preguntas Frecuentes
           </h2>
 
@@ -1746,10 +2460,10 @@ if (vista === 'faq') {
                 <div 
                   key={faq.id}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.95)',
+                    background: modoOscuro ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.95)',
                     borderRadius: '18px',
-                    border: '1px solid rgba(255, 255, 255, 0.8)',
-                    boxShadow: estaAbierta ? '0 15px 30px rgba(0,0,0,0.06)' : '0 4px 6px -1px rgba(0,0,0,0.02)',
+                    border: modoOscuro ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255, 255, 255, 0.8)',
+                    boxShadow: estaAbierta ? (modoOscuro ? '0 15px 30px rgba(0,0,0,0.4)' : '0 15px 30px rgba(0,0,0,0.06)') : '0 4px 6px -1px rgba(0,0,0,0.02)',
                     overflow: 'hidden',
                     transition: 'all 0.3s ease'
                   }}
@@ -1762,7 +2476,7 @@ if (vista === 'faq') {
                       justifyContent: 'space-between', alignItems: 'center', gap: '15px'
                     }}
                   >
-                    <span style={{ fontSize: '1rem', fontWeight: '800', color: estaAbierta ? '#3b82f6' : '#0f172a' }}>
+                    <span style={{ fontSize: '1rem', fontWeight: '800', color: estaAbierta ? '#3b82f6' : (modoOscuro ? '#cbd5e1' : '#0f172a') }}>
                       {faq.pregunta}
                     </span>
                     <span style={{ 
@@ -1776,9 +2490,10 @@ if (vista === 'faq') {
                   <div style={{
                     maxHeight: estaAbierta ? '220px' : '0px', opacity: estaAbierta ? 1 : 0,
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    backgroundColor: '#f8fafc', borderTop: estaAbierta ? '1px solid rgba(0,0,0,0.04)' : 'none'
+                    backgroundColor: modoOscuro ? '#1e293b' : '#f8fafc', 
+                    borderTop: estaAbierta ? (modoOscuro ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.04)') : 'none'
                   }}>
-                    <p style={{ margin: 0, padding: '20px', fontSize: '0.95rem', color: '#334155', lineHeight: '1.6', fontWeight: '500' }}>
+                    <p style={{ margin: 0, padding: '20px', fontSize: '0.95rem', color: modoOscuro ? '#94a3b8' : '#334155', lineHeight: '1.6', fontWeight: '500' }}>
                       {faq.respuesta}
                     </p>
                   </div>
@@ -1799,6 +2514,8 @@ if (vista === 'faq') {
           <div style={{ fontSize: '0.7rem', color: '#64748b' }}>© {new Date().getFullYear()} Extraescolares</div>
         </div>
       </footer>
+      {/* 🌟 NOTIFICACIONES TOASTS */}
+      <ToastContainer toasts={toasts} />
     </div>
   );
 }
@@ -2231,6 +2948,31 @@ Miércoles)"
               📍 Coordenadas exactas para el mapa:
             </p>
 
+            {/* Actividad */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+              <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 'bold' }}>🎒 UBICACIÓN ACTIVIDAD</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setCapturandoCoordenadasPara('actividad');
+                  lanzarToast('📡 Modo Captura Activo: Pincha en cualquier mapa de la app para capturar estas coordenadas.', 'info');
+                }}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid #3b82f6',
+                  backgroundColor: capturandoCoordenadasPara === 'actividad' ? '#2563eb' : 'transparent',
+                  color: capturandoCoordenadasPara === 'actividad' ? 'white' : '#3b82f6',
+                  fontWeight: 'bold',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  outline: 'none'
+                }}
+              >
+                {capturandoCoordenadasPara === 'actividad' ? '📡 Esperando clic...' : '🎯 Pinchar en mapa'}
+              </button>
+            </div>
             <div
               style={{
                 display: 'grid',
@@ -2256,6 +2998,31 @@ Miércoles)"
               />
             </div>
 
+            {/* Monitores */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+              <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 'bold' }}>🚶‍♂️ PUNTO RECOGIDA MONITORES</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setCapturandoCoordenadasPara('monitores');
+                  lanzarToast('📡 Modo Captura Activo: Pincha en cualquier mapa de la app para capturar estas coordenadas.', 'info');
+                }}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid #3b82f6',
+                  backgroundColor: capturandoCoordenadasPara === 'monitores' ? '#2563eb' : 'transparent',
+                  color: capturandoCoordenadasPara === 'monitores' ? 'white' : '#3b82f6',
+                  fontWeight: 'bold',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  outline: 'none'
+                }}
+              >
+                {capturandoCoordenadasPara === 'monitores' ? '📡 Esperando clic...' : '🎯 Pinchar en mapa'}
+              </button>
+            </div>
             <div
               style={{
                 display: 'grid',
@@ -2281,6 +3048,31 @@ Miércoles)"
               />
             </div>
 
+            {/* Familias */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+              <span style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 'bold' }}>👨‍👩‍👧 PUNTO ENTREGA FAMILIAS</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setCapturandoCoordenadasPara('familias');
+                  lanzarToast('📡 Modo Captura Activo: Pincha en cualquier mapa de la app para capturar estas coordenadas.', 'info');
+                }}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid #3b82f6',
+                  backgroundColor: capturandoCoordenadasPara === 'familias' ? '#2563eb' : 'transparent',
+                  color: capturandoCoordenadasPara === 'familias' ? 'white' : '#3b82f6',
+                  fontWeight: 'bold',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  outline: 'none'
+                }}
+              >
+                {capturandoCoordenadasPara === 'familias' ? '📡 Esperando clic...' : '🎯 Pinchar en mapa'}
+              </button>
+            </div>
             <div
               style={{
                 display: 'grid',
@@ -2410,9 +3202,9 @@ Miércoles)"
           </p>
           
           <input
-            placeholder="Pega aquí el enlace de la foto del Storage..."
-            id="inputEnlaceFotoHeader" /* 🛡️ Usamos un ID fijo para que nadie vigile lo que escribes letra a letra */
-            defaultValue={fotoFondoHeader}
+            placeholder="Pega aquí el enlace 'https://...' de tu foto de Firebase"
+            value={fotoFondoHeader}
+            onChange={(e) => setFotoFondoHeader(e.target.value)}
             style={{
               width: '100%',
               padding: '12px',
@@ -2428,25 +3220,19 @@ Miércoles)"
           <button
             type="button"
             onClick={async () => {
-              const enlaceEscrito = document.getElementById('inputEnlaceFotoHeader').value.trim();
-              if (!enlaceEscrito) return alert('¡Escribe o pega primero el enlace de la foto! 📝');
-              
+              if (!isAdmin) return lanzarToast('🛑 ¡Acceso denegado! No tienes permisos de administrador. 🔐', 'error');
+              if (!fotoFondoHeader) return lanzarToast('¡Escribe o pega primero el enlace de la foto! 📝', 'advertencia');
               try {
-                alert('⏳ Guardando de forma ultra-segura en Firebase...');
+                lanzarToast('⏳ Guardando el enlace de la foto...', 'info');
                 const { doc, setDoc } = await import('firebase/firestore');
                 
-                // 💾 Guardamos la foto SIN TOCAR LA CLAVE y asegurando el tiro
-                await setDoc(doc(db, "actividades_cole", "configuracion_header"), { 
-                  fotoFondoHeader: enlaceEscrito 
-                }, { merge: true });
+                // 💾 ¡EL TRUCO!: Lo guardamos en un rincón de la tabla "actividades_cole" que nunca falla
+                await setDoc(doc(db, "actividades_cole", "configuracion_header"), { fotoFondoHeader: fotoFondoHeader }, { merge: true });
                 
-                // Actualizamos el estado de la pantalla SOLO al pulsar el botón
-                if (typeof setFotoFondoHeader === 'function') setFotoFondoHeader(enlaceEscrito);
-                
-                alert('🎉 ¡Foto de fondo vinculada con éxito y clave protegida! 🛡️');
+                lanzarToast('🎉 ¡Foto de fondo vinculada con éxito!', 'exito');
               } catch (error) {
                 console.error("Error al guardar la URL:", error);
-                alert('❌ ¡Vaya! Algo ha fallado al guardar el enlace.');
+                lanzarToast('❌ ¡Vaya! Algo ha fallado al guardar el enlace.', 'error');
               }
             }}
             style={{
@@ -2467,15 +3253,15 @@ Miércoles)"
         </div>
         {/* ======================================================== */}
 
-  {/* 📍 AHORA EL MAPA ESTÁ FUERA, EN SU PROPIA ISLA AZUL */}
-  <div style={{ 
+        {/* 📍 AHORA EL MAPA ESTÁ FUERA, EN SU PROPIA ISLA AZUL */}
+        <div style={{ 
           marginTop: '40px', 
           padding: '25px', 
           backgroundColor: '#eff6ff', 
           borderRadius: '20px',
           border: '2px dashed #3b82f6' 
         }}>
-          <h3 style={{ color: '#1e293b', margin: '0 0 10px', textAlign: 'center', fontWeight: 'bold' }}>📍 Gestionar Mapa Maestro</h3>
+          <h3 style={{ color: '#1e293b', margin: '0 0 10px', textAlign: 'center' }}>📍 Gestionar Mapa Maestro</h3>
           <p style={{ fontSize: '0.8rem', color: '#64748b', textAlign: 'center', marginBottom: '20px' }}>
             (Estos puntos son independientes de las actividades)
           </p>
@@ -2495,6 +3281,28 @@ Miércoles)"
               <input placeholder="Latitud" style={estiloInput} id="nuevoPuntoLat" />
               <input placeholder="Longitud" style={estiloInput} id="nuevoPuntoLng" />
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                setCapturandoCoordenadasPara('maestro');
+                lanzarToast('📡 Modo Captura Activo: Pincha en el mapa para autocompletar la Latitud y Longitud.', 'info');
+              }}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '12px',
+                border: '1px solid #3b82f6',
+                backgroundColor: capturandoCoordenadasPara === 'maestro' ? '#2563eb' : 'transparent',
+                color: capturandoCoordenadasPara === 'maestro' ? 'white' : '#3b82f6',
+                fontWeight: 'bold',
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                outline: 'none',
+                boxShadow: capturandoCoordenadasPara === 'maestro' ? '0 4px 10px rgba(37, 99, 235, 0.3)' : 'none'
+              }}
+            >
+              {capturandoCoordenadasPara === 'maestro' ? '📡 Esperando clic en el mapa...' : '🎯 Pinchar en el mapa para capturar coordenadas'}
+            </button>
             <input
               placeholder="URL de la foto del lugar"
               style={estiloInput}
@@ -2506,6 +3314,7 @@ Miércoles)"
               onClick={async (e) => {
                 e.preventDefault();
                 e.stopPropagation(); // 🛡️ ¡Súper escudo! Evita que el clic suba a la actividad
+                if (!isAdmin) return lanzarToast('🛑 ¡Acceso denegado! No tienes permisos de administrador. 🔐', 'error');
                 
                 const nombre = document.getElementById('nuevoPuntoNombre').value;
                 const desc = document.getElementById('nuevoPuntoDesc').value;
@@ -2513,10 +3322,9 @@ Miércoles)"
                 const lng = document.getElementById('nuevoPuntoLng').value;
                 const foto = document.getElementById('nuevoPuntoFoto').value;
 
-                if(!nombre || !lat || !lng) return alert('¡Oye! Faltan datos (Nombre, Lat y Lng) 📝');
+                if(!nombre || !lat || !lng) return lanzarToast('¡Oye! Faltan datos (Nombre, Lat y Lng) 📝', 'advertencia');
 
                 try {
-                    const { collection, addDoc } = await import('firebase/firestore');
                     await addDoc(collection(db, 'puntos_interes_cole'), {
                       nombre,
                       descripcion: desc,
@@ -2526,9 +3334,11 @@ Miércoles)"
                       color: 'red'
                     });
                     
-                    alert('¡Chincheta guardada con éxito! 📍');
+                    lanzarToast('¡Chincheta guardada con éxito! 📍', 'exito');
+                    cargarPuntosInteres();
                     
-                    // ✨ ¡ESTA ES LA LÍNEA MÁGICA! Te saca del panel y te lleva al catálogo
+                    // ✨ ¡ESTA ES LA LÍNEA MÁGICA! 
+                    // Te saca del panel y te lleva al catálogo automáticamente
                     setVista('catalogo'); 
                     
                     // Limpiar los campos (por si acaso vuelves luego)
@@ -2541,7 +3351,7 @@ Miércoles)"
                     if (typeof cargarPuntosInteres === 'function') cargarPuntosInteres();
                   } catch (error) {
                     console.error("Error al guardar punto:", error);
-                    alert("¡Vaya! Algo ha fallado al guardar");
+                    lanzarToast("¡Vaya! Algo ha fallado al guardar", "error");
                   }
               }}
               style={{
@@ -2552,109 +3362,72 @@ Miércoles)"
                 borderRadius: '15px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                marginTop: '10px',
-                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)'
+                marginTop: '10px'
               }}
             >
               🚀 GUARDAR SOLO LA CHINCHETA
             </button>
-
-            {/* 🗑️ LISTA PARA EDITAR Y BORRAR PUNTOS */}
+            {/* 🗑️ LISTA PARA BORRAR PUNTOS (Pégalo justo aquí) */}
             <div style={{ 
               marginTop: '25px', 
               paddingTop: '20px', 
               borderTop: '1px solid #cbd5e1' 
             }}>
               <p style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#1e293b', marginBottom: '10px' }}>
-                📋 Tus puntos actuales (Toca para editar o borrar):
+                🗑️ Tus puntos actuales (Toca para borrar):
               </p>
               
               <div style={{ display: 'grid', gap: '8px' }}>
-                {typeof puntosInteres !== 'undefined' && puntosInteres.length > 0 ? (
-                  puntosInteres.map((p) => (
-                    <div key={p.id} style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center',
-                      backgroundColor: 'white',
-                      padding: '10px 15px',
-                      borderRadius: '12px',
-                      fontSize: '0.85rem',
-                      border: '1px solid #e2e8f0',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                    }}>
-                      <div style={{ textAlign: 'left' }}>
-                        <span style={{ fontWeight: 'bold', color: '#334155' }}>📍 {p.nombre}</span>
-                        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#64748b' }}>{p.descripcion || 'Sin descripción'}</p>
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        {/* 📝 BOTÓN MÁGICO PARA EDITAR: ¡Sube los datos para modificarlos arriba! */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            document.getElementById('nuevoPuntoNombre').value = p.nombre || '';
-                            document.getElementById('nuevoPuntoDesc').value = p.descripcion || '';
-                            document.getElementById('nuevoPuntoLat').value = p.lat || '';
-                            document.getElementById('nuevoPuntoLng').value = p.lng || '';
-                            document.getElementById('nuevoPuntoFoto').value = p.foto || '';
-                            alert('📝 ¡Datos cargados arriba! Modifícalos y pulsa el botón de Guardar.');
-                          }}
-                          style={{
-                            backgroundColor: '#e0f2fe',
-                            color: '#0369a1',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            fontSize: '0.75rem'
-                          }}
-                        >
-                          EDITAR
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            if (confirm(`¿Quieres borrar "${p.nombre}"?`)) {
-                              try {
-                                const { deleteDoc, doc } = await import('firebase/firestore');
-                                await deleteDoc(doc(db, 'puntos_interes_cole', p.id));
-                                alert('¡Punto borrado! ✨');
-                                if (typeof cargarPuntosInteres === 'function') cargarPuntosInteres();
-                              } catch (error) {
-                                alert('No se pudo borrar');
-                              }
-                            }
-                          }}
-                          style={{
-                            backgroundColor: '#fee2e2',
-                            color: '#ef4444',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            fontSize: '0.75rem'
-                          }}
-                        >
-                          ELIMINAR
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic', textAlign: 'center' }}>
-                    No hay chinchetas creadas todavía. ¡Añade la primera arriba! 🔄
-                  </p>
-                )}
+                {puntosInteres.map((p) => (
+                  <div key={p.id} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    backgroundColor: 'white',
+                    padding: '10px 15px',
+                    borderRadius: '12px',
+                    fontSize: '0.85rem',
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}>
+                    <span style={{ fontWeight: 'bold', color: '#334155' }}>📍 {p.nombre}</span>
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        if (!isAdmin) return lanzarToast('🛑 ¡Acceso denegado! No tienes permisos de administrador. 🔐', 'error');
+                        if (confirm(`¿Quieres borrar "${p.nombre}"?`)) {
+                          try {
+                            const { deleteDoc, doc } = await import('firebase/firestore');
+                            await deleteDoc(doc(db, 'puntos_interes_cole', p.id));
+                            lanzarToast('¡Punto borrado! ✨', 'exito');
+                            cargarPuntosInteres(); // Esto hace que la lista se actualice sola
+                          } catch (error) {
+                            lanzarToast('No se pudo borrar', 'error');
+                          }
+                        }
+                      }}
+                      style={{
+                        backgroundColor: '#fee2e2',
+                        color: '#ef4444',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '0.75rem'
+                      }}
+                    >
+                      ELIMINAR
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
-          </div> {/* 🔌 CIERRA LA REJILLA INTERNA (display: 'grid') */}
-        </div> {/* 🏝️ CIERRA LA ISLA AZUL */}
+          </div>
+        </div>
+        {/* 🌟 NOTIFICACIONES TOASTS */}
+        <ToastContainer toasts={toasts} />
       </div> // 👈 CIERRA EL CONTENEDOR BLANCO DEL PANEL
     );
   }
