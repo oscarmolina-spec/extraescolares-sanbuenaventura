@@ -1419,7 +1419,7 @@ return (
           }}
         >
           {/* 🖼️ IMAGEN / LOGO */}
-          <div style={{ position: 'relative', height: '180px', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', height: '180px', minHeight: '180px', maxHeight: '180px', overflow: 'hidden', flexShrink: 0 }}>
             <img
               src={item.imagen || item.foto || 'https://via.placeholder.com/400x200?text=San+Buenaventura'}
               className="card-img-zoom"
@@ -1482,10 +1482,10 @@ return (
           </div>
 
           {/* 📝 CONTENIDO ESTILIZADO CON CONTRASTE REFORZADO Y MEJOR JERARQUÍA VISUAL */}
-          <div style={{ padding: '24px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+          <div style={{ padding: '16px', textAlign: 'left', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
             
             {/* 👑 1. EL REY DE LA TARJETA: Título más grande en negro puro */}
-            <h3 style={{ margin: '0 0 8px', fontSize: '1.4rem', color: modoOscuro ? '#f8fafc' : '#0f172a', fontWeight: '900', letterSpacing: '-0.5px' }}>
+            <h3 style={{ margin: '0 0 4px', fontSize: '1.4rem', color: modoOscuro ? '#f8fafc' : '#0f172a', fontWeight: '900', letterSpacing: '-0.5px' }}>
               {item.nombre}
             </h3>
             
@@ -1509,47 +1509,89 @@ return (
             </div>
 
             {/* ⏰ El Horario pegado a los días, en un gris intermedio muy elegante */}
-            <p style={{ color: modoOscuro ? '#94a3b8' : '#475569', fontSize: '0.9rem', margin: '0 0 20px', fontWeight: '700' }}>
+            <p style={{ color: modoOscuro ? '#94a3b8' : '#475569', fontSize: '0.9rem', margin: '0 0 4px', fontWeight: '700' }}>
               ⏰ {item.horario || 'Horario a consultar'}
+            </p>
+
+            {/* 📝 MINI-DESCRIPCIÓN DINÁMICA (Máximo 2 líneas con elipsis y limpieza de URLs) */}
+            <p style={{
+              color: modoOscuro ? '#94a3b8' : '#64748b',
+              fontSize: '0.8rem',
+              margin: '4px 0 0',
+              lineHeight: '1.4',
+              fontWeight: '600',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              height: '38px' // Fija la altura a exactamente 2 líneas para simetría impecable
+            }}>
+              {(() => {
+                const rawInfo = item.info || item.descripcion || '';
+                const infoLimpia = rawInfo.includes('https://firebasestorage.googleapis.com')
+                  ? rawInfo.split('https://firebasestorage.googleapis.com')[0].trim()
+                  : rawInfo;
+                return infoLimpia || 'Sin descripción disponible.';
+              })()}
             </p>
 
             {/* 🍃 EL COLCHÓN DE AIRE (marginTop: 'auto') empuja todo lo demás al fondo de forma limpia */}
             <div style={{ marginTop: 'auto' }}>
               
-              {/* 💰 3. EL IMÁN DE LAS MIRADAS: El precio con más tamaño y un gris suave de etiqueta */}
+              {/* 💰 PRECIO Y BOTÓN EN UNA SOLA FILA HORIZONTAL COMPACTA Y PRESTIGIOSA */}
               <div style={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
-                alignItems: 'baseline', 
-                marginBottom: '16px',
-                padding: '0 5px'
+                alignItems: 'center', 
+                marginBottom: '8px',
+                padding: '0 2px'
               }}>
-                <span style={{ fontSize: '0.8rem', color: modoOscuro ? '#94a3b8' : '#64748b', fontWeight: 'bold', letterSpacing: '0.5px' }}>PRECIO:</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: '900', color: item.esClub ? '#d946ef' : (modoOscuro ? '#60a5fa' : '#1d4ed8') }}>
-                  {item.precio ? `${item.precio}€` : '---'}
-                  <small style={{ fontSize: '0.75rem', fontWeight: '700', color: modoOscuro ? '#94a3b8' : '#64748b', marginLeft: '3px' }}>/mes</small>
-                </span>
-              </div>
+                {/* Bloque del Precio */}
+                <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                  <span style={{ fontSize: '0.65rem', color: modoOscuro ? '#94a3b8' : '#64748b', fontWeight: '800', letterSpacing: '0.5px' }}>PRECIO</span>
+                  <span style={{ fontSize: '1.3rem', fontWeight: '900', color: item.esClub ? '#d946ef' : (modoOscuro ? '#60a5fa' : '#1d4ed8'), lineHeight: '1.1' }}>
+                    {item.precio ? `${item.precio}€` : '---'}
+                    <small style={{ fontSize: '0.7rem', fontWeight: '700', color: modoOscuro ? '#94a3b8' : '#64748b', marginLeft: '2px' }}>/mes</small>
+                  </span>
+                </div>
 
-              {/* Botón principal oscuro */}
-              <button
-                type="button"
-                onClick={() => {
-                  setActividadSeleccionada(item);
-                  setVista('detalles');
-                }}
-                style={{
-                  width: '100%', padding: '12px', borderRadius: '14px', border: 'none',
-                  backgroundColor: modoOscuro ? '#3b82f6' : '#0f172a', color: '#ffffff', fontWeight: '800', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '10px',
-                  boxShadow: modoOscuro ? '0 4px 12px rgba(59, 130, 246, 0.3)' : '0 4px 10px rgba(15, 23, 42, 0.2)',
-                  transition: 'all 0.2s',
-                  outline: 'none'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = modoOscuro ? '#60a5fa' : '#1e293b'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = modoOscuro ? '#3b82f6' : '#0f172a'}
-              >
-                Ver información completa
-              </button>
+                {/* Botón Detalles Compacto */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActividadSeleccionada(item);
+                    setVista('detalles');
+                  }}
+                  style={{
+                    padding: '8px 14px', 
+                    borderRadius: '12px', 
+                    border: 'none',
+                    backgroundColor: modoOscuro ? '#3b82f6' : '#0f172a', 
+                    color: '#ffffff', 
+                    fontWeight: '800', 
+                    cursor: 'pointer', 
+                    fontSize: '0.78rem',
+                    boxShadow: modoOscuro ? '0 4px 12px rgba(59, 130, 246, 0.25)' : '0 4px 10px rgba(15, 23, 42, 0.15)',
+                    transition: 'all 0.2s',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = modoOscuro ? '#60a5fa' : '#1e293b';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = modoOscuro ? '#3b82f6' : '#0f172a';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <span>Detalles</span>
+                  <span>→</span>
+                </button>
+              </div>
 
               {/* 🔗 SECCIÓN DE INSCRIPCIÓN INTELIGENTE */}
               <div style={{ width: '100%', paddingTop: '5px' }}>
@@ -1560,13 +1602,13 @@ return (
                       defaultValue=""
                       style={{
                         width: '100%',
-                        padding: '11px',
-                        borderRadius: '14px',
-                        border: '2px solid #0f172a',
-                        backgroundColor: '#ffffff',
-                        color: '#0f172a',
+                        padding: '8px 11px',
+                        borderRadius: '12px',
+                        border: modoOscuro ? '2px solid rgba(255,255,255,0.2)' : '2px solid #0f172a',
+                        backgroundColor: modoOscuro ? '#1e293b' : '#ffffff',
+                        color: modoOscuro ? '#f8fafc' : '#0f172a',
                         fontWeight: 'bold',
-                        fontSize: '0.85rem',
+                        fontSize: '0.82rem',
                         outline: 'none',
                         cursor: 'pointer'
                       }}
@@ -1594,13 +1636,13 @@ return (
                       rel="noopener noreferrer"
                       style={{
                         display: 'block', 
-                        padding: '12px', 
+                        padding: '9px 12px', 
                         backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
                         color: 'white', 
-                        borderRadius: '14px', 
+                        borderRadius: '12px', 
                         textDecoration: 'none', 
                         fontWeight: '900',
-                        fontSize: '0.85rem', 
+                        fontSize: '0.82rem', 
                         textAlign: 'center', 
                         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                         opacity: '0.5',          
@@ -1619,13 +1661,13 @@ return (
                       rel="noopener noreferrer"
                       style={{
                         display: 'block', 
-                        padding: '12px', 
+                        padding: '9px 12px', 
                         backgroundColor: item.esClub ? '#d946ef' : '#ff6b6b',
                         color: 'white', 
-                        borderRadius: '14px', 
+                        borderRadius: '12px', 
                         textDecoration: 'none', 
                         fontWeight: '900',
-                        fontSize: '0.85rem', 
+                        fontSize: '0.82rem', 
                         textAlign: 'center', 
                         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                       }}
@@ -1638,7 +1680,7 @@ return (
 
               {/* 🛠️ BOTONES DE ADMINISTRACIÓN (¡A salvo e intactos!) */}
               {isAdmin && (
-                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', paddingTop: '12px', borderTop: '1px dotted rgba(0,0,0,0.2)' }}>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px', paddingTop: '8px', borderTop: modoOscuro ? '1px dotted rgba(255,255,255,0.15)' : '1px dotted rgba(0,0,0,0.2)' }}>
                   <button
                     onClick={() => {
                       setNuevaAct({
