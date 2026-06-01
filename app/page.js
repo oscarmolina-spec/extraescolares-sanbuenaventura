@@ -963,6 +963,9 @@ const preguntasFrecuentes = [
         }}
       >
         <style dangerouslySetInnerHTML={{ __html: `
+          *, *::before, *::after {
+            box-sizing: border-box !important;
+          }
           @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -1078,7 +1081,7 @@ const preguntasFrecuentes = [
                 letterSpacing: '1px',
                 textTransform: 'uppercase'
               }}>
-                Colegio San Buenaventura
+                Colegio San Buenaventura - Madrid
               </span>
             </div>
 
@@ -1293,22 +1296,24 @@ const preguntasFrecuentes = [
           {/* Brillo decorativo de fondo */}
           <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }}></div>
 
-  {/* ⭐ MEJORA 1: ¡EL ESCUDO RECUPERA SUS 400PX ORIGINALES Y MAJESTUOSOS! */}
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '10px' }}>
+  {/* ⭐ MEJORA 1: ¡EL ESCUDO RECUPERA SUS 400PX ORIGINALES Y MAJESTUOSOS SIN DESBORDAR! */}
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '10px', width: '100%', padding: '0 10px', boxSizing: 'border-box' }}>
     <img
       src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd"
       style={{
-        width: '400px', // 🛡️ ¡Vuelve a su tamaño grande original!
+        width: '100%',
+        maxWidth: '400px', // 🛡️ ¡Vuelve a su tamaño grande original!
         height: 'auto',
         filter: `drop-shadow(2px 0 0 white) drop-shadow(-2px 0 0 white) drop-shadow(0 2px 0 white) drop-shadow(0 -2px 0 white) drop-shadow(0 25px 35px rgba(0, 0, 0, 0.5))`
       }}
     />
     <h1 style={{ 
       margin: '10px 0 0', 
-      fontSize: '2.5rem', // Título grande de nuevo
+      fontSize: 'clamp(1.8rem, 6vw, 2.5rem)', // 📐 ¡Adaptativo inteligente en móviles!
       fontWeight: '800', 
       color: '#ffffff', 
-      letterSpacing: '-1px'
+      letterSpacing: '-1px',
+      textAlign: 'center'
     }}>
       Actividades Extraescolares
     </h1>
@@ -1554,6 +1559,8 @@ const preguntasFrecuentes = [
           {/* 🧸 PORTAL DE BIENVENIDA POR ETAPAS (Opción 1) */}
           {mostrarMenuEtapas && !busqueda ? (
             <div style={{
+              width: '100%',
+              boxSizing: 'border-box',
               maxWidth: '1100px',
               margin: '30px auto',
               padding: '0 20px',
@@ -1808,6 +1815,8 @@ const preguntasFrecuentes = [
               <div 
                 className="explore-banner"
                 style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
                   maxWidth: '1200px',
                   margin: '20px auto 10px',
                   padding: '0 20px',
@@ -1881,6 +1890,8 @@ const preguntasFrecuentes = [
               {/* 📁 SUB-CATEGORÍAS PREMIUM (Glassmorphism + Dynamic Counts + Responsive Slider) */}
               {etapaActiva !== 'Todos' && activitiesInActiveStage.length > 0 && (
                 <div style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
                   maxWidth: '1200px',
                   margin: '0 auto 20px',
                   padding: '0 20px',
@@ -2072,6 +2083,7 @@ const preguntasFrecuentes = [
       maxWidth: '1200px',
       margin: '0 auto',
       width: '100%',
+      boxSizing: 'border-box',
       alignItems: 'start', 
       justifyContent: 'center' 
     }}>
