@@ -342,6 +342,7 @@ export default function Page() {
   const [capturandoCoordenadasPara, setCapturandoCoordenadasPara] = useState(null); // 📡 Indica qué campo se está rellenando al hacer clic en el mapa
   const [mostrarSubirArriba, setMostrarSubirArriba] = useState(false); // ⬆️ Control de visibilidad del botón para volver arriba
   const [mostrarMenuEtapas, setMostrarMenuEtapas] = useState(true); // 🧸 Control del portal de bienvenida por etapas
+  const [subcategoriaActiva, setSubcategoriaActiva] = useState('Todas');
 
   // 🔔 FUNCIÓN DE TOASTS PERSONALIZADOS
   const lanzarToast = (mensaje, tipo = 'exito') => {
@@ -501,11 +502,12 @@ export default function Page() {
       }
 
       setCapturandoCoordenadasPara(null); // Desactivar modo captura
+      setVista('panel'); // Volver automáticamente al panel de control
     };
 
     window.addEventListener('leaflet-map-click', handleMapClick);
     return () => window.removeEventListener('leaflet-map-click', handleMapClick);
-  }, [capturandoCoordenadasPara]);
+  }, [capturandoCoordenadasPara, setVista]);
 
   const [clubes, setClubes] = useState([]); // Aquí guardaremos la lista que viene de la nube
   const [empresaActiva, setEmpresaActiva] = useState('Todas');
@@ -563,6 +565,90 @@ export default function Page() {
     };
   }, [actividades, clubes]);
 
+  // 🧠 CLASIFICADOR AUTOMÁTICO INTELIGENTE POR PALABRAS CLAVE CON CONTROL TOTAL
+  const obtenerCategoriaDeActividad = (item) => {
+    if (item.categoria) return item.categoria;
+
+    const nombre = (item.nombre || '').toLowerCase();
+    const info = (item.info || item.descripcion || '').toLowerCase();
+    const textoCompleto = `${nombre} ${info}`;
+
+    const keywordsDeportes = [
+      'futbol', 'fútbol', 'baloncesto', 'judo', 'natacion', 'natación', 'patinaje', 'deporte', 
+      'gimnasia', 'atletismo', 'tenis', 'padel', 'pádel', 'karate', 'taekwondo', 'balonmano',
+      'voleibol', 'futbolin', 'fútbolin', 'esgrima', 'deportiva'
+    ];
+
+    const keywordsIdiomas = [
+      'ingles', 'inglés', 'english', 'idioma', 'idiomas', 'frances', 'francés', 'aleman', 'alemán', 
+      'oratoria', 'debate', 'chinesse', 'chino', 'language', 'cambridge'
+    ];
+
+    const keywordsArte = [
+      'teatro', 'zumba', 'baile', 'danza', 'lectura', 'arte', 'expresion', 'expresión', 'musica', 
+      'música', 'pintura', 'dibujo', 'coro', 'guitarra', 'piano', 'flauta', 'violn', 'violín', 
+      'espectaculo', 'espectáculo', 'creatividad', 'creativa'
+    ];
+
+    const keywordsTecnologia = [
+      'robotica', 'robótica', 'ajedrez', 'digital', 'tecnologia', 'tecnología', 'programacion', 
+      'programación', 'manualidades', 'costura', 'cocina', 'lego', 'minecraft', 'scratch', 
+      'ciencias', 'experimentos', 'brico', 'bricolaje', 'taller'
+    ];
+
+    const contieneKeyword = (texto, keywords) => {
+      return keywords.some(keyword => texto.includes(keyword));
+    };
+
+    if (contieneKeyword(textoCompleto, keywordsDeportes)) return 'Deportes';
+    if (contieneKeyword(textoCompleto, keywordsIdiomas)) return 'Idiomas';
+    if (contieneKeyword(textoCompleto, keywordsArte)) return 'Arte/expresión';
+    if (contieneKeyword(textoCompleto, keywordsTecnologia)) return 'Tecnología/manualidades';
+
+    return 'Deportes'; // Default fallback si no coincide nada
+  };
+
+  // 🚀 ACTIVIDADES ACTIVAS EN LA ETAPA ACTUAL (Para conteo dinámico y visibilidad reactiva)
+  const activitiesInActiveStage = useMemo(() => {
+    const todoJunto = [
+      ...actividades.map(a => ({ ...a, esClub: false })),
+      ...clubes.map(c => ({ ...c, esClub: true }))
+    ];
+    const etapaBoton = etapaActiva.trim().toLowerCase();
+    if (etapaBoton === 'todos') return todoJunto;
+
+    return todoJunto.filter(item => {
+      const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
+      if (etapaBoton === 'clubes amigos') return esClub;
+      if (esClub) return false;
+
+      const estaEnListaEtapas = Array.isArray(item.etapas) && 
+                                item.etapas.some(e => e.trim().toLowerCase() === etapaBoton);
+      const etapaSimple = (item.etapa || "").trim().toLowerCase();
+      return estaEnListaEtapas || (etapaSimple === etapaBoton);
+    });
+  }, [actividades, clubes, etapaActiva]);
+
+  // 📊 CONTEO REACTIVO DE ACTIVIDADES POR SUB-CATEGORÍA EN LA ETAPA ACTIVA
+  const categoriasDisponibles = useMemo(() => {
+    const counts = {
+      Todas: activitiesInActiveStage.length,
+      Deportes: 0,
+      Idiomas: 0,
+      'Arte/expresión': 0,
+      'Tecnología/manualidades': 0
+    };
+
+    activitiesInActiveStage.forEach(item => {
+      const cat = obtenerCategoriaDeActividad(item);
+      if (cat && cat in counts) {
+        counts[cat]++;
+      }
+    });
+
+    return counts;
+  }, [activitiesInActiveStage]);
+
   // 🚀 FILTRO MEMOIZADO SÚPER VELOZ PARA EL CATÁLOGO (CERO RELENTIZACIONES)
   const itemsFiltrados = useMemo(() => {
     const todoJunto = [
@@ -579,6 +665,12 @@ export default function Page() {
     const diaBoton = diaActivo.toLowerCase();
 
     return todoJunto.filter((item) => {
+      // 1. Filtrar por subcategoría activa si no es 'Todas'
+      if (subcategoriaActiva !== 'Todas') {
+        const cat = obtenerCategoriaDeActividad(item);
+        if (cat !== subcategoriaActiva) return false;
+      }
+
       const nombreActividad = normalizar(item.nombre || "");
       if (!nombreActividad.includes(loQueEscribeLaFamilia)) return false;
     
@@ -608,7 +700,7 @@ export default function Page() {
     
       return estaEnListaEtapas || esEtapaVieja;
     });
-  }, [actividades, clubes, busqueda, etapaActiva, empresaActiva, diaActivo]);
+  }, [actividades, clubes, busqueda, etapaActiva, empresaActiva, diaActivo, subcategoriaActiva]);
 // 🚀 ¡AQUÍ LAS PEGAS! LAS TRES FUNCIONES NUEVAS:
   const agregarFilaLink = () => {
     setNuevoClub({
@@ -629,10 +721,11 @@ export default function Page() {
   };
   // 🏰 El enlace mágico de tu escudo desde Storage
   const URL_ESCUDO =
-    'https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/San%20%20uenaventura.png?alt=media&token=c70def71-3920-425e-9d68-a3519ed51960';
+    'https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd';
 
     const [nuevaAct, setNuevaAct] = useState({
       nombre: '',
+      categoria: '', // 👈 Control Total Manual o Clasificación Automática
       etapas: [], // 👈 ¡Ahora es una lista para marcar varias!
       dias: '',
       horario: '',
@@ -739,6 +832,7 @@ export default function Page() {
       // ✨ LIMPIEZA TOTAL (¡Actualizada con los enlaces!)
       setNuevaAct({
         nombre: '',
+        categoria: '', // 🧹 Limpiamos la categoría
         etapas: [],
         empresa: '',
         logoEmpresa: '',
@@ -868,7 +962,7 @@ const preguntasFrecuentes = [
           transition: 'background-color 0.3s ease, color 0.3s ease',
         }}
       >
-        <style>{`
+        <style dangerouslySetInnerHTML={{ __html: `
           @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -888,7 +982,9 @@ const preguntasFrecuentes = [
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
           }
           .card-premium:hover {
-            transform: translateY(-10px) !important;
+            transform: translateY(-8px) !important;
+            border-color: var(--hover-color, #3b82f6) !important;
+            box-shadow: var(--hover-shadow, 0 15px 35px rgba(0, 0, 0, 0.1)) !important;
           }
           .card-img-zoom {
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -896,188 +992,306 @@ const preguntasFrecuentes = [
           .card-premium:hover .card-img-zoom {
             transform: scale(1.05) !important;
           }
-        `}</style>
+          @media (max-width: 768px) {
+            .explore-banner {
+              flex-direction: column !important;
+              align-items: center !important;
+              text-align: center !important;
+            }
+            .footer-grid {
+              text-align: center !important;
+            }
+            .footer-grid > div {
+              align-items: center !important;
+            }
+            .admin-panel-card {
+              width: 95% !important;
+              padding: 18px !important;
+            }
+          }
+        ` }} />
         {/* 🔮 CÍRCULOS DE LUZ SUAVES EN EL FONDO GENERAL (Ahora más sutiles para fondo claro) */}
         <div style={{ position: 'absolute', top: '15%', left: '-10%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0 }} />
         <div style={{ position: 'absolute', bottom: '20%', right: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,70,239,0.08) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(60px)', pointerEvents: 'none', zIndex: 0 }} />
 
         <header
-  style={{
-    background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 1) 100%)',
-    backdropFilter: 'blur(20px)', // 💎 Cristal esmerilado premium
-    padding: '30px 20px 35px', // 🏰 ¡Header más grande y espacioso de nuevo!
-    textAlign: 'center',
-    borderRadius: '0 0 50px 50px', // Recuperamos tus curvas grandes originales
-    boxShadow: '0 15px 30px rgba(0,0,0,0.3)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-    marginBottom: '20px',
-    position: 'relative',
-    overflow: 'hidden',
-    zIndex: 10,
-  }}
->
-  {/* 🌫️ ¡EL EFECTO SILUETA REFORZADO!: Ocupa todo tu header por detrás de las letras con más fuerza */}
-  {typeof fotoFondoHeader !== 'undefined' && fotoFondoHeader && (
-    <img
-      src={fotoFondoHeader}
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',   // 🍿 Obliga a la foto a cubrir todo el espacio sin deformarse
-        opacity: 0.15,        // 📈 ¡SUBIDO!: Pasamos del 6% al 15% para que la silueta tenga más cuerpo
-        filter: 'blur(1.5px) grayscale(100%)', // 🌫️ ¡MÁS NÍTIDO!: Bajamos el difuminado de 3px a 1.5px para que se reconozcan mejor las ventanas y paredes
-        zIndex: 0,            // Envía la foto al piso de abajo del todo
-        pointerEvents: 'none' // 🖱️ Los clics pasan a través de ella sin molestar a los botones
-      }}
-    />
-  )}
- {/* 🕹️ BOTONES SUPERIORES (MAPA, PREGUNTAS Y ADMIN) */}
- <div style={{
-    position: 'absolute',
-    top: '20px',
-    right: '20px',
-    display: 'flex',
-    gap: '10px',
-    zIndex: 100,
-  }}>
-    {/* 🌓 BOTÓN DE MODO OSCURO */}
-    <button
-      type="button"
-      onClick={() => setModoOscuro(!modoOscuro)}
-      style={{
-        padding: '8px 16px',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        color: 'white',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        borderRadius: '12px',
-        cursor: 'pointer',
-        fontSize: '0.8rem',
-        fontWeight: 'bold',
-        backdropFilter: 'blur(4px)',
-        transition: 'all 0.2s',
-        outline: 'none'
-      }}
-      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'}
-      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-    >
-      {modoOscuro ? '☀️ Claro' : '🌙 Oscuro'}
-    </button>
-
-    <button
-      onClick={() => setVista('mapa')}
-      style={{
-        padding: '8px 16px',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        color: 'white',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        borderRadius: '12px',
-        cursor: 'pointer',
-        fontSize: '0.8rem',
-        fontWeight: 'bold',
-        backdropFilter: 'blur(4px)',
-        transition: 'background-color 0.2s',
-      }}
-      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'}
-      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-    >
-      📍 Mapa Cole
-    </button>
-
-    <button
-      onClick={() => setVista('faq')}
-      style={{
-        padding: '8px 16px',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        color: 'white',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        borderRadius: '12px',
-        cursor: 'pointer',
-        fontSize: '0.8rem',
-        fontWeight: 'bold',
-        backdropFilter: 'blur(4px)',
-        transition: 'background-color 0.2s',
-      }}
-      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'}
-      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-    >
-      💬 Preguntas
-    </button>
-
-    {!isAdmin ? (
-      <button
-        onClick={() => {
-          setClaveInput('');
-          setMostrarAdminModal(true);
-        }}
-        style={{
-          padding: '8px 16px',
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: 'pointer',
-          fontSize: '0.8rem',
-          fontWeight: 'bold',
-          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
-        }}
-      >
-        🔑 Admin
-      </button>
-    ) : (
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button
-          onClick={() => setVista('panel')}
           style={{
-            padding: '8px 16px',
-            backgroundColor: '#10ac84',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontSize: '0.8rem',
-            fontWeight: 'bold',
+            background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.9) 0%, rgba(10, 15, 30, 0.98) 100%)',
+            backdropFilter: 'blur(25px) saturate(180%)', // 💎 Apple-like premium glassmorphism
+            WebkitBackdropFilter: 'blur(25px) saturate(180%)',
+            padding: '20px 20px 35px',
+            textAlign: 'center',
+            borderRadius: '0 0 50px 50px', // Curvas grandes y fluidas
+            boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            marginBottom: '25px',
+            position: 'relative',
+            overflow: 'hidden',
+            zIndex: 10,
           }}
         >
-          ➕ Añadir
-        </button>
-        <button
-          onClick={async () => {
-            try {
-              const { getAuth } = await import('firebase/auth');
-              await getAuth().signOut();
-              setIsAdmin(false);
-              lanzarToast('¡Sesión de administrador cerrada! 🔐', 'info');
-            } catch (err) {
-              console.error(err);
-              lanzarToast('Error al cerrar sesión', 'error');
-            }
-          }}
-          style={{
-            padding: '8px 12px',
-            backgroundColor: '#ef4444',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontSize: '0.8rem',
-            fontWeight: 'bold',
-            transition: 'all 0.2s',
-            outline: 'none'
-          }} 
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
-        >
-          Salir
-        </button>
-      </div>
-    )}
-  </div>
+          {/* 🌫️ ¡EL EFECTO SILUETA REFORZADO!: Ocupa todo tu header por detrás de las letras con más fuerza */}
+          {typeof fotoFondoHeader !== 'undefined' && fotoFondoHeader && (
+            <img
+              src={fotoFondoHeader}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',   // 🍿 Obliga a la foto a cubrir todo el espacio sin deformarse
+                opacity: 0.15,        // 📈 ¡SUBIDO!: Pasamos del 6% al 15% para que la silueta tenga más cuerpo
+                filter: 'blur(1.5px) grayscale(100%)', // 🌫️ ¡MÁS NÍTIDO!: Bajamos el difuminado de 3px a 1.5px para que se reconozcan mejor las ventanas y paredes
+                zIndex: 0,            // Envía la foto al piso de abajo del todo
+                pointerEvents: 'none' // 🖱️ Los clics pasan a través de ella sin molestar a los botones
+              }}
+            />
+          )}
 
-  {/* Brillo decorativo de fondo */}
-  <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '50%', filter: 'blur(40px)' }}></div>
+          {/* 🧭 NAV BAR SUPERIOR FLEX RESPONSIVA */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '1200px',
+            margin: '0 auto 25px',
+            padding: '10px 20px',
+            boxSizing: 'border-box',
+            flexWrap: 'wrap',
+            gap: '12px',
+            zIndex: 100,
+            position: 'relative',
+            background: 'rgba(255, 255, 255, 0.03)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+          }}>
+            {/* Logotipo o insignia pequeña en navbar izquierdo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ 
+                color: '#f8fafc', 
+                fontSize: '0.85rem', 
+                fontWeight: '900', 
+                letterSpacing: '1px',
+                textTransform: 'uppercase'
+              }}>
+                Colegio San Buenaventura - Madrid
+              </span>
+            </div>
+
+            {/* Grupo de botones a la derecha */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {/* 🌓 BOTÓN DE MODO OSCURO */}
+              <button
+                type="button"
+                onClick={() => setModoOscuro(!modoOscuro)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  color: 'white',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  transition: 'all 0.25s ease',
+                  outline: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.18)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <span>{modoOscuro ? '☀️' : '🌙'}</span>
+                <span>{modoOscuro ? 'Modo Claro' : 'Modo Oscuro'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setVista('mapa')}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  color: 'white',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  transition: 'all 0.25s ease',
+                  outline: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.18)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <span>📍</span>
+                <span>Mapa Cole</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setVista('faq')}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  color: 'white',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  transition: 'all 0.25s ease',
+                  outline: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.18)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <span>💬</span>
+                <span>Preguntas</span>
+              </button>
+
+              {!isAdmin ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setClaveInput('');
+                    setMostrarAdminModal(true);
+                  }}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                    transition: 'all 0.25s ease',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2563eb';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#3b82f6';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <span>🔑</span>
+                  <span>Admin</span>
+                </button>
+              ) : (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setVista('panel')}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#10ac84',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: 'bold',
+                      transition: 'all 0.25s ease',
+                      outline: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#0e906f';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#10ac84';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <span>➕</span>
+                    <span>Añadir</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const { getAuth } = await import('firebase/auth');
+                        await getAuth().signOut();
+                        setIsAdmin(false);
+                        lanzarToast('¡Sesión de administrador cerrada! 🔐', 'info');
+                      } catch (err) {
+                        console.error(err);
+                        lanzarToast('Error al cerrar sesión', 'error');
+                      }
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: 'bold',
+                      transition: 'all 0.25s ease',
+                      outline: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }} 
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#dc2626';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#ef4444';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <span>🚪</span>
+                    <span>Salir</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Brillo decorativo de fondo */}
+          <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(59, 130, 246, 0.15)', borderRadius: '50%', filter: 'blur(40px)', pointerEvents: 'none' }}></div>
 
   {/* ⭐ MEJORA 1: ¡EL ESCUDO RECUPERA SUS 400PX ORIGINALES Y MAJESTUOSOS! */}
   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '10px' }}>
@@ -1154,8 +1368,16 @@ const preguntasFrecuentes = [
           display: 'block', // Evita comportamientos extraños de línea
           boxSizing: 'border-box' // Asegura que los paddings no ensanchen el cuadro
         }}
-        onFocus={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-        onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = '#3b82f6';
+          e.currentTarget.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.35), inset 0 2px 4px rgba(0,0,0,0.2)';
+          e.currentTarget.style.transform = 'scale(1.03)';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+          e.currentTarget.style.boxShadow = 'inset 0 2px 4px rgba(0,0,0,0.2)';
+          e.currentTarget.style.transform = 'scale(1)';
+        }}
       />
     </div>
 
@@ -1219,7 +1441,10 @@ const preguntasFrecuentes = [
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => setEtapaActiva(opt.value)}
+                onClick={() => {
+                  setEtapaActiva(opt.value);
+                  setSubcategoriaActiva('Todas');
+                }}
                 style={{
                   padding: '8px 16px',
                   borderRadius: '20px',
@@ -1343,9 +1568,24 @@ const preguntasFrecuentes = [
                   fontWeight: '800',
                   color: modoOscuro ? '#f8fafc' : '#0f172a',
                   margin: '0 0 10px 0',
-                  letterSpacing: '-0.5px'
+                  letterSpacing: '-0.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  flexWrap: 'wrap'
                 }}>
-                  Explora las Actividades del Colegio 🏫
+                  Explora las Actividades del Colegio
+                  <img 
+                    src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/Dise%C3%B1o%20sin%20t%C3%ADtulo%20(9).png?alt=media&token=155598bc-fb6e-4383-aca6-66dbb5bfe3f7" 
+                    alt="Escudo" 
+                    style={{ 
+                      height: '42px', 
+                      width: 'auto', 
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.15))'
+                    }} 
+                  />
                 </h2>
                 <p style={{
                   fontSize: '1rem',
@@ -1421,6 +1661,7 @@ const preguntasFrecuentes = [
                     className="card-premium"
                     onClick={() => {
                       setEtapaActiva(tarjeta.id);
+                      setSubcategoriaActiva('Todas');
                       setMostrarMenuEtapas(false);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
@@ -1439,17 +1680,8 @@ const preguntasFrecuentes = [
                       justifyContent: 'space-between',
                       minHeight: '430px',
                       boxSizing: 'border-box',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-8px)';
-                      e.currentTarget.style.boxShadow = modoOscuro ? `0 15px 35px rgba(${tarjeta.id === 'Infantil' ? '34, 197, 94' : tarjeta.id === 'Primaria' ? '59, 130, 246' : tarjeta.id === 'ESO' ? '249, 115, 22' : tarjeta.id === 'Adultos' ? '139, 92, 246' : '217, 70, 239'}, 0.15)` : '0 15px 35px rgba(0, 0, 0, 0.1)';
-                      e.currentTarget.style.borderColor = tarjeta.color;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = modoOscuro ? '0 10px 30px rgba(0, 0, 0, 0.3)' : '0 10px 25px rgba(0, 0, 0, 0.05)';
-                      e.currentTarget.style.borderColor = modoOscuro ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+                      '--hover-color': tarjeta.color,
+                      '--hover-shadow': modoOscuro ? `0 15px 35px rgba(${tarjeta.id === 'Infantil' ? '34, 197, 94' : tarjeta.id === 'Primaria' ? '59, 130, 246' : tarjeta.id === 'ESO' ? '249, 115, 22' : tarjeta.id === 'Adultos' ? '139, 92, 246' : '217, 70, 239'}, 0.2)` : '0 15px 35px rgba(0, 0, 0, 0.1)'
                     }}
                   >
                     <div>
@@ -1515,7 +1747,7 @@ const preguntasFrecuentes = [
                           display: 'block',
                           marginBottom: '4px'
                         }}>
-                          📌 Actividades Reales:
+                          ✨ Actividades Destacadas:
                         </span>
                         {obtenerPillsEjemplos(tarjeta.id)}
                       </div>
@@ -1541,6 +1773,7 @@ const preguntasFrecuentes = [
                 type="button"
                 onClick={() => {
                   setEtapaActiva('Todos');
+                  setSubcategoriaActiva('Todas');
                   setMostrarMenuEtapas(false);
                 }}
                 style={{
@@ -1572,16 +1805,19 @@ const preguntasFrecuentes = [
           ) : (
             <>
               {/* banner/cabecera minimalista Glassmorphic cuando exploramos una etapa */}
-              <div style={{
-                maxWidth: '1200px',
-                margin: '20px auto 10px',
-                padding: '0 20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '15px'
-              }}>
+              <div 
+                className="explore-banner"
+                style={{
+                  maxWidth: '1200px',
+                  margin: '20px auto 10px',
+                  padding: '0 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '15px'
+                }}
+              >
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -1612,6 +1848,7 @@ const preguntasFrecuentes = [
                   onClick={() => {
                     setMostrarMenuEtapas(true);
                     setEtapaActiva('Todos');
+                    setSubcategoriaActiva('Todas');
                     setBusqueda('');
                   }}
                   style={{
@@ -1640,6 +1877,83 @@ const preguntasFrecuentes = [
                   ← Volver al Menú
                 </button>
               </div>
+
+              {/* 📁 SUB-CATEGORÍAS PREMIUM (Glassmorphism + Dynamic Counts + Responsive Slider) */}
+              {etapaActiva !== 'Todos' && activitiesInActiveStage.length > 0 && (
+                <div style={{
+                  maxWidth: '1200px',
+                  margin: '0 auto 20px',
+                  padding: '0 20px',
+                  overflowX: 'auto',
+                  whiteSpace: 'nowrap',
+                  scrollbarWidth: 'none',
+                  display: 'flex',
+                  gap: '10px',
+                  alignItems: 'center',
+                }} className="scrollbar-hidden">
+                  <style dangerouslySetInnerHTML={{ __html: `
+                    .scrollbar-hidden::-webkit-scrollbar {
+                      display: none;
+                    }
+                  ` }} />
+                  {['Todas', 'Deportes', 'Idiomas', 'Arte/expresión', 'Tecnología/manualidades'].map(cat => {
+                    const count = categoriasDisponibles[cat];
+                    if (cat !== 'Todas' && count === 0) return null; // Ocultamos categorías vacías
+                    
+                    const esActivo = subcategoriaActiva === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSubcategoriaActiva(cat)}
+                        style={{
+                          padding: '10px 20px',
+                          borderRadius: '24px',
+                          border: `1.5px solid ${esActivo ? 'transparent' : (modoOscuro ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')}`,
+                          background: esActivo 
+                            ? (modoOscuro ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)')
+                            : (modoOscuro ? 'rgba(30, 41, 59, 0.45)' : 'rgba(255, 255, 255, 0.65)'),
+                          color: esActivo ? 'white' : (modoOscuro ? '#cbd5e1' : '#475569'),
+                          fontWeight: '800',
+                          fontSize: '0.85rem',
+                          cursor: 'pointer',
+                          boxShadow: esActivo ? '0 8px 16px rgba(37, 99, 235, 0.25)' : 'none',
+                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          backdropFilter: 'blur(10px)',
+                          WebkitBackdropFilter: 'blur(10px)',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!esActivo) {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.backgroundColor = modoOscuro ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.05)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!esActivo) {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.backgroundColor = modoOscuro ? 'rgba(30, 41, 59, 0.45)' : 'rgba(255, 255, 255, 0.65)';
+                          }
+                        }}
+                      >
+                        <span>{cat === 'Todas' ? '✨ Todas' : cat === 'Deportes' ? '⚽ Deportes' : cat === 'Idiomas' ? '🗣️ Idiomas' : cat === 'Arte/expresión' ? '🎨 Arte/Expresión' : '💻 Tecnología'}</span>
+                        <span style={{
+                          fontSize: '0.75rem',
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          background: esActivo ? 'rgba(255, 255, 255, 0.25)' : (modoOscuro ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)'),
+                          color: esActivo ? 'white' : (modoOscuro ? '#cbd5e1' : '#64748b'),
+                          fontWeight: 'bold',
+                        }}>
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* 🌟 FILTROS Y RECORRIDO EN ACCIÓN */}
               <>
@@ -1717,6 +2031,7 @@ const preguntasFrecuentes = [
           onClick={() => {
             setBusqueda('');
             setEtapaActiva('Todos');
+            setSubcategoriaActiva('Todas');
             setEmpresaActiva('Todas');
             setDiaActivo('Todos');
             lanzarToast('Filtros restaurados correctamente', 'exito');
@@ -1751,9 +2066,9 @@ const preguntasFrecuentes = [
     {/* 📦 CONTENEDOR INTELIGENTE EN REJILLA */}
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 350px))', 
+      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
       gap: '30px',
-      padding: '20px',
+      padding: '20px 15px',
       maxWidth: '1200px',
       margin: '0 auto',
       width: '100%',
@@ -1770,47 +2085,29 @@ const preguntasFrecuentes = [
           <SkeletonCard />
         </>
       ) : (
-        itemsFiltrados.map((item) => (
-        <div
-          key={item.id} 
-          className="card-premium"
-          style={{
-            background: modoOscuro ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.94)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderRadius: '28px', 
-            overflow: 'hidden',
-            boxShadow: modoOscuro ? '0 20px 40px rgba(0, 0, 0, 0.6)' : '0 20px 40px rgba(0, 0, 0, 0.15)', 
-            
-            // 🎽 ¡EL COLOR MORADO EN ACCIÓN PARA LAS MULTI-ETAPAS!
-            border: `3px solid ${
-              // 1️⃣ ¿Tiene varias etapas? (Contamos si tiene más de una)
-              (['Infantil', 'Primaria', 'ESO', 'Adultos'].filter(e => item[e] || (item.etapa === e) || (item.etapas && item.etapas.includes(e))).length > 1) ? '#a855f7' : // 🔮 Morado Eléctrico para varias etapas
-              // 2️⃣ Si solo tiene una, miramos cuál es:
-              (item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'))) ? '#d946ef' : // 🦄 Rosa
-              (item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'))) ? '#22c55e' : // 🟢 Verde
-              (item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'))) ? '#f97316' : // 🟠 Naranja
-              '#3b82f6' // 🔵 Azul Claro para Primaria
-            }`, 
-            
-            display: 'flex',
-            flexDirection: 'column',
-            height: '530px', 
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-10px)';
-            e.currentTarget.style.boxShadow = modoOscuro ? '0 30px 60px rgba(96, 165, 250, 0.2)' : '0 30px 60px rgba(59, 130, 246, 0.25)';
-            const m = ['Infantil', 'Primaria', 'ESO', 'Adultos'].filter(e => item[e] || (item.etapa === e) || (item.etapas && item.etapas.includes(e))).length > 1;
-            e.currentTarget.style.borderColor = m ? '#a855f7' : (item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'))) ? '#d946ef' : (item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'))) ? '#22c55e' : (item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'))) ? '#f97316' : '#3b82f6';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = modoOscuro ? '0 20px 40px rgba(0, 0, 0, 0.6)' : '0 20px 35px rgba(0, 0, 0, 0.15)';
-            const m = ['Infantil', 'Primaria', 'ESO', 'Adultos'].filter(e => item[e] || (item.etapa === e) || (item.etapas && item.etapas.includes(e))).length > 1;
-            e.currentTarget.style.borderColor = m ? '#a855f7' : (item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'))) ? '#d946ef' : (item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'))) ? '#22c55e' : (item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'))) ? '#f97316' : '#3b82f6';
-          }}
-        >
+        itemsFiltrados.map((item) => {
+          const m = ['Infantil', 'Primaria', 'ESO', 'Adultos'].filter(e => item[e] || (item.etapa === e) || (item.etapas && item.etapas.includes(e))).length > 1;
+          const cardColor = m ? '#a855f7' : (item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'))) ? '#d946ef' : (item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'))) ? '#22c55e' : (item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'))) ? '#f97316' : '#3b82f6';
+          
+          return (
+            <div
+              key={item.id} 
+              className="card-premium"
+              style={{
+                background: modoOscuro ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.94)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: '28px', 
+                overflow: 'hidden',
+                boxShadow: modoOscuro ? '0 20px 40px rgba(0, 0, 0, 0.6)' : '0 20px 40px rgba(0, 0, 0, 0.15)', 
+                border: `3px solid ${cardColor}`, 
+                display: 'flex',
+                flexDirection: 'column',
+                height: '530px', 
+                '--hover-color': cardColor,
+                '--hover-shadow': modoOscuro ? '0 30px 60px rgba(96, 165, 250, 0.25)' : '0 30px 60px rgba(59, 130, 246, 0.25)'
+              }}
+            >
           {/* 🖼️ IMAGEN / LOGO */}
           <div style={{ position: 'relative', height: '180px', minHeight: '180px', maxHeight: '180px', overflow: 'hidden', flexShrink: 0 }}>
             <img
@@ -1883,29 +2180,42 @@ const preguntasFrecuentes = [
               {item.nombre}
             </h3>
             
-            {/* 🗓️ 2. LOS ESCUDEROS: Subimos los días justo debajo del título */}
-            <div style={{ 
-              backgroundColor: modoOscuro ? (item.esClub ? '#4c1d95' : '#0c4a6e') : (item.esClub ? '#fae8ff' : '#e0f2fe'), 
-              color: modoOscuro ? (item.esClub ? '#f5d0fe' : '#bae6fd') : (item.esClub ? '#701a75' : '#0369a1'), 
-              fontSize: '0.75rem', 
-              fontWeight: '950', 
-              padding: '6px 14px',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              alignSelf: 'flex-start',
-              border: modoOscuro ? (item.esClub ? '1px solid #701a75' : '1px solid #0369a1') : (item.esClub ? '1px solid #d8b4fe' : '1px solid #7dd3fc'),
-              marginBottom: '8px'
-            }}>
-              <span>🗓️</span>
-              <span>{item.dias ? item.dias.toUpperCase() : 'DÍAS A CONSULTAR'}</span>
-            </div>
+            {/* 🗓️⏰ Badges de Días y Horarios en Colores del Colegio (Azul y Amarillo) */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+              {/* Badge de Días (Azul Corporativo) */}
+              <div style={{ 
+                backgroundColor: modoOscuro ? 'rgba(37, 99, 235, 0.15)' : '#eff6ff', 
+                color: modoOscuro ? '#60a5fa' : '#1d4ed8', 
+                fontSize: '0.7rem', 
+                fontWeight: '900', 
+                padding: '5px 10px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                border: `1px solid ${modoOscuro ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe'}`,
+              }}>
+                <span>🗓️</span>
+                <span>{item.dias ? item.dias.toUpperCase() : 'DÍAS A CONSULTAR'}</span>
+              </div>
 
-            {/* ⏰ El Horario pegado a los días, en un gris intermedio muy elegante */}
-            <p style={{ color: modoOscuro ? '#94a3b8' : '#475569', fontSize: '0.9rem', margin: '0 0 4px', fontWeight: '700' }}>
-              ⏰ {item.horario || 'Horario a consultar'}
-            </p>
+              {/* Badge de Horario (Amarillo Dorado Corporativo) */}
+              <div style={{ 
+                backgroundColor: modoOscuro ? 'rgba(245, 158, 11, 0.15)' : '#fef3c7', 
+                color: modoOscuro ? '#fbbf24' : '#b45309', 
+                fontSize: '0.7rem', 
+                fontWeight: '900', 
+                padding: '5px 10px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                border: `1px solid ${modoOscuro ? 'rgba(245, 158, 11, 0.3)' : '#fde68a'}`,
+              }}>
+                <span>⏰</span>
+                <span>{item.horario ? item.horario.toUpperCase() : 'HORARIO A CONSULTAR'}</span>
+              </div>
+            </div>
 
             {/* 📝 MINI-DESCRIPCIÓN DINÁMICA (Máximo 2 líneas con elipsis y limpieza de URLs) */}
             <p style={{
@@ -2102,7 +2412,8 @@ const preguntasFrecuentes = [
                         fotoFam: item.fotoFam || '',
                         recogidaMonitores: item.recogidaMonitores || '',
                         recogidaFamilias: item.recogidaFamilias || '',
-                        linkInscripcion: item.linkInscripcion || item.enlace || ''
+                        linkInscripcion: item.linkInscripcion || item.enlace || '',
+                        categoria: item.categoria || ''
                       });
                       setEditandoId(item.id); 
                       setVista('panel');      
@@ -2131,59 +2442,160 @@ const preguntasFrecuentes = [
             </div>
           </div>
         </div>
-      ))
+      );
+      })
       )}
     </div>
   </>
             </>
           )}
         </main>
-        {/* 🛡️ FOOTER ULTRA-ESTRECHO Y MINIMALISTA */}
+
+        {/* 🛡️ FOOTER PREMIUM GLASSMORPHIC */}
         <footer style={{
-          backgroundColor: '#1e293b',
-          color: '#f8fafc',
-          padding: '15px 20px',      // ↕️ ¡Súper estrecho! Solo 15px de aire
-          marginTop: '40px',         // Menos separación con lo de arriba
-          borderTop: '2px solid #3b82f6', // Línea más fina
-          borderRadius: '20px 20px 0 0',   // Curva más suave
-          // 🌟 ¡LOS TRUCOS MÁGICOS MEJORADOS AQUÍ!
-          marginBottom: '0px',        // 🧹 Quitamos cualquier margen de abajo que empuje la web hacia arriba
-          position: 'relative',       // 📌 Lo fijamos bien en su sitio para que no flote
-          boxShadow: '0 50vh 0 #1e293b' // 🎨 ¡EL ESCUDO OSCURO! Rellena hasta 50 partes de la pantalla hacia abajo con el mismo color oscuro, tapando todo lo blanco por completo.
+          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', // 🌌 Azul oscuro degradado premium
+          backdropFilter: 'blur(15px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(15px) saturate(160%)',
+          borderTop: '1.5px solid rgba(255, 255, 255, 0.08)',
+          padding: '40px 20px 30px',
+          borderRadius: '32px 32px 0 0',
+          marginTop: '50px',
+          position: 'relative',
+          boxShadow: '0 50vh 0 #0f172a', // 🎨 Relleno oscuro infinito
+          color: '#cbd5e1', // Texto claro legible
+          transition: 'all 0.3s ease',
+          marginBottom: '0px',
         }}>
-          <div style={{ 
-            maxWidth: '900px', 
-            margin: '0 auto', 
-            display: 'flex',         // ↔️ Usamos flex para que todo vaya en una línea
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',        // Por si en el móvil no cabe
-            gap: '20px' 
-          }}>
-            
-            {/* Logo y Nombre (Todo en uno para ahorrar espacio) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <img 
-                src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd" 
-                style={{ 
-                  width: '100px',      // 🛡️ Logo pequeñito
-                  filter: 'brightness(0) invert(1)', 
-                  opacity: '0.8' 
-                }} 
-              />
-              <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Colegio San Buenaventura, Madrid</span>
+          <div 
+            className="footer-grid"
+            style={{
+              maxWidth: '1100px',
+              margin: '0 auto',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '30px',
+              textAlign: 'left'
+            }}
+          >
+            {/* Columna 1: Identidad */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <img 
+                  src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/logo%20BLANCO.png?alt=media&token=753d085f-d9d1-4b78-9d54-26e88578c35b" 
+                  alt="Escudo Cole" 
+                  style={{ 
+                    width: '140px', // 🛡️ Agrandado premium
+                    height: 'auto',
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.25))'
+                  }} 
+                />
+              </div>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0', lineHeight: '1.5', fontWeight: '500' }}>
+                Portal oficial de actividades extraescolares
+              </p>
             </div>
 
-            {/* Contacto rápido */}
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-              📞 915 267 161  |  📧 extraescolares@sanbuenaventura.org
+            {/* Columna 2: Contacto Premium */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: '900', color: '#60a5fa', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                Contacto Directo
+              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <a 
+                  href="tel:915267161"
+                  style={{ 
+                    fontSize: '0.85rem', 
+                    color: '#cbd5e1', 
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
+                >
+                  <span>📞</span> 915 267 161
+                </a>
+                <a 
+                  href="mailto:extraescolares@sanbuenaventura.org"
+                  style={{ 
+                    fontSize: '0.85rem', 
+                    color: '#cbd5e1', 
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'color 0.2s',
+                    wordBreak: 'break-all'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
+                >
+                  <span>📧</span> extraescolares@sanbuenaventura.org
+                </a>
+                <a 
+                  href="mailto:extraescolarespiscina@sanbuenaventura.org"
+                  style={{ 
+                    fontSize: '0.85rem', 
+                    color: '#cbd5e1', 
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'color 0.2s',
+                    wordBreak: 'break-all'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
+                >
+                  <span>📧</span> extraescolarespiscina@sanbuenaventura.org
+                </a>
+              </div>
             </div>
 
-            {/* Copyright pequeñito */}
-            <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
-              © {new Date().getFullYear()} Extraescolares
-            </div>
+            {/* Columna 3: Enlaces Rápidos y Copyright */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', justifyContent: 'space-between' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', fontWeight: '900', color: '#60a5fa', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  Navegación Rápida
+                </span>
+                <div style={{ display: 'flex', gap: '15px', marginTop: '8px', flexWrap: 'wrap' }}>
+                  <button 
+                    type="button"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', padding: 0, transition: 'color 0.2s', outline: 'none' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                  >
+                    ↑ Inicio
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setVista('faq')}
+                    style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', padding: 0, transition: 'color 0.2s', outline: 'none' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                  >
+                    💬 FAQ
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setVista('mapa')}
+                    style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', padding: 0, transition: 'color 0.2s', outline: 'none' }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                  >
+                    📍 Mapa
+                  </button>
+                </div>
+              </div>
 
+              <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '10px' }}>
+                © {new Date().getFullYear()} Extraescolares Colegio San Buenaventura.
+              </div>
+            </div>
           </div>
         </footer>
 
@@ -2310,6 +2722,12 @@ if (vista === 'mapa') {
 }
   if (vista === 'detalles' && actividadSeleccionada) {
     const act = actividadSeleccionada;
+    const latMonNum = Number(act.latMon);
+    const latFamNum = Number(act.latFam);
+    const latActNum = Number(act.latAct);
+    const esMonValido = act.latMon && !isNaN(latMonNum) && latMonNum !== 0 && latMonNum !== 40.407937755274425;
+    const esFamValido = act.latFam && !isNaN(latFamNum) && latFamNum !== 0 && latFamNum !== 40.407937755274425;
+    const esActValido = act.latAct && !isNaN(latActNum) && latActNum !== 0 && latActNum !== 40.407937755274425;
     return (
       <div
         style={{
@@ -2805,13 +3223,13 @@ if (vista === 'mapa') {
             >
               {/* 1. LUGAR (Vuela a la actividad) */}
               <div
-                onClick={() => setDestino([act.latAct, act.lngAct])}
-                style={{ display: 'flex', gap: '15px', marginBottom: '20px', cursor: 'pointer' }}
+                onClick={esActValido ? () => setDestino([act.latAct, act.lngAct]) : undefined}
+                style={{ display: 'flex', gap: '15px', marginBottom: '20px', cursor: esActValido ? 'pointer' : 'default' }}
               >
                 <div style={{ fontSize: '1.5rem', minWidth: '35px' }}>📍</div>
                 <div>
                   <p style={{ margin: 0, fontWeight: '800', color: '#1e293b' }}>
-                    Lugar (Ver en mapa)
+                    Lugar {esActValido && '(Ver en mapa)'}
                   </p>
                   <p style={{ margin: 0, color: '#64748b' }}>{act.lugar}</p>
                 </div>
@@ -2819,7 +3237,7 @@ if (vista === 'mapa') {
 
               {/* 2. MONITORES (Vuela al punto de monitores) */}
               <div
-                onClick={() => setDestino([act.latMon, act.lngMon])}
+                onClick={esMonValido ? () => setDestino([act.latMon, act.lngMon]) : undefined}
                 style={{
                   display: 'flex',
                   gap: '15px',
@@ -2827,36 +3245,35 @@ if (vista === 'mapa') {
                   padding: '15px',
                   backgroundColor: '#f8fafc',
                   borderRadius: '20px',
-                  cursor: 'pointer', // 👈 ¡Ahora es un botón mágico!
+                  cursor: esMonValido ? 'pointer' : 'default', // 👈 ¡Botón mágico solo si es válido!
                   transition: 'transform 0.1s active'
                 }}
               >
                 <div style={{ fontSize: '1.5rem', minWidth: '35px' }}>👨‍🏫</div>
-<div>
-  <p style={{ margin: 0, fontWeight: '800', color: '#1e293b' }}>
-    Monitores (Toca para ubicar 📍)
-  </p>
-  <p 
-    style={{ 
-      margin: 0, 
-      color: '#64748b',
-      // ✨ ¡ESTO ES LO QUE FALTA! ✨
-      whiteSpace: 'pre-wrap', 
-      lineHeight: '1.4' 
-    }}
-  >
-    {act.recogidaMonitores || 'Consultar'}
-  </p>
-</div>
+                <div>
+                  <p style={{ margin: 0, fontWeight: '800', color: '#1e293b' }}>
+                    {esMonValido ? 'Monitores (Toca para ubicar 📍)' : 'Monitores'}
+                  </p>
+                  <p 
+                    style={{ 
+                      margin: 0, 
+                      color: '#64748b',
+                      whiteSpace: 'pre-wrap', 
+                      lineHeight: '1.4' 
+                    }}
+                  >
+                    {esMonValido ? (act.recogidaMonitores || 'Consultar') : 'Punto de recogida general'}
+                  </p>
+                </div>
               </div>
 
               {/* 3. FAMILIAS (Vuela al punto de familias) */}
               <div 
-                onClick={() => setDestino([act.latFam, act.lngFam])}
+                onClick={esFamValido ? () => setDestino([act.latFam, act.lngFam]) : undefined}
                 style={{ 
                   display: 'flex', 
                   gap: '15px', 
-                  cursor: 'pointer',
+                  cursor: esFamValido ? 'pointer' : 'default',
                   padding: '5px',
                   borderRadius: '15px' 
                 }}
@@ -2864,10 +3281,10 @@ if (vista === 'mapa') {
                 <div style={{ fontSize: '1.5rem', minWidth: '35px' }}>👪</div>
                 <div>
                   <p style={{ margin: 0, fontWeight: '800', color: '#1e293b' }}>
-                    Familias (Toca para ubicar 📍)
+                    {esFamValido ? 'Familias (Toca para ubicar 📍)' : 'Familias'}
                   </p>
                   <p style={{ margin: 0, color: '#64748b' }}>
-                    {act.recogidaFamilias || 'Consultar'}
+                    {esFamValido ? (act.recogidaFamilias || 'Consultar') : 'Punto de recogida general'}
                   </p>
                 </div>
               </div>
@@ -2980,14 +3397,151 @@ if (vista === 'faq') {
         </div>
       </div>
 
-      <footer style={{ backgroundColor: '#1e293b', color: '#f8fafc', padding: '15px 20px', borderTop: '2px solid #3b82f6', boxShadow: '0 50vh 0 #1e293b', position: 'relative' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/colegio%20buena%20-%20Editada.png?alt=media&token=d30127c6-037e-47c5-a7e0-29d7cd5585fd" style={{ width: '100px', filter: 'brightness(0) invert(1)', opacity: '0.8' }} />
-            <span style={{ fontSize: '#0.85rem', fontWeight: 'bold' }}>Colegio San Buenaventura, Madrid</span>
+      {/* 🛡️ FOOTER PREMIUM GLASSMORPHIC */}
+      <footer style={{
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', // 🌌 Azul oscuro degradado premium
+        backdropFilter: 'blur(15px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(15px) saturate(160%)',
+        borderTop: '1.5px solid rgba(255, 255, 255, 0.08)',
+        padding: '40px 20px 30px',
+        borderRadius: '32px 32px 0 0',
+        marginTop: '50px',
+        position: 'relative',
+        boxShadow: '0 50vh 0 #0f172a', // 🎨 Relleno oscuro infinito
+        color: '#cbd5e1', // Texto claro legible
+        transition: 'all 0.3s ease',
+        marginBottom: '0px',
+      }}>
+        <div 
+          className="footer-grid"
+          style={{
+            maxWidth: '1100px',
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '30px',
+            textAlign: 'left'
+          }}
+        >
+          {/* Columna 1: Identidad */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <img 
+                src="https://firebasestorage.googleapis.com/v0/b/extraescolarescsb.firebasestorage.app/o/logo%20BLANCO.png?alt=media&token=753d085f-d9d1-4b78-9d54-26e88578c35b" 
+                alt="Escudo Cole" 
+                style={{ 
+                  width: '140px', // 🛡️ Agrandado premium
+                  height: 'auto',
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.25))'
+                }} 
+              />
+            </div>
+            <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0', lineHeight: '1.5', fontWeight: '500' }}>
+              Portal oficial de actividades extraescolares
+            </p>
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>📞 915 267 161  |  📧 extraescolares@sanbuenaventura.org</div>
-          <div style={{ fontSize: '0.7rem', color: '#64748b' }}>© {new Date().getFullYear()} Extraescolares</div>
+
+          {/* Columna 2: Contacto Premium */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: '900', color: '#60a5fa', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              Contacto Directo
+            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <a 
+                href="tel:915267161"
+                style={{ 
+                  fontSize: '0.85rem', 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'color 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
+              >
+                <span>📞</span> 915 267 161
+              </a>
+              <a 
+                href="mailto:extraescolares@sanbuenaventura.org"
+                style={{ 
+                  fontSize: '0.85rem', 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'color 0.2s',
+                  wordBreak: 'break-all'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
+              >
+                <span>📧</span> extraescolares@sanbuenaventura.org
+              </a>
+              <a 
+                href="mailto:extraescolarespiscina@sanbuenaventura.org"
+                style={{ 
+                  fontSize: '0.85rem', 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'color 0.2s',
+                  wordBreak: 'break-all'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
+              >
+                <span>📧</span> extraescolarespiscina@sanbuenaventura.org
+              </a>
+            </div>
+          </div>
+
+          {/* Columna 3: Enlaces Rápidos y Copyright */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', justifyContent: 'space-between' }}>
+            <div>
+              <span style={{ fontSize: '0.75rem', fontWeight: '900', color: '#60a5fa', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                Navegación Rápida
+              </span>
+              <div style={{ display: 'flex', gap: '15px', marginTop: '8px', flexWrap: 'wrap' }}>
+                <button 
+                  type="button"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', padding: 0, transition: 'color 0.2s', outline: 'none' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                >
+                  ↑ Inicio
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setVista('catalogo')}
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', padding: 0, transition: 'color 0.2s', outline: 'none' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                >
+                  🎒 Catálogo
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setVista('mapa')}
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '700', padding: 0, transition: 'color 0.2s', outline: 'none' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                >
+                  📍 Mapa
+                </button>
+              </div>
+            </div>
+
+            <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '10px' }}>
+              © {new Date().getFullYear()} Extraescolares Colegio San Buenaventura.
+            </div>
+          </div>
         </div>
       </footer>
       {/* 🌟 NOTIFICACIONES TOASTS */}
@@ -2999,6 +3553,7 @@ if (vista === 'faq') {
   if (vista === 'panel') {
     return (
       <div
+        className="admin-panel-card"
         style={{
           padding: '30px',
           maxWidth: '600px',
@@ -3023,6 +3578,28 @@ if (vista === 'faq') {
             }
             style={estiloInput}
           />
+
+          {/* 📁 CATEGORÍA (CONTROL TOTAL MANUAL) */}
+          <div style={{ display: 'grid', gap: '4px' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#64748b' }}>
+              Categoría de la Actividad (Control Total Manual)
+            </label>
+            <select
+              value={nuevaAct.categoria || ''}
+              onChange={(e) => setNuevaAct({ ...nuevaAct, categoria: e.target.value })}
+              style={{
+                ...estiloInput,
+                backgroundColor: 'white',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">-- Clasificación Automática Inteligente ✨ --</option>
+              <option value="Deportes">Deportes ⚽</option>
+              <option value="Idiomas">Idiomas 🗣️</option>
+              <option value="Arte/expresión">Arte/expresión 🎨</option>
+              <option value="Tecnología/manualidades">Tecnología/manualidades 💻</option>
+            </select>
+          </div>
 
           {/* 🏁 NUEVO SELECTOR MULTI-ETAPA (Sustituye al viejo <select>) */}
           <div style={{ 
@@ -3239,6 +3816,15 @@ Miércoles)"
               }
               style={estiloInput}
             />
+            {nuevaAct.imagen && (nuevaAct.imagen.startsWith('http') || nuevaAct.imagen.startsWith('data:image')) && (
+              <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'center' }}>
+                <img 
+                  src={nuevaAct.imagen} 
+                  alt="Vista previa actividad" 
+                  style={{ maxHeight: '110px', maxWidth: '100%', borderRadius: '10px', border: '1px solid #cbd5e1', objectFit: 'contain', padding: '3px', backgroundColor: 'white' }} 
+                />
+              </div>
+            )}
           </div>
 
           <textarea
@@ -3313,6 +3899,15 @@ Miércoles)"
                 }
                 style={estiloInput}
               />
+            {nuevaAct.logoEmpresa && (nuevaAct.logoEmpresa.startsWith('http') || nuevaAct.logoEmpresa.startsWith('data:image')) && (
+              <div style={{ marginTop: '5px', marginBottom: '10px', display: 'flex', justifyContent: 'center' }}>
+                <img 
+                  src={nuevaAct.logoEmpresa} 
+                  alt="Vista previa logo empresa" 
+                  style={{ maxHeight: '60px', maxWidth: '100%', borderRadius: '8px', border: '1px solid #cbd5e1', objectFit: 'contain', padding: '2px', backgroundColor: 'white' }} 
+                />
+              </div>
+            )}
             <input
               placeholder="Email contacto"
               value={nuevaAct.contacto || ''}
@@ -3378,7 +3973,8 @@ Miércoles)"
                 type="button"
                 onClick={() => {
                   setCapturandoCoordenadasPara('actividad');
-                  lanzarToast('📡 Modo Captura Activo: Pincha en cualquier mapa de la app para capturar estas coordenadas.', 'info');
+                  setVista('mapa');
+                  lanzarToast('📡 Redirigiendo al mapa... Pincha sobre la ubicación de la actividad.', 'info');
                 }}
                 style={{
                   padding: '4px 10px',
@@ -3428,7 +4024,8 @@ Miércoles)"
                 type="button"
                 onClick={() => {
                   setCapturandoCoordenadasPara('monitores');
-                  lanzarToast('📡 Modo Captura Activo: Pincha en cualquier mapa de la app para capturar estas coordenadas.', 'info');
+                  setVista('mapa');
+                  lanzarToast('📡 Redirigiendo al mapa... Pincha sobre el punto de recogida de monitores.', 'info');
                 }}
                 style={{
                   padding: '4px 10px',
@@ -3478,7 +4075,8 @@ Miércoles)"
                 type="button"
                 onClick={() => {
                   setCapturandoCoordenadasPara('familias');
-                  lanzarToast('📡 Modo Captura Activo: Pincha en cualquier mapa de la app para capturar estas coordenadas.', 'info');
+                  setVista('mapa');
+                  lanzarToast('📡 Redirigiendo al mapa... Pincha sobre el punto de recogida de familias.', 'info');
                 }}
                 style={{
                   padding: '4px 10px',
@@ -3551,6 +4149,15 @@ Miércoles)"
               }
               style={estiloInput}
             />
+            {nuevaAct.fotoAct && (nuevaAct.fotoAct.startsWith('http') || nuevaAct.fotoAct.startsWith('data:image')) && (
+              <div style={{ marginTop: '2px', marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
+                <img 
+                  src={nuevaAct.fotoAct} 
+                  alt="Vista previa foto actividad" 
+                  style={{ maxHeight: '60px', maxWidth: '100%', borderRadius: '8px', border: '1px solid #cbd5e1', objectFit: 'contain', padding: '2px', backgroundColor: 'white' }} 
+                />
+              </div>
+            )}
             <input
               placeholder="URL Foto Monitores"
               value={nuevaAct.fotoMon || ''}
@@ -3559,6 +4166,15 @@ Miércoles)"
               }
               style={estiloInput}
             />
+            {nuevaAct.fotoMon && (nuevaAct.fotoMon.startsWith('http') || nuevaAct.fotoMon.startsWith('data:image')) && (
+              <div style={{ marginTop: '2px', marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
+                <img 
+                  src={nuevaAct.fotoMon} 
+                  alt="Vista previa foto monitores" 
+                  style={{ maxHeight: '60px', maxWidth: '100%', borderRadius: '8px', border: '1px solid #cbd5e1', objectFit: 'contain', padding: '2px', backgroundColor: 'white' }} 
+                />
+              </div>
+            )}
             <input
               placeholder="URL Foto Familias"
               value={nuevaAct.fotoFam || ''}
@@ -3567,6 +4183,15 @@ Miércoles)"
               }
               style={estiloInput}
             />
+            {nuevaAct.fotoFam && (nuevaAct.fotoFam.startsWith('http') || nuevaAct.fotoFam.startsWith('data:image')) && (
+              <div style={{ marginTop: '2px', marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
+                <img 
+                  src={nuevaAct.fotoFam} 
+                  alt="Vista previa foto familias" 
+                  style={{ maxHeight: '60px', maxWidth: '100%', borderRadius: '8px', border: '1px solid #cbd5e1', objectFit: 'contain', padding: '2px', backgroundColor: 'white' }} 
+                />
+              </div>
+            )}
           </div>
 
           {/* 🚀 BOTÓN DE GUARDAR (FUERA DE TODO, SIN MOLESTAR) */}
@@ -3788,7 +4413,8 @@ Miércoles)"
               type="button"
               onClick={() => {
                 setCapturandoCoordenadasPara('maestro');
-                lanzarToast('📡 Modo Captura Activo: Pincha en el mapa para autocompletar la Latitud y Longitud.', 'info');
+                setVista('mapa');
+                lanzarToast('📡 Redirigiendo al mapa... Pincha en el punto para capturar sus coordenadas.', 'info');
               }}
               style={{
                 padding: '10px 14px',
