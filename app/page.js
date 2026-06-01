@@ -1078,7 +1078,7 @@ const preguntasFrecuentes = [
                 letterSpacing: '1px',
                 textTransform: 'uppercase'
               }}>
-                Colegio San Buenaventura - Madrid
+                Colegio San Buenaventura
               </span>
             </div>
 
@@ -2503,6 +2503,25 @@ const preguntasFrecuentes = [
               </span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <a 
+                  href="https://maps.google.com/?q=Calle+de+El+Greco+16,+Madrid"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ 
+                    fontSize: '0.85rem', 
+                    color: '#cbd5e1', 
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'color 0.2s',
+                    wordBreak: 'break-word'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
+                >
+                  <span>📍</span> Calle de El Greco 16, Madrid
+                </a>
+                <a 
                   href="tel:915267161"
                   style={{ 
                     fontSize: '0.85rem', 
@@ -3448,6 +3467,25 @@ if (vista === 'faq') {
               Contacto Directo
             </span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <a 
+                href="https://maps.google.com/?q=Calle+de+El+Greco+16,+Madrid"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ 
+                  fontSize: '0.85rem', 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'color 0.2s',
+                  wordBreak: 'break-word'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#60a5fa'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#cbd5e1'}
+              >
+                <span>📍</span> Calle de El Greco 16, Madrid
+              </a>
               <a 
                 href="tel:915267161"
                 style={{ 
