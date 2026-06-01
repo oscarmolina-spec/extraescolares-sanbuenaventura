@@ -10,7 +10,7 @@ import {
   updateDoc,
   onSnapshot, // 👈 ¡Sincronización en tiempo real activa!
 } from 'firebase/firestore';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 
 // Esto es como un "escudo" para que el mapa cargue solo cuando la web esté lista
@@ -354,30 +354,7 @@ export default function Page() {
 
   // 📚 FUNCIÓN DE RESOLUCIÓN EN TIEMPO REAL DE ACTIVIDADES DE ETAPA (100% REALES DESDE FIRESTORE)
   const obtenerPillsEjemplos = (etapaId) => {
-    const todoJunto = [
-      ...actividades.map(a => ({ ...a, esClub: false })),
-      ...clubes.map(c => ({ ...c, esClub: true }))
-    ];
-    
-    const actsEtapa = todoJunto.filter(item => {
-      if (etapaId === 'Clubes Amigos') {
-        return item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'));
-      }
-      if (etapaId === 'Infantil') {
-        return item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'));
-      }
-      if (etapaId === 'ESO') {
-        return item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'));
-      }
-      if (etapaId === 'Adultos') {
-        return item.Adultos || item.etapa === 'Adultos' || (item.etapas && item.etapas.includes('Adultos'));
-      }
-      if (etapaId === 'Primaria') {
-        return item.Primaria || item.etapa === 'Primaria' || (item.etapas && item.etapas.includes('Primaria')) ||
-               (!item.esClub && !item.Infantil && !item.ESO && !item.Adultos && item.etapa !== 'Infantil' && item.etapa !== 'ESO' && item.etapa !== 'Adultos' && item.etapa !== 'Clubes Amigos');
-      }
-      return false;
-    });
+    const actsEtapa = pillsEjemplosPorEtapa[etapaId] || [];
 
     if (actsEtapa.length === 0) {
       return (
@@ -389,7 +366,7 @@ export default function Page() {
 
     return (
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-        {actsEtapa.slice(0, 4).map((item, idx) => (
+        {actsEtapa.map((item, idx) => (
           <span
             key={item.id || idx}
             style={{
@@ -547,6 +524,91 @@ export default function Page() {
   lngAct: '',          // Punto de interés (longitud)
   linksMultiples: []   // 🌟 ¡NUEVO! Aquí guardaremos la lista de cursos y enlaces
 });
+
+  // 📚 MEMOIZACIÓN PREMIUM DE ACTIVIDADES DE ETAPA (100% REALES Y OPTIMIZADAS)
+  const pillsEjemplosPorEtapa = useMemo(() => {
+    const todoJunto = [
+      ...actividades.map(a => ({ ...a, esClub: false })),
+      ...clubes.map(c => ({ ...c, esClub: true }))
+    ];
+    
+    const obtenerActs = (etapaId) => {
+      return todoJunto.filter(item => {
+        if (etapaId === 'Clubes Amigos') {
+          return item.esClub || item.etapa === 'Clubes Amigos' || (item.etapas && item.etapas.includes('Clubes Amigos'));
+        }
+        if (etapaId === 'Infantil') {
+          return item.Infantil || item.etapa === 'Infantil' || (item.etapas && item.etapas.includes('Infantil'));
+        }
+        if (etapaId === 'ESO') {
+          return item.ESO || item.etapa === 'ESO' || (item.etapas && item.etapas.includes('ESO'));
+        }
+        if (etapaId === 'Adultos') {
+          return item.Adultos || item.etapa === 'Adultos' || (item.etapas && item.etapas.includes('Adultos'));
+        }
+        if (etapaId === 'Primaria') {
+          return item.Primaria || item.etapa === 'Primaria' || (item.etapas && item.etapas.includes('Primaria')) ||
+                 (!item.esClub && !item.Infantil && !item.ESO && !item.Adultos && item.etapa !== 'Infantil' && item.etapa !== 'ESO' && item.etapa !== 'Adultos' && item.etapa !== 'Clubes Amigos');
+        }
+        return false;
+      });
+    };
+
+    return {
+      Infantil: obtenerActs('Infantil').slice(0, 4),
+      Primaria: obtenerActs('Primaria').slice(0, 4),
+      ESO: obtenerActs('ESO').slice(0, 4),
+      Adultos: obtenerActs('Adultos').slice(0, 4),
+      'Clubes Amigos': obtenerActs('Clubes Amigos').slice(0, 4)
+    };
+  }, [actividades, clubes]);
+
+  // 🚀 FILTRO MEMOIZADO SÚPER VELOZ PARA EL CATÁLOGO (CERO RELENTIZACIONES)
+  const itemsFiltrados = useMemo(() => {
+    const todoJunto = [
+      ...actividades.map(a => ({ ...a, esClub: false })),
+      ...clubes.map(c => ({ ...c, esClub: true }))
+    ];
+
+    const normalizar = (texto) => 
+      texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      
+    const loQueEscribeLaFamilia = normalizar(busqueda);
+    const etapaBoton = etapaActiva.trim().toLowerCase();
+    const empresaBoton = empresaActiva.trim().toLowerCase();
+    const diaBoton = diaActivo.toLowerCase();
+
+    return todoJunto.filter((item) => {
+      const nombreActividad = normalizar(item.nombre || "");
+      if (!nombreActividad.includes(loQueEscribeLaFamilia)) return false;
+    
+      const empresaActividad = (item.empresa || "").trim().toLowerCase();
+      const cumpleEmpresa = 
+        empresaBoton === 'todas' || 
+        empresaActividad === empresaBoton ||
+        (empresaBoton === 'san buenaventura' && empresaActividad === 'colegio san buenaventura');
+    
+      if (!cumpleEmpresa) return false;
+    
+      const diasActividad = (item.dias || "").toLowerCase();
+      const cumpleDia = diaBoton === 'todos' || diasActividad.includes(diaBoton);
+      if (!cumpleDia) return false;
+    
+      const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
+      if (etapaBoton === 'clubes amigos') return esClub;
+      if (esClub) return false;
+      
+      if (etapaBoton === 'todos') return true;
+      
+      const estaEnListaEtapas = Array.isArray(item.etapas) && 
+                                item.etapas.some(e => e.trim().toLowerCase() === etapaBoton);
+      
+      const etapaSimple = (item.etapa || "").trim().toLowerCase();
+      const esEtapaVieja = etapaSimple === etapaBoton;
+    
+      return estaEnListaEtapas || esEtapaVieja;
+    });
+  }, [actividades, clubes, busqueda, etapaActiva, empresaActiva, diaActivo]);
 // 🚀 ¡AQUÍ LAS PEGAS! LAS TRES FUNCIONES NUEVAS:
   const agregarFilaLink = () => {
     setNuevoClub({
@@ -1393,7 +1455,7 @@ const preguntasFrecuentes = [
                     <div>
                       {/* 🖼️ FOTO DE LA ETAPA CON BADGE GLASSMORPHIC */}
                       <div style={{ position: 'relative', height: '140px', borderRadius: '16px', overflow: 'hidden', marginBottom: '16px' }}>
-                        <img src={tarjeta.imagen} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={tarjeta.titulo} />
+                        <img src={tarjeta.imagen} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={tarjeta.titulo} />
                         <div style={{
                           position: 'absolute',
                           top: '12px',
@@ -1580,68 +1642,7 @@ const preguntasFrecuentes = [
               </div>
 
               {/* 🌟 FILTROS Y RECORRIDO EN ACCIÓN */}
-              {(() => {
-          const todoJunto = [
-            ...actividades.map(a => ({ ...a, esClub: false })),
-            ...clubes.map(c => ({ ...c, esClub: true }))
-          ];
-
-          const itemsFiltrados = todoJunto.filter((item) => {
-            const normalizar = (texto) => 
-              texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-          
-            const nombreActividad = normalizar(item.nombre || "");
-            const loQueEscribeLaFamilia = normalizar(busqueda);
-          
-            if (!nombreActividad.includes(loQueEscribeLaFamilia)) return false;
-          
-            const etapaBoton = etapaActiva.trim().toLowerCase();
-            const empresaBoton = empresaActiva.trim().toLowerCase();
-          
-            // 🌟 Primero creamos la variable para que el ordenador la conozca
-            const empresaActividad = (item.empresa || "").trim().toLowerCase();
-          
-            // 📊 Y ahora ya podemos usarla aquí abajo sin ningún error
-            const cumpleEmpresa = 
-              empresaBoton === 'todas' || 
-              empresaActividad === empresaBoton ||
-              (empresaBoton === 'san buenaventura' && empresaActividad === 'colegio san buenaventura');
-          
-            if (!cumpleEmpresa) return false;
-          
-            // 📆 ¡EL NUEVO SÚPER FILTRO DE DÍAS EN ACCIÓN!
-            const diaBoton = diaActivo.toLowerCase();
-            const diasActividad = (item.dias || "").toLowerCase();
-            
-            // Si el botón no es 'todos', comprobamos si el día elegido está en la actividad
-            const cumpleDia = diaBoton === 'todos' || diasActividad.includes(diaBoton);
-            
-            if (!cumpleDia) return false;
-            // 📆 ¡AQUÍ TERMINA EL NUEVO FILTRO DE DÍAS!
-          
-            const esClub = item.etapas && item.etapas.includes('Clubes Amigos');
-            if (etapaBoton === 'clubes amigos') return esClub;
-            if (esClub) return false;
-          
-            // ========================================================
-            // 🚀 ¡NUEVA LÓGICA MULTI-ETAPA REFORZADA AQUÍ MISMO!
-            // ========================================================
-            // 📊 ¡EL TRUCO DE TODAS LAS ETAPAS!: Si el botón es 'todos', ¡se salta la regla y se muestra!
-            if (etapaBoton === 'todos') return true;
-            // 1️⃣ Comprobamos si la etapa del botón está dentro de la lista de etapas de la actividad
-            const estaEnListaEtapas = Array.isArray(item.etapas) && 
-                                      item.etapas.some(e => e.trim().toLowerCase() === etapaBoton);
-          
-            // 2️⃣ Por si acaso, revisamos también el campo viejo para no romper actividades antiguas
-            const etapaSimple = (item.etapa || "").trim().toLowerCase();
-            const esEtapaVieja = etapaSimple === etapaBoton;
-          
-            // 🏁 ¡EL GRAN TRUCO!: Si cumple cualquiera de las dos cosas, ¡se muestra en la pantalla!
-            return estaEnListaEtapas || esEtapaVieja;
-          });
-
-return (
-  <>
+              <>
     {/* 🚩 Mensaje si no hay nada que enseñar (Solo si no está cargando) */}
     {!cargando && itemsFiltrados.length === 0 && (
       <div style={{ 
@@ -1815,6 +1816,7 @@ return (
             <img
               src={item.imagen || item.foto || 'https://via.placeholder.com/400x200?text=San+Buenaventura'}
               className="card-img-zoom"
+              loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               onError={(e) => { e.target.src = 'https://via.placeholder.com/400x200?text=Imagen+No+Disponible'; }}
             />
@@ -2133,8 +2135,6 @@ return (
       )}
     </div>
   </>
-);
-})()}
             </>
           )}
         </main>
