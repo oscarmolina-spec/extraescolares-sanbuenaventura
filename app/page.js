@@ -2077,7 +2077,7 @@ const preguntasFrecuentes = [
     {/* 📦 CONTENEDOR INTELIGENTE EN REJILLA */}
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
       gap: '30px',
       padding: '20px 15px',
       maxWidth: '1200px',
