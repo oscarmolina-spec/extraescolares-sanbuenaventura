@@ -2099,7 +2099,7 @@ const preguntasFrecuentes = [
       margin: '0 auto',
       width: '100%',
       boxSizing: 'border-box',
-      alignItems: 'start', 
+      alignItems: 'stretch', 
       justifyContent: 'center' 
     }}>
       {cargando ? (
@@ -2130,7 +2130,8 @@ const preguntasFrecuentes = [
                 border: `3px solid ${cardColor}`, 
                 display: 'flex',
                 flexDirection: 'column',
-                height: '530px', 
+                minHeight: '530px', 
+                height: '100%',
                 '--hover-color': cardColor,
                 '--hover-shadow': modoOscuro ? '0 30px 60px rgba(96, 165, 250, 0.25)' : '0 30px 60px rgba(59, 130, 246, 0.25)'
               }}
@@ -2282,7 +2283,7 @@ const preguntasFrecuentes = [
                 <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
                   <span style={{ fontSize: '0.65rem', color: modoOscuro ? '#94a3b8' : '#64748b', fontWeight: '800', letterSpacing: '0.5px' }}>PRECIO</span>
                   <span style={{ fontSize: '1.3rem', fontWeight: '900', color: item.esClub ? '#d946ef' : (modoOscuro ? '#60a5fa' : '#1d4ed8'), lineHeight: '1.1' }}>
-                    {item.precio ? `${item.precio}€` : '---'}
+                    {item.precio ? (String(item.precio).endsWith('€') ? item.precio : `${item.precio}€`) : '---'}
                     <small style={{ fontSize: '0.7rem', fontWeight: '700', color: modoOscuro ? '#94a3b8' : '#64748b', marginLeft: '2px' }}>/mes</small>
                   </span>
                 </div>
