@@ -9,7 +9,19 @@ import {
   deleteDoc,
   updateDoc,
   onSnapshot, // 👈 ¡Sincronización en tiempo real activa!
+  enableIndexedDbPersistence
 } from 'firebase/firestore';
+
+// Habilitar persistencia de Firestore offline para soportar mala cobertura en el pabellón/colegio
+if (typeof window !== 'undefined') {
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn("La persistencia falló: múltiples pestañas abiertas.");
+    } else if (err.code === 'unimplemented') {
+      console.warn("El navegador no soporta persistencia offline.");
+    }
+  });
+}
 import { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 
@@ -953,6 +965,48 @@ const preguntasFrecuentes = [
     id: 4,
     pregunta: "🌧️ ¿Qué pasa si llueve y la actividad es al aire libre?",
     respuesta: "¡La diversión nunca se detiene en el cole! En caso de lluvia o mal tiempo, los monitores tienen previstos espacios cubiertos alternativos dentro del colegio (como aulas asignadas, porches o el gimnasio) para realizar la actividad de forma segura y adaptada."
+  },
+  {
+    id: 5,
+    pregunta: "🏊‍♂️ ¿Cómo accedo a las actividades y reservas de la Piscina?",
+    respuesta: (
+      <span>
+        Las actividades acuáticas y de natación del colegio tienen un portal propio e independiente. Puedes acceder directamente a través de <a href="https://piscina-csb.vercel.app/" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline', fontWeight: '700' }}>piscina-csb.vercel.app</a> para consultar los niveles, reservar citas para pruebas de nivel y gestionar cómodamente las inscripciones online.
+      </span>
+    )
+  },
+  {
+    id: 6,
+    pregunta: "✍️ ¿Puedo inscribir a mi hijo en una actividad si el curso ya ha comenzado?",
+    respuesta: (
+      <span>
+        ¡Sí, por supuesto! Las inscripciones permanecen abiertas durante todo el curso escolar (que se imparte de <strong>octubre a mayo</strong>), siempre y cuando queden vacantes en la actividad elegida. Ten en cuenta que <strong>no se aplican descuentos ni prorrateos por apuntarse a mitad de mes</strong> (se cobrará la mensualidad completa). Si lo prefieres, <strong>puedes solicitar comenzar la actividad a partir del primer día del mes siguiente</strong> para evitar el cobro del mes en curso. Asimismo, recuerda que la viabilidad de cada actividad al inicio del curso está sujeta a alcanzar un <strong>mínimo de alumnos inscritos</strong> en el grupo.
+      </span>
+    )
+  },
+  {
+    id: 7,
+    pregunta: "🥋 ¿Qué equipamiento o ropa especial necesita llevar mi hijo para la actividad?",
+    respuesta: (
+      <span>
+        ¡No te preocupes! <strong>Dentro de la ficha de información detallada de cada actividad en esta web viene especificado exactamente el material técnico</strong>, ropa o calzado que el alumno necesita llevar a las sesiones. Por norma general, para las actividades deportivas se recomienda asistir con ropa cómoda o el chándal oficial del colegio.
+      </span>
+    )
+  },
+  {
+    id: 8,
+    pregunta: "📅 ¿Hay actividades extraescolares los días festivos o no lectivos?",
+    respuesta: "No, las actividades extraescolares siguen estrictamente el calendario escolar oficial del colegio. Por tanto, no habrá clases los días festivos nacionales, autonómicos o municipales, ni durante las vacaciones escolares (Navidad, Semana Santa y verano) o los días no lectivos marcados por el centro."
+  },
+  {
+    id: 9,
+    pregunta: "💰 ¿Existen descuentos por hermanos o por apuntarse a más de una actividad?",
+    respuesta: "Las políticas de precios y los posibles descuentos dependen directamente de la empresa gestora de la actividad (como Alventus para las actividades generales o los respectivos clubes deportivos para el baloncesto o judo). Te aconsejamos consultar la ficha de información detallada de cada actividad para revisar sus condiciones tarifarias específicas."
+  },
+  {
+    id: 10,
+    pregunta: "🔄 ¿Se puede realizar un cambio de actividad a mitad de curso?",
+    respuesta: "¡Claro que sí! Para cambiar de actividad, deberás solicitar la baja de la actividad en la que está inscrito el alumno antes del día 25 del mes y realizar una nueva inscripción en la actividad que prefiera. El cambio estará siempre sujeto a la disponibilidad de plazas libres en el nuevo grupo."
   }
 ];
 
