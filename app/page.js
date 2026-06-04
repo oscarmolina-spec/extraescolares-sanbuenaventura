@@ -789,6 +789,21 @@ export default function Page() {
     };
   }, []);
 
+  // 📡 CONTROL DE ENLACES COMPARTIDOS (DEEP LINKING / URL PARAMS)
+  useEffect(() => {
+    if (cargando || (actividades.length === 0 && clubes.length === 0)) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const actId = params.get('act');
+    if (actId) {
+      const encontrada = actividades.find(a => a.id === actId) || clubes.find(c => c.id === actId);
+      if (encontrada) {
+        setActividadSeleccionada(encontrada);
+        setVista('detalles');
+      }
+    }
+  }, [cargando, actividades, clubes]);
+
   // Funciones de compatibilidad para evitar errores al guardar/borrar
   const cargarActividades = () => {};
   const cargarPuntosInteres = () => {};
@@ -2772,24 +2787,88 @@ if (vista === 'mapa') {
           transition: 'all 0.3s ease',
         }}
       >
-        {/* 🔙 Botón Volver Minimalista */}
-        <button
-          onClick={() => setVista('catalogo')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'none',
-            border: 'none',
-            color: modoOscuro ? '#94a3b8' : '#64748b',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            marginBottom: '20px',
-            fontSize: '1rem',
-          }}
-        >
-          ← Volver al catálogo
-        </button>
+        {/* 🔙 Botón Volver Minimalista y Compartir */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
+          <button
+            onClick={() => {
+              setVista('catalogo');
+              setActividadSeleccionada(null);
+              if (typeof window !== 'undefined') {
+                window.history.replaceState({}, '', window.location.pathname);
+              }
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'none',
+              border: 'none',
+              color: modoOscuro ? '#94a3b8' : '#64748b',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              outline: 'none',
+            }}
+          >
+            ← Volver al catálogo
+          </button>
+
+          <button
+            onClick={async () => {
+              const urlCompartir = `${window.location.origin}${window.location.pathname}?act=${act.id}`;
+              const textoCompartir = `¡Mira la actividad extraescolar de "${act.nombre}" del Colegio San Buenaventura! 🏫✨`;
+              
+              if (navigator.share) {
+                try {
+                  await navigator.share({
+                    title: act.nombre,
+                    text: textoCompartir,
+                    url: urlCompartir,
+                  });
+                  lanzarToast('¡Compartido con éxito! 🚀', 'exito');
+                } catch (err) {
+                  if (err.name !== 'AbortError') {
+                    console.error(err);
+                  }
+                }
+              } else {
+                try {
+                  await navigator.clipboard.writeText(urlCompartir);
+                  lanzarToast('📋 ¡Enlace copiado! Compártelo por WhatsApp o Email.', 'exito');
+                } catch (err) {
+                  console.error(err);
+                  lanzarToast('❌ No se pudo copiar el enlace', 'error');
+                }
+              }
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: modoOscuro ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff',
+              border: `1.5px solid ${modoOscuro ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe'}`,
+              color: modoOscuro ? '#60a5fa' : '#1d4ed8',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              padding: '8px 16px',
+              borderRadius: '12px',
+              fontSize: '0.88rem',
+              transition: 'all 0.2s',
+              outline: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = modoOscuro ? 'rgba(59, 130, 246, 0.25)' : '#dbeafe';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = modoOscuro ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <span>🔗</span>
+            <span>Compartir</span>
+          </button>
+        </div>
 
         {/* 🖼️ Tarjeta Principal de Imagen */}
         <div
