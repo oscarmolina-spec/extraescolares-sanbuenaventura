@@ -2945,7 +2945,7 @@ if (vista === 'mapa') {
               act.imagen ||
               'https://via.placeholder.com/800x400?text=San+Buenaventura'
             }
-            style={{ width: '100%', height: '300px', objectFit: 'cover' }}
+            style={{ width: '100%', height: 'auto', maxHeight: '300px', aspectRatio: '16/9', objectFit: 'cover' }}
             onError={(e) => {
               e.target.src =
                 'https://via.placeholder.com/800x400?text=Revisar+Imagen';
