@@ -2287,41 +2287,100 @@ const preguntasFrecuentes = [
                   </span>
                 </div>
 
-                {/* Botón Detalles Compacto */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActividadSeleccionada(item);
-                    setVista('detalles');
-                  }}
-                  style={{
-                    padding: '8px 14px', 
-                    borderRadius: '12px', 
-                    border: 'none',
-                    backgroundColor: modoOscuro ? '#3b82f6' : '#0f172a', 
-                    color: '#ffffff', 
-                    fontWeight: '800', 
-                    cursor: 'pointer', 
-                    fontSize: '0.78rem',
-                    boxShadow: modoOscuro ? '0 4px 12px rgba(59, 130, 246, 0.25)' : '0 4px 10px rgba(15, 23, 42, 0.15)',
-                    transition: 'all 0.2s',
-                    outline: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = modoOscuro ? '#60a5fa' : '#1e293b';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = modoOscuro ? '#3b82f6' : '#0f172a';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  <span>Detalles</span>
-                  <span>→</span>
-                </button>
+                {/* Acciones de la Tarjeta */}
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {/* Botón Compartir Rápido */}
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const urlCompartir = `${window.location.origin}${window.location.pathname}?act=${item.id}`;
+                      const textoCompartir = `¡Mira la actividad extraescolar de "${item.nombre}" del Colegio San Buenaventura! 🏫✨`;
+                      
+                      if (navigator.share) {
+                        try {
+                          await navigator.share({
+                            title: item.nombre,
+                            text: textoCompartir,
+                            url: urlCompartir,
+                          });
+                          lanzarToast('¡Compartido con éxito! 🚀', 'exito');
+                        } catch (err) {
+                          if (err.name !== 'AbortError') console.error(err);
+                        }
+                      } else {
+                        try {
+                          await navigator.clipboard.writeText(urlCompartir);
+                          lanzarToast('📋 ¡Enlace copiado! Listo para compartir.', 'exito');
+                        } catch (err) {
+                          console.error(err);
+                          lanzarToast('❌ No se pudo copiar el enlace', 'error');
+                        }
+                      }
+                    }}
+                    style={{
+                      padding: '8px 10px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      backgroundColor: modoOscuro ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9',
+                      color: modoOscuro ? '#cbd5e1' : '#475569',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s',
+                      outline: 'none',
+                    }}
+                    title="Compartir enlace directo"
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = modoOscuro ? 'rgba(255, 255, 255, 0.18)' : '#e2e8f0';
+                      e.currentTarget.style.color = modoOscuro ? '#ffffff' : '#0f172a';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = modoOscuro ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9';
+                      e.currentTarget.style.color = modoOscuro ? '#cbd5e1' : '#475569';
+                    }}
+                  >
+                    🔗
+                  </button>
+
+                  {/* Botón Detalles Compacto */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActividadSeleccionada(item);
+                      setVista('detalles');
+                    }}
+                    style={{
+                      padding: '8px 14px', 
+                      borderRadius: '12px', 
+                      border: 'none',
+                      backgroundColor: modoOscuro ? '#3b82f6' : '#0f172a', 
+                      color: '#ffffff', 
+                      fontWeight: '800', 
+                      cursor: 'pointer', 
+                      fontSize: '0.78rem',
+                      boxShadow: modoOscuro ? '0 4px 12px rgba(59, 130, 246, 0.25)' : '0 4px 10px rgba(15, 23, 42, 0.15)',
+                      transition: 'all 0.2s',
+                      outline: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = modoOscuro ? '#60a5fa' : '#1e293b';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = modoOscuro ? '#3b82f6' : '#0f172a';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <span>Detalles</span>
+                    <span>→</span>
+                  </button>
+                </div>
               </div>
 
               {/* 🔗 SECCIÓN DE INSCRIPCIÓN INTELIGENTE */}
