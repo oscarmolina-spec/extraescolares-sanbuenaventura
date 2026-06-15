@@ -1250,6 +1250,40 @@ const preguntasFrecuentes = [
                 <span>Preguntas</span>
               </button>
 
+              <button
+                type="button"
+                onClick={() => window.open("https://piscina-csb.vercel.app/", "_blank", "noopener,noreferrer")}
+                style={{
+                  padding: '8px 16px',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 'bold',
+                  transition: 'all 0.25s ease',
+                  outline: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(6, 182, 212, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(6, 182, 212, 0.3)';
+                }}
+              >
+                <span>🏊</span>
+                <span>Acceso a la web de piscina</span>
+              </button>
+
               {!isAdmin ? (
                 <button
                   type="button"
