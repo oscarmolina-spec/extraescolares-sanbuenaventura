@@ -522,6 +522,8 @@ export default function Page() {
   }, [capturandoCoordenadasPara, setVista]);
 
   const [clubes, setClubes] = useState([]); // Aquí guardaremos la lista que viene de la nube
+  // Los documentos anteriores no tienen este campo y siguen publicados.
+  const publicado = (item) => item.activa !== false;
   const [empresaActiva, setEmpresaActiva] = useState('Todas');
   const [busqueda, setBusqueda] = useState('');
   const [mostrarFiltros, setMostrarFiltros] = useState(false); // Para abrir y cerrar el panel
@@ -542,8 +544,8 @@ export default function Page() {
   // 📚 MEMOIZACIÓN PREMIUM DE ACTIVIDADES DE ETAPA (100% REALES Y OPTIMIZADAS)
   const pillsEjemplosPorEtapa = useMemo(() => {
     const todoJunto = [
-      ...actividades.map(a => ({ ...a, esClub: false })),
-      ...clubes.map(c => ({ ...c, esClub: true }))
+      ...actividades.filter(publicado).map(a => ({ ...a, esClub: false })),
+      ...clubes.filter(publicado).map(c => ({ ...c, esClub: true }))
     ];
     
     const obtenerActs = (etapaId) => {
@@ -623,8 +625,8 @@ export default function Page() {
   // 🚀 ACTIVIDADES ACTIVAS EN LA ETAPA ACTUAL (Para conteo dinámico y visibilidad reactiva)
   const activitiesInActiveStage = useMemo(() => {
     const todoJunto = [
-      ...actividades.map(a => ({ ...a, esClub: false })),
-      ...clubes.map(c => ({ ...c, esClub: true }))
+      ...actividades.filter(publicado).map(a => ({ ...a, esClub: false })),
+      ...clubes.filter(publicado).map(c => ({ ...c, esClub: true }))
     ];
     const etapaBoton = etapaActiva.trim().toLowerCase();
     if (etapaBoton === 'todos') return todoJunto;
@@ -664,8 +666,8 @@ export default function Page() {
   // 🚀 FILTRO MEMOIZADO SÚPER VELOZ PARA EL CATÁLOGO (CERO RELENTIZACIONES)
   const itemsFiltrados = useMemo(() => {
     const todoJunto = [
-      ...actividades.map(a => ({ ...a, esClub: false })),
-      ...clubes.map(c => ({ ...c, esClub: true }))
+      ...actividades.filter(a => isAdmin || publicado(a)).map(a => ({ ...a, esClub: false })),
+      ...clubes.filter(c => isAdmin || publicado(c)).map(c => ({ ...c, esClub: true }))
     ];
 
     const normalizar = (texto) => 
@@ -712,7 +714,7 @@ export default function Page() {
     
       return estaEnListaEtapas || esEtapaVieja;
     });
-  }, [actividades, clubes, busqueda, etapaActiva, empresaActiva, diaActivo, subcategoriaActiva]);
+  }, [actividades, clubes, isAdmin, busqueda, etapaActiva, empresaActiva, diaActivo, subcategoriaActiva]);
 // 🚀 ¡AQUÍ LAS PEGAS! LAS TRES FUNCIONES NUEVAS:
   const agregarFilaLink = () => {
     setNuevoClub({
@@ -808,13 +810,20 @@ export default function Page() {
     const params = new URLSearchParams(window.location.search);
     const actId = params.get('act');
     if (actId) {
-      const encontrada = actividades.find(a => a.id === actId) || clubes.find(c => c.id === actId);
+      const encontrada = actividades.find(a => a.id === actId && (isAdmin || publicado(a))) || clubes.find(c => c.id === actId && (isAdmin || publicado(c)));
       if (encontrada) {
         setActividadSeleccionada(encontrada);
         setVista('detalles');
       }
     }
-  }, [cargando, actividades, clubes]);
+  }, [cargando, actividades, clubes, isAdmin]);
+
+  useEffect(() => {
+    if (actividadSeleccionada && !isAdmin && !publicado(actividadSeleccionada)) {
+      setActividadSeleccionada(null);
+      setVista('catalogo');
+    }
+  }, [actividadSeleccionada, actividades, clubes, isAdmin]);
 
   // Funciones de compatibilidad para evitar errores al guardar/borrar
   const cargarActividades = () => {};
@@ -831,6 +840,7 @@ export default function Page() {
     // 🚀 Preparamos el paquete limpiando los enlaces antiguos y nuevos
     const actividadFinal = {
       ...nuevaAct,
+      activa: editandoId ? nuevaAct.activa !== false : true,
       etapas: nuevaAct.etapas,
       // 🌟 EL TRUCO DE LA PISCINA: Aseguramos que la casilla principal guarde la web en los dos campos posibles
       enlace: nuevaAct.enlace || '',
@@ -905,6 +915,7 @@ export default function Page() {
       // 🚀 Preparamos el paquete como siempre
       const clubFinal = {
         nombre: nuevoClub.nombre,
+        activa: editandoId ? nuevoClub.activa !== false : true,
         etapas: nuevoClub.etapas,
         horario: nuevoClub.horario || '',
         descripcion: nuevoClub.descripcion || '',
@@ -2559,7 +2570,8 @@ const preguntasFrecuentes = [
 
               {/* 🛠️ BOTONES DE ADMINISTRACIÓN (¡A salvo e intactos!) */}
               {isAdmin && (
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px', paddingTop: '8px', borderTop: modoOscuro ? '1px dotted rgba(255,255,255,0.15)' : '1px dotted rgba(0,0,0,0.2)' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', paddingTop: '8px', borderTop: modoOscuro ? '1px dotted rgba(255,255,255,0.15)' : '1px dotted rgba(0,0,0,0.2)' }}>
+                  {!publicado(item) && <span style={{ width: '100%', color: '#b45309', fontWeight: 'bold', fontSize: '0.8rem' }}>DESACTIVADA · Solo visible para administración</span>}
                   <button
                     onClick={() => {
                       setNuevaAct({
@@ -2596,6 +2608,23 @@ const preguntasFrecuentes = [
                     style={{ flex: 1, padding: '8px', backgroundColor: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
                   >
                     EDITAR
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!isAdmin) return lanzarToast('🛑 ¡No tienes permiso! 🔐', 'error');
+                      try {
+                        await updateDoc(doc(db, item.esClub ? 'clubes_cole' : 'actividades_cole', item.id), { activa: !publicado(item) });
+                        lanzarToast(publicado(item) ? 'Actividad desactivada' : 'Actividad reactivada', 'exito');
+                      } catch (error) {
+                        console.error('Error al cambiar el estado:', error);
+                        lanzarToast('No se pudo cambiar el estado de la actividad.', 'error');
+                      }
+                    }}
+                    style={{ flex: 1, padding: '8px', backgroundColor: publicado(item) ? '#ffedd5' : '#dcfce7', color: publicado(item) ? '#9a3412' : '#166534', border: '1px solid currentColor', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}
+                  >
+                    {publicado(item) ? 'DESACTIVAR' : 'REACTIVAR'}
                   </button>
 
                   <button
@@ -2914,7 +2943,7 @@ if (vista === 'mapa') {
     </div>
   );
 }
-  if (vista === 'detalles' && actividadSeleccionada) {
+  if (vista === 'detalles' && actividadSeleccionada && (isAdmin || publicado(actividades.find(a => a.id === actividadSeleccionada.id) || clubes.find(c => c.id === actividadSeleccionada.id) || { activa: false }))) {
     const act = actividadSeleccionada;
     const latMonNum = Number(act.latMon);
     const latFamNum = Number(act.latFam);
