@@ -8,8 +8,11 @@ rules_version = '2';
 // Access Model:
 //   - Public (unauthenticated families): Read-only access to the three
 //     public catalog/configuration collections listed below.
-//   - Administrators: Authenticated via Firebase Auth (email/password accounts
-//     provisioned in Firebase Console; public self-signup is disabled).
+//   - Administrators: Restricted exclusively to the provisioned school admin
+//     account (`extraescolares@sanbuenaventura.org`) authenticated via a
+//     non-anonymous Firebase Auth provider (public self-signup is disabled).
+//     Note: `email_verified` is not required because manually created Firebase
+//     Console email/password accounts often have `email_verified == false`.
 //   - All other collections and subcollections: Denied by default.
 //
 // Collection: actividades_cole
@@ -113,22 +116,17 @@ service cloud.firestore {
     }
 
     // Administrator check:
-    // Currently allows any non-anonymous Firebase Auth account configured in
-    // project `extraescolarescsb` so existing email/password admin accounts
-    // created in Firebase Console are not locked out (public self-signup is
-    // disabled in Firebase Auth for this project).
-    //
-    // RECOMMENDED HARDENING: Once admin accounts are verified in Firebase
-    // Console, restrict this function to custom claims:
-    //   return isAuthenticated() && request.auth.token.admin == true;
-    // or to an explicit allowlist of verified admin emails:
-    //   return isAuthenticated() &&
-    //     request.auth.token.email_verified == true &&
-    //     request.auth.token.email in ['admin@colegiosanbuenaventura.es'];
+    // Restricts write/delete access exclusively to the provisioned school
+    // administrator account (`extraescolares@sanbuenaventura.org`) signed in
+    // via a non-anonymous Firebase Auth provider.
+    // NOTE: `email_verified == true` is intentionally NOT required because
+    // manually created Firebase Console email/password accounts often have
+    // `email_verified == false`.
     function isAdmin() {
-      return isAuthenticated() &&
-        (!('firebase' in request.auth.token) ||
-         request.auth.token.firebase.sign_in_provider != 'anonymous');
+      return request.auth != null &&
+        request.auth.uid != null &&
+        request.auth.token.firebase.sign_in_provider != 'anonymous' &&
+        request.auth.token.email == 'extraescolares@sanbuenaventura.org';
     }
 
     function hasRequiredFields(data, fields) {
