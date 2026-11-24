@@ -1,0 +1,377 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model — Portal Extraescolares Colegio San Buenaventura
+// Firebase Project: extraescolarescsb
+// ===============================================================
+//
+// Access Model:
+//   - Public (unauthenticated families): Read-only access to the three
+//     public catalog/configuration collections listed below.
+//   - Administrators: Authenticated via Firebase Auth (email/password accounts
+//     provisioned in Firebase Console; public self-signup is disabled).
+//   - All other collections and subcollections: Denied by default.
+//
+// Collection: actividades_cole
+// Document ID: 'configuracion_header' (singleton portal configuration)
+// Fields (all optional, at least one key required):
+//   - fotoFondoHeader: string (safe URL/image, <= 500000 chars)
+//   - fotoEtapaInfantil: string (safe URL/image, <= 500000 chars)
+//   - fotoEtapaPrimaria: string (safe URL/image, <= 500000 chars)
+//   - fotoEtapaESO: string (safe URL/image, <= 500000 chars)
+//   - fotoEtapaAdultos: string (safe URL/image, <= 500000 chars)
+//   - fotoEtapaClubes: string (safe URL/image, <= 500000 chars)
+//   - avisoActivo: bool
+//   - avisoTipo: string (<= 50 chars)
+//   - avisoTitulo: string (<= 200 chars)
+//   - avisoTexto: string (<= 2000 chars)
+//   - avisoEnlace: string (safe URL, <= 2000 chars)
+//   - avisoEnlaceTexto: string (<= 200 chars)
+//   - faqs: list (<= 50 items)
+//   - updatedAt: timestamp | string (<= 50 chars)
+//
+// Collection: actividades_cole
+// Document ID: auto-generated (docId != 'configuracion_header')
+// Fields:
+//   - nombre: string (required, 1..200 chars)
+//   - etapas: list<string> (required on create, 1..10 items, string elements <= 80 chars;
+//       on update, either etapas or legacy etapa must be present)
+//   - activa: bool (optional)
+//   - categoria: string (optional, <= 100 chars)
+//   - dias: string (optional, <= 300 chars)
+//   - horario: string (optional, <= 300 chars)
+//   - lugar: string (optional, <= 300 chars)
+//   - precio: string (<= 100 chars) | number (0..100000) (optional)
+//   - info: string (optional, <= 10000 chars)
+//   - material: string (optional, <= 3000 chars)
+//   - imagen: string (optional, <= 500000 chars)
+//   - imagenExtra: string (optional, <= 500000 chars)
+//   - empresa: string (optional, <= 200 chars)
+//   - logoEmpresa: string (optional, <= 500000 chars)
+//   - nombreContacto: string (optional, <= 200 chars)
+//   - contacto: string (optional, <= 300 chars)
+//   - enlace: string (optional, safe URL, <= 2000 chars)
+//   - linkInscripcion: string (optional, safe URL, <= 2000 chars)
+//   - linksMultiples: list<map{etiqueta, url}> (optional, <= 30 items)
+//   - recogidaMonitores: string (optional, <= 500 chars)
+//   - recogidaFamilias: string (optional, <= 500 chars)
+//   - latAct, latMon, latFam: number (-90..90) | string (<= 40 chars) (optional)
+//   - lngAct, lngMon, lngFam: number (-180..180) | string (<= 40 chars) (optional)
+//   - fotoAct, fotoMon, fotoFam: string (optional, <= 500000 chars)
+//   - estadoPlazas: string (optional, <= 100 chars)
+//   - destacada: bool (optional)
+//   - updatedAt: timestamp | string (<= 50 chars) (optional)
+//   - Legacy / edit-spread fields supported cleanly:
+//     foto (<= 500000), descripcion (<= 10000), etapa (<= 100),
+//     Infantil (bool), Primaria (bool), ESO (bool), Adultos (bool),
+//     id (<= 200), esClub (bool)
+//
+// Collection: clubes_cole
+// Document ID: auto-generated
+// Fields: Same structure and guardrails as regular actividades_cole documents.
+//
+// Collection: puntos_interes_cole
+// Document ID: auto-generated
+// Fields:
+//   - nombre: string (required, 1..150 chars)
+//   - descripcion: string (optional, <= 1000 chars)
+//   - lat: number (required, -90..90)
+//   - lng: number (required, -180..180)
+//   - foto: string (optional, safe URL/image, <= 500000 chars)
+//   - color: string (optional, <= 30 chars)
+//   - categoria: string (optional, <= 50 chars)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the caller is authenticated with Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    // Check if the authenticated caller owns a user-scoped resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Verify uid field matches caller on create (if present)
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == request.auth.uid;
+    }
+
+    // Verify uid field is immutable on update (if present)
+    function uidNotModified() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == resource.data.uid;
+    }
+
+    // Administrator check:
+    // Currently allows any non-anonymous Firebase Auth account configured in
+    // project `extraescolarescsb` so existing email/password admin accounts
+    // created in Firebase Console are not locked out (public self-signup is
+    // disabled in Firebase Auth for this project).
+    //
+    // RECOMMENDED HARDENING: Once admin accounts are verified in Firebase
+    // Console, restrict this function to custom claims:
+    //   return isAuthenticated() && request.auth.token.admin == true;
+    // or to an explicit allowlist of verified admin emails:
+    //   return isAuthenticated() &&
+    //     request.auth.token.email_verified == true &&
+    //     request.auth.token.email in ['admin@colegiosanbuenaventura.es'];
+    function isAdmin() {
+      return isAuthenticated() &&
+        (!('firebase' in request.auth.token) ||
+         request.auth.token.firebase.sign_in_provider != 'anonymous');
+    }
+
+    function hasRequiredFields(data, fields) {
+      return data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(data, fields) {
+      return data.keys().hasOnly(fields);
+    }
+
+    function isNonEmptyString(val, maxLen) {
+      return val is string && val.size() > 0 && val.size() <= maxLen;
+    }
+
+    // Reject script-executing URI schemes while permitting https/http/data:image/relative paths
+    function isSafeUrl(val, maxLen) {
+      return val is string &&
+        val.size() <= maxLen &&
+        !val.matches('(?i)^\\s*(javascript:|vbscript:|data:text/html).*');
+    }
+
+    function isValidLatNumber(val) {
+      return val is number && val >= -90 && val <= 90;
+    }
+
+    function isValidLngNumber(val) {
+      return val is number && val >= -180 && val <= 180;
+    }
+
+    function isOptionalCoordVal(val, maxAbs) {
+      return val == null ||
+        (val is number && val >= -maxAbs && val <= maxAbs) ||
+        (val is string && val.size() <= 40);
+    }
+
+    // ===============================================================
+    // Domain Validators (used in BOTH create and update rules)
+    // ===============================================================
+
+    // Portal configuration document: actividades_cole/configuracion_header
+    function isValidHeaderConfig(d) {
+      return d.keys().size() > 0 &&
+        hasOnlyAllowedFields(d, [
+          'fotoFondoHeader',
+          'fotoEtapaInfantil',
+          'fotoEtapaPrimaria',
+          'fotoEtapaESO',
+          'fotoEtapaAdultos',
+          'fotoEtapaClubes',
+          'avisoActivo',
+          'avisoTipo',
+          'avisoTitulo',
+          'avisoTexto',
+          'avisoEnlace',
+          'avisoEnlaceTexto',
+          'faqs',
+          'updatedAt'
+        ]) &&
+        (!('fotoFondoHeader' in d) || d.fotoFondoHeader == null || isSafeUrl(d.fotoFondoHeader, 500000)) &&
+        (!('fotoEtapaInfantil' in d) || d.fotoEtapaInfantil == null || isSafeUrl(d.fotoEtapaInfantil, 500000)) &&
+        (!('fotoEtapaPrimaria' in d) || d.fotoEtapaPrimaria == null || isSafeUrl(d.fotoEtapaPrimaria, 500000)) &&
+        (!('fotoEtapaESO' in d) || d.fotoEtapaESO == null || isSafeUrl(d.fotoEtapaESO, 500000)) &&
+        (!('fotoEtapaAdultos' in d) || d.fotoEtapaAdultos == null || isSafeUrl(d.fotoEtapaAdultos, 500000)) &&
+        (!('fotoEtapaClubes' in d) || d.fotoEtapaClubes == null || isSafeUrl(d.fotoEtapaClubes, 500000)) &&
+        (!('avisoActivo' in d) || d.avisoActivo == null || d.avisoActivo is bool) &&
+        (!('avisoTipo' in d) || d.avisoTipo == null || (d.avisoTipo is string && d.avisoTipo.size() <= 50)) &&
+        (!('avisoTitulo' in d) || d.avisoTitulo == null || (d.avisoTitulo is string && d.avisoTitulo.size() <= 200)) &&
+        (!('avisoTexto' in d) || d.avisoTexto == null || (d.avisoTexto is string && d.avisoTexto.size() <= 2000)) &&
+        (!('avisoEnlace' in d) || d.avisoEnlace == null || isSafeUrl(d.avisoEnlace, 2000)) &&
+        (!('avisoEnlaceTexto' in d) || d.avisoEnlaceTexto == null || (d.avisoEnlaceTexto is string && d.avisoEnlaceTexto.size() <= 200)) &&
+        (!('faqs' in d) || d.faqs == null || (d.faqs is list && d.faqs.size() <= 50)) &&
+        (!('updatedAt' in d) || d.updatedAt == null || d.updatedAt is timestamp || (d.updatedAt is string && d.updatedAt.size() <= 50));
+    }
+
+    // Shared validator for actividades_cole (regular docs) and clubes_cole.
+    // Compactly validates all 42 allowed fields while staying below Firestore's
+    // 1000-expression evaluation limit even when every field is populated.
+    function isValidCatalogItem(d, isCreate) {
+      return 'nombre' in d &&
+        isNonEmptyString(d.nombre, 200) &&
+        d.keys().hasOnly([
+          'nombre',
+          'etapas',
+          'activa',
+          'categoria',
+          'dias',
+          'horario',
+          'lugar',
+          'precio',
+          'info',
+          'material',
+          'imagen',
+          'imagenExtra',
+          'empresa',
+          'logoEmpresa',
+          'nombreContacto',
+          'contacto',
+          'enlace',
+          'linkInscripcion',
+          'linksMultiples',
+          'recogidaMonitores',
+          'recogidaFamilias',
+          'latAct',
+          'lngAct',
+          'latMon',
+          'lngMon',
+          'latFam',
+          'lngFam',
+          'fotoAct',
+          'fotoMon',
+          'fotoFam',
+          'estadoPlazas',
+          'destacada',
+          'updatedAt',
+          // Legacy & edit-spread compatibility fields
+          'foto',
+          'descripcion',
+          'etapa',
+          'Infantil',
+          'Primaria',
+          'ESO',
+          'Adultos',
+          'id',
+          'esClub'
+        ]) &&
+        (isCreate
+          ? ('etapas' in d && d.etapas is list && d.etapas.size() >= 1 && d.etapas.size() <= 10 && d.etapas[0] is string && d.etapas[0].size() <= 80)
+          : (('etapas' in d && d.etapas is list && d.etapas.size() <= 10 && (d.etapas.size() == 0 || (d.etapas[0] is string && d.etapas[0].size() <= 80))) ||
+             ('etapa' in d && isNonEmptyString(d.etapa, 100)))) &&
+        (!('activa' in d) || d.activa is bool) &&
+        (!('categoria' in d) || (d.categoria is string && d.categoria.size() <= 100)) &&
+        (!('dias' in d) || (d.dias is string && d.dias.size() <= 300)) &&
+        (!('horario' in d) || (d.horario is string && d.horario.size() <= 300)) &&
+        (!('lugar' in d) || (d.lugar is string && d.lugar.size() <= 300)) &&
+        (!('precio' in d) || (d.precio is string && d.precio.size() <= 100) || (d.precio is number && d.precio >= 0 && d.precio <= 100000)) &&
+        (!('info' in d) || (d.info is string && d.info.size() <= 10000)) &&
+        (!('material' in d) || (d.material is string && d.material.size() <= 3000)) &&
+        (!('imagen' in d) || (d.imagen is string && d.imagen.size() <= 500000)) &&
+        (!('imagenExtra' in d) || (d.imagenExtra is string && d.imagenExtra.size() <= 500000)) &&
+        (!('empresa' in d) || (d.empresa is string && d.empresa.size() <= 200)) &&
+        (!('logoEmpresa' in d) || (d.logoEmpresa is string && d.logoEmpresa.size() <= 500000)) &&
+        (!('nombreContacto' in d) || (d.nombreContacto is string && d.nombreContacto.size() <= 200)) &&
+        (!('contacto' in d) || (d.contacto is string && d.contacto.size() <= 300)) &&
+        (!('enlace' in d) || isSafeUrl(d.enlace, 2000)) &&
+        (!('linkInscripcion' in d) || isSafeUrl(d.linkInscripcion, 2000)) &&
+        (!('linksMultiples' in d) || (d.linksMultiples is list && d.linksMultiples.size() <= 30 && (d.linksMultiples.size() == 0 || (d.linksMultiples[0] is map && d.linksMultiples[0].keys().hasOnly(['etiqueta', 'url']))))) &&
+        (!('recogidaMonitores' in d) || (d.recogidaMonitores is string && d.recogidaMonitores.size() <= 500)) &&
+        (!('recogidaFamilias' in d) || (d.recogidaFamilias is string && d.recogidaFamilias.size() <= 500)) &&
+        (!('latAct' in d) || isOptionalCoordVal(d.latAct, 90)) &&
+        (!('lngAct' in d) || isOptionalCoordVal(d.lngAct, 180)) &&
+        (!('latMon' in d) || isOptionalCoordVal(d.latMon, 90)) &&
+        (!('lngMon' in d) || isOptionalCoordVal(d.lngMon, 180)) &&
+        (!('latFam' in d) || isOptionalCoordVal(d.latFam, 90)) &&
+        (!('lngFam' in d) || isOptionalCoordVal(d.lngFam, 180)) &&
+        (!('fotoAct' in d) || (d.fotoAct is string && d.fotoAct.size() <= 500000)) &&
+        (!('fotoMon' in d) || (d.fotoMon is string && d.fotoMon.size() <= 500000)) &&
+        (!('fotoFam' in d) || (d.fotoFam is string && d.fotoFam.size() <= 500000)) &&
+        (!('estadoPlazas' in d) || (d.estadoPlazas is string && d.estadoPlazas.size() <= 100)) &&
+        (!('destacada' in d) || d.destacada is bool) &&
+        (!('updatedAt' in d) || d.updatedAt is timestamp || (d.updatedAt is string && d.updatedAt.size() <= 50)) &&
+        // Legacy & edit-spread fields
+        (!('foto' in d) || (d.foto is string && d.foto.size() <= 500000)) &&
+        (!('descripcion' in d) || (d.descripcion is string && d.descripcion.size() <= 10000)) &&
+        (!('etapa' in d) || (d.etapa is string && d.etapa.size() <= 100)) &&
+        (!('Infantil' in d) || d.Infantil is bool) &&
+        (!('Primaria' in d) || d.Primaria is bool) &&
+        (!('ESO' in d) || d.ESO is bool) &&
+        (!('Adultos' in d) || d.Adultos is bool) &&
+        (!('id' in d) || (d.id is string && d.id.size() <= 200)) &&
+        (!('esClub' in d) || d.esClub is bool);
+    }
+
+    // Map points of interest: puntos_interes_cole/{docId}
+    function isValidPuntoInteres(d) {
+      return hasRequiredFields(d, ['nombre', 'lat', 'lng']) &&
+        hasOnlyAllowedFields(d, [
+          'nombre',
+          'descripcion',
+          'lat',
+          'lng',
+          'foto',
+          'color',
+          'categoria'
+        ]) &&
+        isNonEmptyString(d.nombre, 150) &&
+        (!('descripcion' in d) || d.descripcion == null || (d.descripcion is string && d.descripcion.size() <= 1000)) &&
+        isValidLatNumber(d.lat) &&
+        isValidLngNumber(d.lng) &&
+        (!('foto' in d) || d.foto == null || isSafeUrl(d.foto, 500000)) &&
+        (!('color' in d) || d.color == null || (d.color is string && d.color.size() <= 30)) &&
+        (!('categoria' in d) || d.categoria == null || (d.categoria is string && d.categoria.size() <= 50));
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // 1. Extracurricular activities & portal header configuration
+    match /actividades_cole/{docId} {
+      // Public catalog read for families (unauthenticated browsing required)
+      allow read: if true;
+
+      // Admin writes with strict schema validation for both create and update
+      allow create: if isAdmin() && (
+        docId == 'configuracion_header'
+          ? isValidHeaderConfig(request.resource.data)
+          : isValidCatalogItem(request.resource.data, true)
+      );
+
+      allow update: if isAdmin() && (
+        docId == 'configuracion_header'
+          ? isValidHeaderConfig(request.resource.data)
+          : isValidCatalogItem(request.resource.data, false)
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // 2. Partner clubs ("Clubes Amigos")
+    match /clubes_cole/{docId} {
+      // Public catalog read for families
+      allow read: if true;
+
+      // Admin writes with strict schema validation for both create and update
+      allow create: if isAdmin() && isValidCatalogItem(request.resource.data, true);
+      allow update: if isAdmin() && isValidCatalogItem(request.resource.data, false);
+      allow delete: if isAdmin();
+    }
+
+    // 3. School campus map points of interest ("Mapa Maestro")
+    match /puntos_interes_cole/{docId} {
+      // Public map read for families
+      allow read: if true;
+
+      // Admin writes with strict schema & coordinate validation
+      allow create: if isAdmin() && isValidPuntoInteres(request.resource.data);
+      allow update: if isAdmin() && isValidPuntoInteres(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 4. Default deny for all other collections and subcollections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

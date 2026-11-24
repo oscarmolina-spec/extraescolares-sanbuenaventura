@@ -1,5 +1,12 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAyb6sWG3_xKhBeMp2KRTJCn94ovrNU5q8',
@@ -11,5 +18,23 @@ const firebaseConfig = {
   measurementId: 'G-P4F5NBXLZS',
 };
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app); // ¡Esta es la base de datos!
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
+let dbInstance;
+if (typeof window !== 'undefined') {
+  try {
+    dbInstance = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    });
+  } catch {
+    dbInstance = getFirestore(app);
+  }
+} else {
+  dbInstance = getFirestore(app);
+}
+
+export const db = dbInstance;
+export const auth = getAuth(app);
+export const storage = getStorage(app);

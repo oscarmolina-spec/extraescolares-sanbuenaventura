@@ -1,16 +1,17 @@
+const path = require('node:path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: path.join(__dirname),
   eslint: {
-    // 🛡️ Esto le dice a Vercel: "No te detengas aunque haya avisos de ESLint"
     ignoreDuringBuilds: true,
   },
-
   typescript: {
-    // 🛡️ Y esto: "No te detengas por avisos de TypeScript"
     ignoreBuildErrors: true,
   },
-  // 🌟 ¡NUEVO! Desactivamos el minificador nativo SWC para que no dé error en tu entorno Linux
-  swcMinify: false,
-}
+  images: {
+    unoptimized: true,
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
