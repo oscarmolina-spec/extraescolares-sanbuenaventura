@@ -122,15 +122,20 @@ export default function HeroSection({
             </div>
           </div>
 
-          {/* Institutional Crest (clean & balanced on desktop) */}
-          <div className="hidden lg:flex flex-col items-end gap-2">
-            <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 shadow-xl">
-              <img
-                src={SCHOOL_INFO.crestUrl}
-                alt={SCHOOL_INFO.name}
-                className="w-28 h-28 object-contain"
-              />
-            </div>
+          {/* Institutional Crest (original large crest with white relief outline, no dark box) */}
+          <div className="flex justify-center lg:justify-end items-center">
+            <img
+              src={SCHOOL_INFO.crestStorageUrl}
+              alt={SCHOOL_INFO.name}
+              onError={(e) => {
+                e.currentTarget.src = SCHOOL_INFO.crestUrl;
+              }}
+              className="w-[240px] sm:w-[300px] lg:w-[360px] max-w-full h-auto object-contain select-none"
+              style={{
+                filter:
+                  'drop-shadow(2px 0 0 white) drop-shadow(-2px 0 0 white) drop-shadow(0 2px 0 white) drop-shadow(0 -2px 0 white) drop-shadow(0 20px 30px rgba(0, 0, 0, 0.45))',
+              }}
+            />
           </div>
         </div>
       </div>

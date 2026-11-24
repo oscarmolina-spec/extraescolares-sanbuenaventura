@@ -41,7 +41,7 @@ export default function Header({
           <img
             src={SCHOOL_INFO.crestUrl}
             alt={SCHOOL_INFO.name}
-            className="h-10 w-auto object-contain shrink-0"
+            className="h-10 w-auto object-contain shrink-0 dark:drop-shadow-[0_0_2px_rgba(255,255,255,0.95)]"
           />
           <div className="leading-tight min-w-0">
             <div className="font-display font-bold text-sm sm:text-base text-[#082448] dark:text-white tracking-tight truncate">
